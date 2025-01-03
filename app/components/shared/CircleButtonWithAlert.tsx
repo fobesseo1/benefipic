@@ -1,6 +1,6 @@
 'use client';
 
-import { Camera, Plus, X } from 'lucide-react';
+import { Camera, Dumbbell, Plus, ScanBarcode, SquareMenu, SquarePen, X } from 'lucide-react';
 import { AlertDialog, AlertDialogContent, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -16,7 +16,7 @@ export default function CircleButtonWithAlert() {
           className="bg-gray-900 w-12 h-12 flex items-center justify-center rounded-full cursor-pointer shadow-md"
           onClick={() => setIsOpen(true)}
         >
-          <Plus className="w-10 h-10 text-white" />
+          <Plus className="w-8 h-8 text-white" />
         </div>
       </AlertDialogTrigger>
       <AlertDialogContent className="sm:max-w-md ">
@@ -32,24 +32,34 @@ export default function CircleButtonWithAlert() {
 
         <div className="grid grid-cols-2 gap-2">
           <Link href="/food" onClick={() => setIsOpen(false)}>
-            <Button variant="outline" className="w-full p-6">
-              사진입력
-            </Button>
+            <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
+              <Camera className="w-8 h-8 text-gray-900 " strokeWidth={1} />
+              <p className="text-sm text-gray-900 font-bold">사진입력</p>
+            </div>
           </Link>
           <Link href="/barcode" onClick={() => setIsOpen(false)}>
-            <Button variant="outline" className="w-full p-6">
-              바코드
-            </Button>
+            <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
+              <ScanBarcode className="w-8 h-8 text-gray-900 " strokeWidth={1} />
+              <p className="text-sm text-gray-900 font-bold">바코드</p>
+            </div>
           </Link>
           <Link href="/food-description" onClick={() => setIsOpen(false)}>
-            <Button variant="outline" className="w-full p-6">
-              직접입력
-            </Button>
+            <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
+              <SquarePen className="w-8 h-8 text-gray-900 " strokeWidth={1} />
+              <p className="text-sm text-gray-900 font-bold">직접입력</p>
+            </div>
+          </Link>
+          <Link href="/menu" onClick={() => setIsOpen(false)}>
+            <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
+              <SquareMenu className="w-8 h-8 text-gray-900 " strokeWidth={1} />
+              <p className="text-sm text-gray-900 font-bold">메뉴추천</p>
+            </div>
           </Link>
           <Link href="/exercise" onClick={() => setIsOpen(false)}>
-            <Button variant="outline" className="w-full p-6">
-              운동입력
-            </Button>
+            <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
+              <Dumbbell className="w-8 h-8 text-gray-900 " strokeWidth={1} />
+              <p className="text-sm text-gray-900 font-bold">운동입력</p>
+            </div>
           </Link>
         </div>
       </AlertDialogContent>

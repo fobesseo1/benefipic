@@ -6,13 +6,23 @@ export async function GET(req: Request) {
   const supabase = createSupabaseServerClient();
   const currentUser = await getUser();
   const userId = currentUser?.id;
+
+  // URL에서 date 파라미터 가져오기
+  const url = new URL(req.url);
+  const dateStr = url.searchParams.get('date');
+  const selectedDate = dateStr ? new Date(dateStr) : new Date();
+
+  console.log('Selected Date:', selectedDate);
   console.log('userId', userId);
 
   if (!userId) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { utcStart, utcEnd } = getKoreanDateRange();
+  // 선택된 날짜의 범위 가져오기
+  const { utcStart, utcEnd } = getKoreanDateRange(selectedDate);
+
+  console.log('Date Range:', { utcStart, utcEnd });
 
   try {
     const { data: goals } = await supabase

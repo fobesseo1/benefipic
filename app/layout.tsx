@@ -43,7 +43,7 @@ export default async function RootLayout({
         {/* <div className="w-full h-16 bg-red-800"></div> */}
         <StoreInitializer currentUser={currentUser} />
         <MysticSymbolsEffect />
-        <div className="fixed bottom-4 right-2 z-50 ml-auto w-fit flex items-center justify-center">
+        <div className="fixed bottom-4 right-1 z-50 ml-auto w-fit flex items-center justify-center">
           <CircleButtonWithAlert />
         </div>
 
