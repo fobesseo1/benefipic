@@ -73,7 +73,7 @@ const CurrentWeekCalendar: React.FC<CurrentWeekCalendarProps> = ({
   };
 
   return (
-    <div className="rounded-lg shadow p-4 max-w-sm">
+    <div className="rounded-lg shadow p-4 w-full">
       <div className="flex justify-between items-center mb-4">
         <button
           onClick={goToPreviousWeek}

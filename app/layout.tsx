@@ -4,7 +4,8 @@ import './globals.css';
 import MysticSymbolsEffect from './Layout-component/BubbleEffect/MysticSymbolsEffect';
 import StoreInitializer from './Layout-component/StoreInitializer';
 import { getUser } from '@/lib/supabse/server';
-import { ChevronLeft, Menu } from 'lucide-react';
+import { ChevronLeft, Circle, Menu } from 'lucide-react';
+import CircleButtonWithAlert from './components/shared/CircleButtonWithAlert';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -30,14 +31,23 @@ export default async function RootLayout({
   const currentUser = await getUser();
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased relative`}>
-        <div className="w-screen h-12 absolute top-0 z-50 flex px-6 items-center justify-between">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased relative mx-auto max-w-lg h-screen`}
+      >
+        <div className="w-full h-12 absolute top-0 z-50 flex px-6 items-center justify-between">
           <ChevronLeft color="#9CA3AF" size={32} />
           <Menu color="#9CA3AF" size={32} />
         </div>
         {children}
         <StoreInitializer currentUser={currentUser} />
         <MysticSymbolsEffect />
+        <div className="sticky bottom-32 right-6 z-50 ml-auto w-fit flex items-center justify-center">
+          <CircleButtonWithAlert />
+        </div>
+        <div className="w-full h-16 sticky bg-red-400 bottom-0 z-50 flex px-6 items-center justify-between">
+          <ChevronLeft color="#9CA3AF" size={32} />
+          <Menu color="#9CA3AF" size={32} />
+        </div>
       </body>
     </html>
   );

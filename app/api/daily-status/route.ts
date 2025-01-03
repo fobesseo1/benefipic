@@ -33,6 +33,23 @@ export async function GET(req: Request) {
       .gte('logged_at', utcStart.toISOString())
       .lte('logged_at', utcEnd.toISOString());
 
+    // 전체 데이터 로그 출력
+    console.log('Food Logs Data:', JSON.stringify(foodLogs, null, 2));
+
+    // 각 로그 항목별로 자세히 출력
+    foodLogs?.forEach((log, index) => {
+      console.log(`Food Log #${index + 1}:`, {
+        id: log.id,
+        user_id: log.user_id,
+        food_name: log.food_name,
+        calories: log.calories,
+        protein: log.protein,
+        fat: log.fat,
+        carbs: log.carbs,
+        logged_at: log.logged_at,
+      });
+    });
+
     const { data: exerciseLogs } = await supabase
       .from('exercise_logs')
       .select('*')

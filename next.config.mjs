@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    serverComponentsExternalPackages: ['timezone'],
+  },
+  env: {
+    TZ: 'UTC',
+  },
   images: {
     domains: [
       'lh3.googleusercontent.com', // Google 프로필 이미지
