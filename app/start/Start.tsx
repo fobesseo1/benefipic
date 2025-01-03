@@ -3,6 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, ChartBar, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+
+interface Slide {
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  image: string;
+}
 
 const OnboardingScreen = ({ defaultSlide }: { defaultSlide: number }) => {
   const [currentSlide, setCurrentSlide] = useState(defaultSlide);
@@ -13,7 +21,7 @@ const OnboardingScreen = ({ defaultSlide }: { defaultSlide: number }) => {
     }
   }, [defaultSlide]);
 
-  const slides = [
+  const slides: Slide[] = [
     {
       title: '칼로리 계산 너무 쉬워요',
       subtitle: '그냥 사진만 찍으시면 저희가 알려드릴게요',
@@ -54,7 +62,7 @@ const OnboardingScreen = ({ defaultSlide }: { defaultSlide: number }) => {
           >
             <img
               src={slides[currentSlide].image}
-              alt="Onboarding"
+              alt={`Onboarding ${currentSlide + 1}`}
               className="w-full h-full object-cover"
             />
           </motion.div>
@@ -69,15 +77,20 @@ const OnboardingScreen = ({ defaultSlide }: { defaultSlide: number }) => {
             initial={{ x: 300, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -300, opacity: 0 }}
-            className="flex-1 flex flex-col "
+            className="flex-1 flex flex-col"
           >
             {/* Icon and Title in one line */}
-            <div className="flex flex-col justify-center gap-4 mb-4 ">
-              <h2 className="text-2xl font-semibold text-gray-900">{slides[currentSlide].title}</h2>
+            <div className="flex flex-col justify-center gap-4 mb-4">
+              <div className="flex items-center gap-2">
+                {slides[currentSlide].icon}
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  {slides[currentSlide].title}
+                </h2>
+              </div>
             </div>
 
             {/* Subtitle with line breaks */}
-            <p className="text-gray-600  leading-relaxed whitespace-pre-line">
+            <p className="text-gray-600 leading-relaxed whitespace-pre-line">
               {slides[currentSlide].subtitle}
             </p>
           </motion.div>
@@ -91,7 +104,7 @@ const OnboardingScreen = ({ defaultSlide }: { defaultSlide: number }) => {
           {slides.map((_, index) => (
             <div
               key={index}
-              className={`w-2 h-2 rounded-full ${
+              className={`w-2 h-2 rounded-full transition-colors ${
                 currentSlide === index ? 'bg-black' : 'bg-gray-200'
               }`}
             />
@@ -99,12 +112,20 @@ const OnboardingScreen = ({ defaultSlide }: { defaultSlide: number }) => {
         </div>
 
         {/* Next/Start Button */}
-        <button
-          onClick={handleNext}
-          className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
-        >
-          {currentSlide === slides.length - 1 ? '시작하기' : 'Next'}
-        </button>
+        {currentSlide === slides.length - 1 ? (
+          <Link href="/auth" className="block">
+            <button className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium hover:bg-gray-800 transition-colors">
+              시작하기
+            </button>
+          </Link>
+        ) : (
+          <button
+            onClick={handleNext}
+            className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium hover:bg-gray-800 transition-colors"
+          >
+            Next
+          </button>
+        )}
       </div>
     </div>
   );

@@ -49,7 +49,13 @@ export default async function AuthPage() {
         {/* 로고 */}
         <div className="flex justify-center">
           <div className="relative w-48 h-12 sm:w-56 sm:h-14">
-            <Image src="/logo-wissome.svg" alt="Wissome" fill className="object-contain" priority />
+            <Image
+              src="/logo-benefipic.svg"
+              alt="Benefipic-logo"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
         </div>
 

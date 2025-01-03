@@ -60,7 +60,7 @@ export function AuthForm() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <Tabs defaultValue="signin" className="w-full space-y-6">
+      {/* <Tabs defaultValue="signin" className="w-full space-y-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="signin">로그인</TabsTrigger>
           <TabsTrigger value="register">회원가입</TabsTrigger>
@@ -72,7 +72,7 @@ export function AuthForm() {
           <RegisterForm />
         </TabsContent>
       </Tabs>
-      <hr />
+      <hr /> */}
       <div className="flex flex-col gap-4">
         {memoizedGoogleButton}
         {memoizedGithubButton}
