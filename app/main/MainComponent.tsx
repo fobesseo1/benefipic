@@ -148,13 +148,13 @@ export default function MainComponent() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex items-center justify-center min-h-screen">
+  //       <div className="text-lg">Loading...</div>
+  //     </div>
+  //   );
+  // }
 
   const isToday = (date: Date) => {
     const today = new Date();
