@@ -32,22 +32,25 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased relative mx-auto max-w-lg h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased relative mx-auto max-w-lg  `}
       >
         <div className="w-full h-12 absolute top-0 z-50 flex px-6 items-center justify-between">
           <ChevronLeft color="#9CA3AF" size={32} />
           <Menu color="#9CA3AF" size={32} />
         </div>
+
         {children}
+        {/* <div className="w-full h-16 bg-red-800"></div> */}
         <StoreInitializer currentUser={currentUser} />
         <MysticSymbolsEffect />
-        <div className="sticky bottom-32 right-6 z-50 ml-auto w-fit flex items-center justify-center">
+        <div className="fixed bottom-4 right-2 z-50 ml-auto w-fit flex items-center justify-center">
           <CircleButtonWithAlert />
         </div>
-        <div className="w-full h-16 sticky bg-red-400 bottom-0 z-50 flex px-6 items-center justify-between">
+
+        {/* <div className="w-full  h-16 fixed  bottom-0 z-50 flex px-6 items-center justify-between">
           <ChevronLeft color="#9CA3AF" size={32} />
           <Menu color="#9CA3AF" size={32} />
-        </div>
+        </div> */}
       </body>
     </html>
   );
