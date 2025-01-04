@@ -99,27 +99,42 @@ export default function NavigationButtonSection({
           사진 촬영하기
         </button>
       ) : step === 'image-selected' ? (
-        <button
-          onClick={onAnalyze}
-          className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
-        >
-          분석하기
-        </button>
-      ) : step === 'complete' ? (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-4 pb-48 ">
           <button
-            onClick={resetAnalyzer}
-            className="w-full bg-gray-100 text-gray-900 rounded-xl py-4 text-lg font-medium"
-          >
-            다른 음식
-          </button>
-          <button
-            onClick={onSave}
+            onClick={onAnalyze}
             className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
           >
-            저장하기
+            분석하기
+          </button>
+          <button
+            onClick={resetAnalyzer}
+            className="w-full bg-gray-200 text-gray-600 rounded-xl py-4 text-lg font-medium"
+          >
+            돌아가기
           </button>
         </div>
+      ) : step === 'complete' ? (
+        // <div className="grid grid-cols-2 gap-4">
+        //   <button
+        //     onClick={resetAnalyzer}
+        //     className="w-full bg-gray-100 text-gray-900 rounded-xl py-4 text-lg font-medium"
+        //   >
+        //     다른 음식
+        //   </button>
+        //   <button
+        //     onClick={onSave}
+        //     className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
+        //   >
+        //     저장하기
+        //   </button>
+        // </div>
+
+        <button
+          onClick={onSave}
+          className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
+        >
+          저장하기
+        </button>
       ) : (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>

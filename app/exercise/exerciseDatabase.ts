@@ -22,7 +22,7 @@ export const quickAccessExercises: Exercise[] = [
   {
     id: 'running',
     name: '달리기',
-    caloriesPerHour: 600,
+    caloriesPerHour: 750,
     icon: 'Run',
   },
   {
@@ -34,7 +34,7 @@ export const quickAccessExercises: Exercise[] = [
   {
     id: 'swimming',
     name: '수영',
-    caloriesPerHour: 500,
+    caloriesPerHour: 650,
     icon: 'Swim',
   },
   {
@@ -70,12 +70,12 @@ export const exerciseDatabase: Exercise[] = [
   {
     id: 'basketball',
     name: '농구',
-    caloriesPerHour: 450,
+    caloriesPerHour: 600,
   },
   {
     id: 'tennis',
     name: '테니스',
-    caloriesPerHour: 400,
+    caloriesPerHour: 500,
   },
   {
     id: 'dancing',
