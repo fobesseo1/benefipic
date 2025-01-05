@@ -12,8 +12,8 @@ export async function GET(req: Request) {
   const dateStr = url.searchParams.get('date');
   const selectedDate = dateStr ? new Date(dateStr) : new Date();
 
-  console.log('Selected Date:', selectedDate);
-  console.log('userId', userId);
+  // console.log('Selected Date:', selectedDate);
+  // console.log('userId', userId);
 
   if (!userId) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -22,7 +22,7 @@ export async function GET(req: Request) {
   // 선택된 날짜의 범위 가져오기
   const { utcStart, utcEnd } = getKoreanDateRange(selectedDate);
 
-  console.log('Date Range:', { utcStart, utcEnd });
+  //console.log('Date Range:', { utcStart, utcEnd });
 
   try {
     const { data: goals } = await supabase
@@ -44,21 +44,21 @@ export async function GET(req: Request) {
       .lte('logged_at', utcEnd.toISOString());
 
     // 전체 데이터 로그 출력
-    console.log('Food Logs Data:', JSON.stringify(foodLogs, null, 2));
+    // console.log('Food Logs Data:', JSON.stringify(foodLogs, null, 2));
 
     // 각 로그 항목별로 자세히 출력
-    foodLogs?.forEach((log, index) => {
-      console.log(`Food Log #${index + 1}:`, {
-        id: log.id,
-        user_id: log.user_id,
-        food_name: log.food_name,
-        calories: log.calories,
-        protein: log.protein,
-        fat: log.fat,
-        carbs: log.carbs,
-        logged_at: log.logged_at,
-      });
-    });
+    // foodLogs?.forEach((log, index) => {
+    //   console.log(`Food Log #${index + 1}:`, {
+    //     id: log.id,
+    //     user_id: log.user_id,
+    //     food_name: log.food_name,
+    //     calories: log.calories,
+    //     protein: log.protein,
+    //     fat: log.fat,
+    //     carbs: log.carbs,
+    //     logged_at: log.logged_at,
+    //   });
+    // });
 
     const { data: exerciseLogs } = await supabase
       .from('exercise_logs')

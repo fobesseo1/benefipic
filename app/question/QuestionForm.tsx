@@ -182,7 +182,7 @@ const QuestionSlidePage = ({
       }
 
       // 저장 성공 후 다음 페이지로 이동
-      router.push('/goal');
+      router.push('/health-info');
     } catch (error) {
       console.error('Error saving health record:', error);
       // 에러 처리 로직 추가 (예: 토스트 메시지 표시)

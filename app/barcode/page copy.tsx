@@ -22,7 +22,15 @@ export default function ScanPage() {
 
   return (
     <div>
-      <BarcodeScanner />
+      <BarcodeScanner
+        onScanSuccess={(result) => {
+          console.log('Scanned result:', result);
+        }}
+        onScanError={(error) => {
+          console.error('Scan error:', error);
+        }}
+        currentUser_id={currentUser.id}
+      />
     </div>
   );
 }

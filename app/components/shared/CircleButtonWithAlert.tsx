@@ -13,7 +13,10 @@ export default function CircleButtonWithAlert() {
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
         <div
-          className="bg-gray-900 w-12 h-12 flex items-center justify-center rounded-full cursor-pointer shadow-md"
+          className="bg-gray-800 w-12 h-12 flex items-center justify-center rounded-full cursor-pointer shadow-xl"
+          style={{
+            boxShadow: '0px 4px 6px rgba(255, 160, 122, 0.5)', // 녹색 그림자 예시
+          }}
           onClick={() => setIsOpen(true)}
         >
           <Plus className="w-8 h-8 text-white" />
@@ -37,12 +40,12 @@ export default function CircleButtonWithAlert() {
               <p className="text-sm text-gray-900 font-bold">사진입력</p>
             </div>
           </Link>
-          <Link href="/barcode" onClick={() => setIsOpen(false)}>
+          {/* <Link href="/barcode" onClick={() => setIsOpen(false)}>
             <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
               <ScanBarcode className="w-8 h-8 text-gray-900 " strokeWidth={1} />
               <p className="text-sm text-gray-900 font-bold">바코드</p>
             </div>
-          </Link>
+          </Link> */}
           <Link href="/food-description" onClick={() => setIsOpen(false)}>
             <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
               <SquarePen className="w-8 h-8 text-gray-900 " strokeWidth={1} />

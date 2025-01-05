@@ -6,6 +6,7 @@ import StoreInitializer from './Layout-component/StoreInitializer';
 import { getUser } from '@/lib/supabse/server';
 import { ChevronLeft, Circle, Menu } from 'lucide-react';
 import CircleButtonWithAlert from './components/shared/CircleButtonWithAlert';
+import { headers } from 'next/headers';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -29,28 +30,37 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const currentUser = await getUser();
+
+  // 현재 경로 가져오기
+  const headersList = headers();
+  const pathname = headersList.get('x-pathname') || '';
+
+  // 숨길 경로 목록
+  const hiddenNavPaths = ['/start', '/question', '/health-info'];
+  const shouldShowNav = !hiddenNavPaths.includes(pathname);
+
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased relative mx-auto max-w-lg  `}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased relative mx-auto max-w-lg`}
       >
-        <div className="w-full h-12 absolute top-0 z-50 flex px-6 items-center justify-between">
-          <ChevronLeft color="#9CA3AF" size={32} />
-          <Menu color="#9CA3AF" size={32} />
-        </div>
+        {shouldShowNav && (
+          <div className="w-full h-12 absolute top-0 z-50 flex px-6 items-center justify-between">
+            <ChevronLeft color="#9CA3AF" size={32} />
+            <Menu color="#9CA3AF" size={32} />
+          </div>
+        )}
 
         {children}
-        {/* <div className="w-full h-16 bg-red-800"></div> */}
+
         <StoreInitializer currentUser={currentUser} />
         <MysticSymbolsEffect />
-        <div className="fixed bottom-6 right-6 z-50 ml-auto w-fit flex items-center justify-center">
-          <CircleButtonWithAlert />
-        </div>
 
-        {/* <div className="w-full  h-16 fixed  bottom-0 z-50 flex px-6 items-center justify-between">
-          <ChevronLeft color="#9CA3AF" size={32} />
-          <Menu color="#9CA3AF" size={32} />
-        </div> */}
+        {shouldShowNav && (
+          <div className="fixed bottom-6 right-6 z-50 ml-auto w-fit flex items-center justify-center">
+            <CircleButtonWithAlert />
+          </div>
+        )}
       </body>
     </html>
   );

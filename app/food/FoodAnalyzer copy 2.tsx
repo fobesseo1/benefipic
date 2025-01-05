@@ -3,8 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Minus, Pencil, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { compressImage, fileToBase64 } from '@/utils/image';
 import NutritionCard from '../components/shared/ui/NutritionCard';
 import NavigationButtonSection from '../components/shared/ui/NavigationButtonSection';
@@ -19,10 +19,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
 import AnalysisProgress from './Analysis Progress';
 import FoodDetectionAlert from './FoodDetectionAlert';
 
-// 타입 정의
 type AnalysisStep =
   | 'initial'
   | 'camera'
@@ -31,25 +31,6 @@ type AnalysisStep =
   | 'analyzing'
   | 'calculate'
   | 'complete';
-
-interface NutritionPer100g {
-  calories: number;
-  protein: number;
-  fat: number;
-  carbs: number;
-}
-
-interface IngredientWithNutrition {
-  name: string;
-  amount: string;
-  unit: string;
-  nutritionPer100g: NutritionPer100g;
-}
-
-interface ApiResponse {
-  foodName: string;
-  ingredients: IngredientWithNutrition[];
-}
 
 export interface NutritionData {
   foodName: string;
@@ -69,34 +50,6 @@ export interface NutritionData {
   };
 }
 
-// 유틸리티 함수
-const calculateTotalNutrition = (ingredients: IngredientWithNutrition[]): NutritionPer100g => {
-  return ingredients.reduce(
-    (total, ingredient) => {
-      const amount = parseFloat(ingredient.amount);
-      const ratio = amount / 100;
-
-      return {
-        calories: total.calories + ingredient.nutritionPer100g.calories * ratio,
-        protein: total.protein + ingredient.nutritionPer100g.protein * ratio,
-        fat: total.fat + ingredient.nutritionPer100g.fat * ratio,
-        carbs: total.carbs + ingredient.nutritionPer100g.carbs * ratio,
-      };
-    },
-    { calories: 0, protein: 0, fat: 0, carbs: 0 }
-  );
-};
-
-const roundNutritionValues = (nutrition: NutritionPer100g): NutritionPer100g => {
-  return {
-    calories: Math.round(nutrition.calories),
-    protein: parseFloat(nutrition.protein.toFixed(1)),
-    fat: parseFloat(nutrition.fat.toFixed(1)),
-    carbs: parseFloat(nutrition.carbs.toFixed(1)),
-  };
-};
-
-// 메인 컴포넌트
 const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   const [step, setStep] = useState<AnalysisStep>('initial');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -104,6 +57,7 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   const [analysis, setAnalysis] = useState<NutritionData | null>(null);
   const [originalAnalysis, setOriginalAnalysis] = useState<NutritionData | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [showResultAlert, setShowResultAlert] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -119,7 +73,13 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const supabase = createSupabaseBrowserClient();
 
-  // Effect Hooks
+  const closeNotFoodAlert = () => {
+    setNotFoodAlert({
+      isOpen: false,
+      detectedContent: '',
+    });
+  };
+
   useEffect(() => {
     if (originalAnalysis) {
       setAnalysis(calculateNutritionByQuantity(originalAnalysis, quantity));
@@ -134,32 +94,6 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     };
   }, [stream]);
 
-  // 이벤트 핸들러
-  const handleIncrease = () => {
-    if (quantity < 99) setQuantity((prev) => prev + 1);
-  };
-
-  const handleDecrease = () => {
-    if (quantity > 1) setQuantity((prev) => prev - 1);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (!isNaN(value)) {
-      if (value > 99) setQuantity(99);
-      else if (value < 1) setQuantity(1);
-      else setQuantity(value);
-    }
-  };
-
-  const closeNotFoodAlert = () => {
-    setNotFoodAlert({
-      isOpen: false,
-      detectedContent: '',
-    });
-  };
-
-  // 계산 함수들
   const calculateNutritionByQuantity = (
     originalData: NutritionData,
     qty: number
@@ -186,30 +120,54 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     };
   };
 
-  const processApiResponse = (apiData: ApiResponse): NutritionData => {
-    // 전체 영양소 계산
-    const totalNutrition = calculateTotalNutrition(apiData.ingredients);
-    const roundedNutrition = roundNutritionValues(totalNutrition);
-
-    // ingredients 형식 변환
-    const processedIngredients = apiData.ingredients.map((ingredient) => ({
-      name: ingredient.name,
-      amount: `${ingredient.amount}${ingredient.unit}`,
-      originalAmount: {
-        value: parseFloat(ingredient.amount),
-        unit: ingredient.unit,
-      },
-    }));
-
-    return {
-      foodName: apiData.foodName,
-      ingredients: processedIngredients,
-      nutrition: roundedNutrition,
-    };
+  const handleIncrease = () => {
+    if (quantity < 99) {
+      setQuantity((prev) => prev + 1);
+    }
   };
 
-  // API 통신
-  const analyzeImage = async () => {
+  const handleDecrease = () => {
+    if (quantity > 1) {
+      setQuantity((prev) => prev - 1);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    if (!isNaN(value)) {
+      if (value > 99) {
+        setQuantity(99);
+      } else if (value < 1) {
+        setQuantity(1);
+      } else {
+        setQuantity(value);
+      }
+    }
+  };
+
+  const processApiResponse = (apiData: NutritionData) => {
+    const processedData = {
+      ...apiData,
+      ingredients: apiData.ingredients.map((ingredient) => {
+        const match = ingredient.amount.match(/^(\d+\.?\d*)\s*(.+)$/);
+        if (match) {
+          return {
+            ...ingredient,
+            originalAmount: {
+              value: parseFloat(match[1]),
+              unit: match[2],
+            },
+          };
+        }
+        return ingredient;
+      }),
+    };
+
+    setOriginalAnalysis(processedData);
+    setAnalysis(processedData);
+  };
+
+  const analyzeImage1 = async () => {
     if (!selectedImage) return;
 
     try {
@@ -217,6 +175,127 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       const base64Image = await fileToBase64(selectedImage);
       const fileType = selectedImage.type === 'image/png' ? 'png' : 'jpeg';
 
+      setStep('analyzing');
+      const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: `당신은 음식 영양 분석 전문가입니다. 다음 단계로 분석을 진행하세요:
+  
+  1단계: 시각적 분석
+  - 음식의 종류와 구성 요소를 정확히 파악
+  - 식기나 주변 사물을 기준으로 전체 양이나 중량 등 추정
+  - 각 구성 요소의 비율 파악해주세요
+  
+  2단계: 영양소 계산
+  - 복합 메뉴(예: 세트메뉴)는 반드시 각 구성 요소를 개별 계산 후 합산
+  - 각 음식의 표준 1인분 기준 영양성분을 바탕으로 계산
+  - 계산된 값이 일반적인 범위를 크게 벗어나면 재검토
+  
+  주의사항:
+  1. 여러 음식이 있거나 여러 재료가 있는 경우:
+  - 각 음식과 재료를 개별적으로 계산한 후 합산
+  - 예: "냉면과 초밥 세트"면 냉면의 영양성분과 초밥의 영양성분을 따로 계산
+  
+  2. 각 메뉴의 계산:
+  - 주요 재료들의 영양성분 합산
+  - serving.amount와 ingredients 정보를 모두 고려
+  - 메뉴의 특성에 맞는 조리 방법 반영
+  
+  3. 계산 과정 검증:
+  - 각 구성 요소별 계산 값이 합리적인지 확인
+  - 전체 합산 값이 일반적인 범위 내인지 확인
+  - 이상값 발견 시 재계산`,
+            },
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `이 음식 사진을 분석하고 정확한 영양성분을 계산해주세요.
+  
+  각 음식이 구분되는 세트메뉴의 경우 반드시 개별 계산 후 합산하세요.
+  각 계산 과정과 근거를 상세히 기록하세요.
+  
+  다음 형식의 JSON으로 응답해주세요:
+  {
+    "foodName": "string",
+    "description": "string",
+    "components": [
+      {
+        "name": "string",
+        "amount": "string",
+        "calories": "number",
+        "protein": "number",
+        "fat": "number",
+        "carbs": "number"
+      }
+    ],
+    "ingredients": [
+      {
+        "name": "string",
+        "amount": "string",
+        "confidence": "string"
+      }
+    ],
+    "nutrition": {
+      "calories": "number",
+      "protein": "number",
+      "fat": "number",
+      "carbs": "number"
+    },
+    "analysis": {
+      "calculationMethod": "string",
+      "breakdown": "string",
+      "verification": "string"
+    }
+  }`,
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: `data:image/${fileType};base64,${base64Image}`,
+                  },
+                },
+              ],
+            },
+          ],
+          max_tokens: 800,
+          temperature: 0.3,
+          response_format: { type: 'json_object' },
+        }),
+      });
+
+      const analysisData = await analysisResponse.json();
+      const result = JSON.parse(analysisData.choices[0].message.content);
+
+      console.log('분석 결과:', result);
+      processApiResponse(result);
+      setStep('complete');
+    } catch (error) {
+      console.error('Error:', error);
+      setAnalysis(null);
+      setStep('image-selected');
+    }
+  };
+
+  const analyzeImage = async () => {
+    if (!selectedImage) return;
+
+    try {
+      // 이미지 압축 단계
+      setStep('compress');
+      const base64Image = await fileToBase64(selectedImage);
+      const fileType = selectedImage.type === 'image/png' ? 'png' : 'jpeg';
+
+      // 음식 분석 단계
       setStep('analyzing');
       const initialAnalysis = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -230,7 +309,7 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
             {
               role: 'system',
               content:
-                '당신은 음식 영양 분석 전문가입니다. 음식 사진을 보고 최대한 정확하게 분석하고 음식이 아닌경우 isFood의 항목 false로 음식이라면 true',
+                '당신은 음식 영양 분석 전문가입니다. 음식 사진을 보고 최대한 정확하게 분석하고 음식이 아닌경우 음식이 아닐경우 isFood의 항목 false로 음식이라면 true',
             },
             {
               role: 'user',
@@ -250,12 +329,12 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
                     "description": "음식의 상세 설명 (조리 방법, 식재료 특징 등)",
                     "serving": {
                       "amount": "정확한 중량 또는 부피 (범위로 표현)",
-                      "reference": "크기 추정에 사용된 기준 (식기 또는 사물)"
+                      "reference": "크기 추정에 사용된 기준 (식기 또는 사물)",
                     },
                     "ingredients": [
                       {
                         "name": "재료명",
-                        "amount": "추정 수량/중량"
+                        "amount": "추정 수량/중량",
                       }
                     ]
                   }`,
@@ -276,35 +355,6 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
 
       const initialData = await initialAnalysis.json();
       const initialResult = JSON.parse(initialData.choices[0].message.content);
-
-      // 테스트용 데이터
-      // const initialResult = {
-      //   isFood: true,
-      //   foodName: '비빔밥',
-      //   description: '신선한 야채와 고추장이 들어간 전통적인 한식 비빔밥',
-      //   serving: {
-      //     amount: '1인분',
-      //     reference: '일반적인 식당 제공량',
-      //   },
-      //   ingredients: [
-      //     {
-      //       name: '밥',
-      //       amount: '한 공기',
-      //     },
-      //     {
-      //       name: '당근',
-      //       amount: '한 줌',
-      //     },
-      //     {
-      //       name: '시금치',
-      //       amount: '적당량',
-      //     },
-      //     {
-      //       name: '고추장',
-      //       amount: '한 스푼',
-      //     },
-      //   ],
-      // };
       console.log('초기 분석 결과:', initialResult);
 
       if (!initialResult.isFood) {
@@ -313,9 +363,10 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
           detectedContent: initialResult.description,
         });
         setStep('image-selected');
-        return;
+        return; // 두 번째 API 호출 중단
       }
 
+      // 영양소 계산 단계
       setStep('calculate');
       const finalResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -329,26 +380,44 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
             {
               role: 'user',
               content: `분석된 음식 정보:
-${JSON.stringify(initialResult, null, 2)}
-만약 amount에 숫자가 아닐경우는 무조건 정수로 바꿔서 입력해주세요 반드시
-위 정보를 바탕으로 각 재료의 영양분석을 다음 형식의 JSON으로 응답해주세요:
+      ${JSON.stringify(initialResult, null, 2)}
+      
+      위 정보를 바탕으로 각 재료의 영양분석을 다음 순서로 정확히 계산해주세요:
+0. 음식이 명확히 결정된 경우에는 그 음식의 일반적인 영양성분 정보 이용 아니면 아래의1,2,3에 따라 계산
+1. 각 재료/음식의 단위(1g 또는 1개)당 기본 영양성분을 먼저 결정
+2. 반드시 위 정보중 ingredients의 각 object의 amount를 이용하여 전체 중량이나 개수를 곱하여 최종 영양성분 계산
+3. 모든 재료의 영양성분을 합산하여 Nutrition에 저장 정확한 계산을 위해 계산된 값을 꼭 확인하고 검산해야함
 
-{
-  "foodName": "음식 이름",
-  "ingredients": [
-    {
-      "name": "재료명",
-      "amount": "정확한 중량 (숫자만)",
-      "unit": "단위(g/ml)",
-      "nutritionPer100g": {
-        "calories": "number",
-        "protein": "number",
-        "fat": "number",
-        "carbs": "number"
-      }
-    }
-  ]
-}`,
+예) 음식 300g인 경우
+- 1g당 영양성분 먼저 결정
+- 결정된 값에 300을 곱하여 계산
+
+예) 햄버거1개 + 콜라500ml
+- 햄버거 1개 = 개당 400 kcal * 1개 =400kcal
+- 콜라 500ml = ml당 0.38 kcal * 500 ml  = 190kcal
+- 총 영양성분 = 400kcal + 190kcal = 590kcal
+      
+      다음 JSON 형식으로 응답해주세요:
+      {
+        "foodName": "음식 이름",
+        "servingSize": "사용한 중간값",
+        "ingredients": [
+          {
+            "name": "재료명",
+            "amount": "정확한 중량",
+          }
+        ],
+        "calculation": {
+          "method": "계산 방법 설명",
+          "details": "세부 계산 과정"
+        },
+        "nutrition": {
+          "calories": 계산된 ingredients의 각각 요소들의 칼로리의 합,
+          "protein": 계산된 ingredients의 각각 요소들의 단백질의 합,
+          "fat": 계산된 ingredients의 각각 요소들의 지방의 합,
+          "carbs": 계산된 ingredients의 각각 요소들의 탄수화물의 합
+        },
+      }`,
             },
           ],
           max_tokens: 800,
@@ -361,9 +430,7 @@ ${JSON.stringify(initialResult, null, 2)}
       const finalResult = JSON.parse(finalData.choices[0].message.content);
       console.log('최종 계산 결과:', finalResult);
 
-      const processedData = processApiResponse(finalResult);
-      setOriginalAnalysis(processedData);
-      setAnalysis(processedData);
+      processApiResponse(finalResult);
       setStep('complete');
     } catch (error) {
       console.error('Error:', error);
@@ -390,6 +457,7 @@ ${JSON.stringify(initialResult, null, 2)}
     if (!selectedImage || !analysis) return;
 
     try {
+      // 1. Storage에 이미지 업로드
       const fileExt = selectedImage.type.split('/')[1];
       const filePath = `${currentUser_id}/${Date.now()}.${fileExt}`;
 
@@ -399,10 +467,12 @@ ${JSON.stringify(initialResult, null, 2)}
 
       if (uploadError) throw uploadError;
 
+      // 2. 이미지 URL 가져오기
       const {
         data: { publicUrl },
       } = supabase.storage.from('food-images').getPublicUrl(filePath);
 
+      // 3. food_logs 테이블에 데이터 저장
       const { error: insertError } = await supabase.from('food_logs').insert({
         user_id: currentUser_id,
         logged_at: new Date().toISOString(),
@@ -416,6 +486,7 @@ ${JSON.stringify(initialResult, null, 2)}
 
       if (insertError) throw insertError;
 
+      // 성공 Alert 표시
       setError(null);
       setShowResultAlert(true);
     } catch (error) {
@@ -425,7 +496,6 @@ ${JSON.stringify(initialResult, null, 2)}
     }
   };
 
-  // 렌더링
   return (
     <div className="relative min-h-screen min-w-screen flex flex-col bg-gray-900 overflow-hidden">
       {/* Image Section */}
@@ -450,6 +520,7 @@ ${JSON.stringify(initialResult, null, 2)}
                 <div className="absolute bottom-16 left-16 w-16 h-16 border-l-4 border-b-4 rounded-bl-3xl border-gray-300"></div>
                 <div className="absolute bottom-16 right-16 w-16 h-16 border-r-4 border-b-4 rounded-br-3xl border-gray-300"></div>
 
+                {/* 안내 텍스트 */}
                 <span className="text-gray-500">음식 사진을 선택해주세요</span>
               </div>
             )}

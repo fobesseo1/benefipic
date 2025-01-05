@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { compressImage, fileToBase64 } from '@/utils/image';
 import NutritionCard from '../components/shared/ui/NutritionCard';
 import NavigationButtonSection from '../components/shared/ui/NavigationButtonSection';
+import Link from 'next/link';
 
 type AnalysisStep =
   | 'initial'
@@ -93,7 +94,36 @@ const MenuAnalyzer = () => {
               content: [
                 {
                   type: 'text',
-                  text: '현재 다이어트중인 26세 여성인데 어떤 메뉴가 다이어트와 피부미용에 좋을지 아래 JSON 형식으로 응답해주세요. healthTip은 왜 이음식이 다이어트와 피부미용에 좋은지 이유(필수) 선택한 메뉴를 건강하게 먹는 방법(선택사항), 건강상 이유로 곁드리면 좋은 음식 추천(선택사항)등 단 한개의 음식만 추천해: { "foodName": "음식 이름", "healthTip": "건강 꿀팁", "nutrition": {"calories": 칼로리(kcal), "protein": 단백질(g), "fat": 지방(g), "carbs": 탄수화물(g)} }',
+                  text: `당신은 영양 전문가입니다. 사진에서 보이는 메뉴들을 분석하고 다음 조건에 맞는 메뉴를 하나만 추천해주세요:
+
+대상자 정보:
+- 26세 여성
+- 다이어트 중
+- 피부 미용에 관심 있음
+
+필수 요구사항:
+1. 반드시 사진에 있는 메뉴들 중에서만 선택할 것
+2. 사진에 없는 메뉴는 절대 추천하지 말 것
+3. 오직 한 개의 메뉴만 추천할 것
+4. 선택한 메뉴에 대해 다음 정보를 반드시 포함할 것:
+   - 다이어트와 피부미용에 좋은 이유 (필수)
+   - 반드시 nutrition은 1인분 기준의 정확한 영양성분 (칼로리, 단백질, 지방, 탄수화물)
+
+선택 사항:
+- 선택한 메뉴를 건강하게 먹는 방법
+- 영양학적으로 함께 섭취하면 좋은 음식 추천 (단, 현재 메뉴에 있는 것만 가능)
+
+다음의 정확한 JSON 형식으로 응답해주세요:
+{
+  "foodName": "선택한 메뉴 이름",
+  "healthTip": "다이어트와 피부미용에 좋은 이유(필수) + 건강하게 먹는 방법(선택) + 함께 먹으면 좋은 음식(선택)",
+  "nutrition": {
+    "calories": 1인분 기준 숫자로만(kcal),
+    "protein": 1인분 기준 숫자로만(g),
+    "fat": 1인분 기준 숫자로만(g),
+    "carbs": 1인분 기준 숫자로만(g)
+  }
+}`,
                 },
                 {
                   type: 'image_url',
@@ -210,16 +240,40 @@ const MenuAnalyzer = () => {
       </div>
 
       {/* Navigation Section */}
-      <NavigationButtonSection
-        step={step}
-        setStep={setStep}
-        setSelectedImage={setSelectedImage}
-        setImageUrl={setImageUrl}
-        onAnalyze={analyzeImage}
-        stream={stream}
-        setStream={setStream}
-        videoRef={videoRef}
-      />
+      {step === 'complete' ? (
+        <div className="absolute bottom-0 w-full px-6 pb-8 bg-white">
+          <div className="grid grid-cols-2 gap-4">
+            <Link
+              href="/"
+              className="w-full bg-gray-100 text-gray-900 rounded-xl py-4 text-lg font-medium text-center"
+            >
+              홈으로
+            </Link>
+            <button
+              onClick={() => {
+                setStep('initial');
+                setSelectedImage(null);
+                setImageUrl('');
+                setAnalysis(null);
+              }}
+              className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
+            >
+              다시하기
+            </button>
+          </div>
+        </div>
+      ) : (
+        <NavigationButtonSection
+          step={step}
+          setStep={setStep}
+          setSelectedImage={setSelectedImage}
+          setImageUrl={setImageUrl}
+          onAnalyze={analyzeImage}
+          stream={stream}
+          setStream={setStream}
+          videoRef={videoRef}
+        />
+      )}
     </div>
   );
 };

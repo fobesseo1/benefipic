@@ -3,12 +3,15 @@
 'use client';
 
 import { useState, useCallback, useEffect, Suspense } from 'react';
-import CurrentWeekCalendar from './CurrentWeekCalendar';
+
 import NutritionCard from '../components/shared/ui/NutritionCard';
 import FoodLogCard from '../components/shared/ui/FoodLogCard';
 import ExerciseLogCard from '../components/shared/ui/ExerciseLogCard';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
 import { FoodLog, ExerciseLog } from '../types/types';
+import dynamic from 'next/dynamic';
+
+const CurrentWeekCalendar = dynamic(() => import('./CurrentWeekCalendar'), { ssr: false });
 
 export type DailyStatus = {
   totalCalories: number;
@@ -20,7 +23,7 @@ export type DailyStatus = {
   remainingCarbs: number;
 };
 
-export default function MainComponent() {
+export default function MainComponent({ user_id }: { user_id: string }) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dailyStatus, setDailyStatus] = useState<DailyStatus | null>(null);
   const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]);
@@ -58,6 +61,7 @@ export default function MainComponent() {
         const { data } = await supabase
           .from('food_logs')
           .select('*')
+          .eq('user_id', user_id) // user_id 필터링 추가
           .gte('logged_at', utcStart.toISOString())
           .lte('logged_at', utcEnd.toISOString())
           .order('logged_at', { ascending: false });
@@ -69,7 +73,7 @@ export default function MainComponent() {
         console.error('Error fetching food logs:', error);
       }
     },
-    [supabase]
+    [supabase, user_id] // user_id 의존성 추가
   );
 
   // 운동 기록 데이터 가져오기
@@ -80,6 +84,7 @@ export default function MainComponent() {
         const { data } = await supabase
           .from('exercise_logs')
           .select('*')
+          .eq('user_id', user_id) // user_id 필터링 추가
           .gte('logged_at', utcStart.toISOString())
           .lte('logged_at', utcEnd.toISOString())
           .order('logged_at', { ascending: false });
@@ -91,7 +96,7 @@ export default function MainComponent() {
         console.error('Error fetching exercise logs:', error);
       }
     },
-    [supabase]
+    [supabase, user_id] // user_id 의존성 추가
   );
 
   // 모든 데이터 가져오기
@@ -124,10 +129,13 @@ export default function MainComponent() {
 
   const handleFoodDelete = async (id: string) => {
     try {
-      const { error } = await supabase.from('food_logs').delete().eq('id', id);
+      const { error } = await supabase
+        .from('food_logs')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user_id); // user_id 체크 추가
       if (error) throw error;
       setFoodLogs((prevLogs) => prevLogs.filter((log) => log.id !== id));
-      // 음식 삭제 후 영양 상태와 음식 로그만 업데이트
       await fetchNutritionStatus(selectedDate);
       await fetchFoodLogs(selectedDate);
     } catch (error) {
@@ -137,10 +145,13 @@ export default function MainComponent() {
 
   const handleExerciseDelete = async (id: string) => {
     try {
-      const { error } = await supabase.from('exercise_logs').delete().eq('id', id);
+      const { error } = await supabase
+        .from('exercise_logs')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user_id); // user_id 체크 추가
       if (error) throw error;
       setExerciseLogs((prevLogs) => prevLogs.filter((log) => log.id !== id));
-      // 운동 삭제 후 영양 상태와 운동 로그만 업데이트
       await fetchNutritionStatus(selectedDate);
       await fetchExerciseLogs(selectedDate);
     } catch (error) {

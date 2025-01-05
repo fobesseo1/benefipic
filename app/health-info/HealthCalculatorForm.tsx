@@ -119,7 +119,7 @@ const HealthCalculateForm = ({ currentUser_id }: { currentUser_id: string }) => 
   };
 
   const handleSave = async () => {
-    if (!result || !healthRecord) return; // healthRecord null 체크 추가
+    if (!result || !healthRecord) return;
 
     try {
       // 목표 날짜 계산
@@ -151,7 +151,11 @@ const HealthCalculateForm = ({ currentUser_id }: { currentUser_id: string }) => 
         status: 'active',
       };
 
-      const { error } = await supabase.from('fitness_goals').insert([goalData]);
+      // upsert 사용 - user_id가 같은 레코드가 있으면 업데이트, 없으면 새로 생성
+      const { error } = await supabase.from('fitness_goals').upsert(goalData, {
+        onConflict: 'user_id', // user_id 컬럼이 충돌할 경우
+        ignoreDuplicates: false, // 중복을 무시하지 않고 업데이트
+      });
 
       if (error) throw error;
 

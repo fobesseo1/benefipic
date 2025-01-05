@@ -1,12 +1,15 @@
-//middleware.ts (새로 생성 또는 수정)
-
+//middleware.ts
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
 export async function middleware(request: NextRequest) {
+  // 헤더에 pathname 추가
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', request.nextUrl.pathname);
+
   let response = NextResponse.next({
     request: {
-      headers: request.headers,
+      headers: requestHeaders, // 수정된 헤더 사용
     },
   });
 

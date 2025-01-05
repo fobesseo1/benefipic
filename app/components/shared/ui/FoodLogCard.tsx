@@ -151,6 +151,7 @@ export const FoodLogCard = ({
                   src={log.image_url}
                   alt={log.food_name}
                   fill
+                  sizes="100vw"
                   style={{ objectFit: 'cover' }}
                 />
               ) : (

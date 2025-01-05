@@ -105,95 +105,88 @@ export default function NavigationButtonSection({
   //   setImageUrl('');
   // };
 
+  const isProcessing = (step: NavigationButtonSectionProps['step']): boolean => {
+    return step === 'compress' || step === 'analyzing' || step === 'calculate';
+  };
+
   return (
-    <div className="absolute bottom-0 w-full px-6 pb-8 bg-white">
-      {step === 'camera' ? (
-        <button
-          onClick={takePicture}
-          className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
-        >
-          사진 촬영하기
-        </button>
-      ) : step === 'image-selected' ? (
-        <div className="flex flex-col gap-4 pb-48 ">
-          <button
-            onClick={onAnalyze}
-            className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
-          >
-            분석하기
-          </button>
-          <button
-            onClick={resetAnalyzer}
-            className="w-full bg-gray-200 text-gray-600 rounded-xl py-4 text-lg font-medium"
-          >
-            돌아가기
-          </button>
-        </div>
-      ) : step === 'complete' ? (
-        // <div className="grid grid-cols-2 gap-4">
-        //   <button
-        //     onClick={resetAnalyzer}
-        //     className="w-full bg-gray-100 text-gray-900 rounded-xl py-4 text-lg font-medium"
-        //   >
-        //     다른 음식
-        //   </button>
-        //   <button
-        //     onClick={onSave}
-        //     className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
-        //   >
-        //     저장하기
-        //   </button>
-        // </div>
-
-        <button
-          onClick={onSave}
-          className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
-        >
-          저장하기
-        </button>
-      ) : (
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <button className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium flex items-center justify-center gap-4">
-              <Camera className="w-8 h-8" />
-              <p>촬영하기 / 불러오기</p>
+    <>
+      {step === 'compress' || step === 'analyzing' || step === 'calculate' ? null : (
+        <div className="absolute bottom-0 w-full px-6 pb-8 bg-white">
+          {step === 'camera' ? (
+            <button
+              onClick={takePicture}
+              className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
+            >
+              사진 촬영하기
             </button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>촬영하기 / 불러오기</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 p-4">
-              <label className="block">
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handleImageSelect}
-                  className="hidden"
-                />
-                <div className="w-full p-4 bg-black text-white rounded-xl flex items-center justify-center gap-2 cursor-pointer">
-                  <Camera className="w-5 h-5" />
-                  <span>카메라로 촬영하기</span>
-                </div>
-              </label>
-
-              <label className="block">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageSelect}
-                  className="hidden"
-                />
-                <div className="w-full p-4 bg-gray-100 text-gray-900 rounded-xl flex items-center justify-center gap-2 cursor-pointer">
-                  <ImageIcon className="w-5 h-5" />
-                  <span>갤러리에서 선택하기</span>
-                </div>
-              </label>
+          ) : step === 'image-selected' ? (
+            <div className="flex flex-col gap-4 pb-48">
+              <button
+                onClick={onAnalyze}
+                className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
+              >
+                분석하기
+              </button>
+              <button
+                onClick={resetAnalyzer}
+                className="w-full bg-gray-200 text-gray-600 rounded-xl py-4 text-lg font-medium"
+              >
+                돌아가기
+              </button>
             </div>
-          </DialogContent>
-        </Dialog>
+          ) : step === 'complete' ? (
+            <button
+              onClick={onSave}
+              className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
+            >
+              저장하기
+            </button>
+          ) : (
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <button className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium flex items-center justify-center gap-4">
+                  <Camera className="w-8 h-8" />
+                  <p>촬영하기 / 불러오기</p>
+                </button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>촬영하기 / 불러오기</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 p-4">
+                  <label className="block">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
+                    <div className="w-full p-4 bg-black text-white rounded-xl flex items-center justify-center gap-2 cursor-pointer">
+                      <Camera className="w-5 h-5" />
+                      <span>카메라로 촬영하기</span>
+                    </div>
+                  </label>
+
+                  <label className="block">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
+                    <div className="w-full p-4 bg-gray-100 text-gray-900 rounded-xl flex items-center justify-center gap-2 cursor-pointer">
+                      <ImageIcon className="w-5 h-5" />
+                      <span>갤러리에서 선택하기</span>
+                    </div>
+                  </label>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       )}
-    </div>
+    </>
   );
 }
