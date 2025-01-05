@@ -149,16 +149,15 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     setAnalysis(processedData);
   };
 
-  const analyzeImage = async () => {
+  /* const analyzeImage = async () => {
     if (!selectedImage) return;
-    setStep('analyzing');
 
+    setStep('analyzing');
     try {
-      // 1단계: 이미지 분석
       const base64Image = await fileToBase64(selectedImage);
       const fileType = selectedImage.type === 'image/png' ? 'png' : 'jpeg';
 
-      const initialAnalysis = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -168,38 +167,46 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
           model: 'gpt-4o-mini',
           messages: [
             {
-              role: 'system',
-              content:
-                '당신은 음식 영양 분석 전문가입니다. 음식 사진을 보고 최대한 정확하게 분석하되, 확실하지 않은 부분은 신뢰도를 낮게 표시해야 합니다.',
-            },
-            {
               role: 'user',
               content: [
                 {
                   type: 'text',
-                  text: `이 음식 사진을 자세히 분석해주세요. 다음 사항들을 고려해주세요:
-                  - 음식의 양을 추정할 때는 식기나 주변 사물의 크기를 기준으로 삼아주세요
-                  - 인분 수뿐만 아니라 실제 중량이나 부피도 반드시 추정해주세요
-                  - 확실하지 않은 정보는 신뢰도를 '하'로 표시해주세요
-  
-                  다음 형식의 JSON으로 응답해주세요:
-                  {
-                    "foodName": "음식 이름",
-                    "description": "음식의 상세 설명 (조리 방법, 식재료 특징 등)",
-                    "serving": {
-                      "amount": "정확한 중량 또는 부피 (범위로 표현)",
-                      "reference": "크기 추정에 사용된 기준 (식기 또는 사물)",
-                      "confidence": "추정 신뢰도(상/중/하)"
-                    },
-                    "ingredients": [
-                      {
-                        "name": "재료명",
-                        "amount": "추정 수량/중량",
-                        "confidence": "신뢰도(상/중/하)"
-                      }
-                    ]
-                  }`,
+                  text: `주어진 음식 이미지를 단계별로 분석한 후, 정확히 아래의 JSON 형식으로 결과를 출력해주세요.
+
+분석 단계:
+1) 이미지에서 메인 음식명을 파악해주세요
+2) 보이는 모든 재료를 식별하고 각각의 양을 추정해주세요
+3) 표준 영양성분 데이터를 기준으로 전체 영양정보를 계산해주세요
+4) 아래의 정확한 JSON 형식으로 출력해주세요
+
+{
+    "foodName": "음식 이름",
+    "ingredients": [
+        {
+            "name": "재료명",
+            "amount": "수량 또는 중량"
+        }
+    ],
+    "nutrition": {
+        "calories": 칼로리(kcal),
+        "protein": 단백질(g),
+        "fat": 지방(g),
+        "carbs": 탄수화물(g)
+    }
+}
+
+주의사항:
+- JSON 형식은 위 예시와 정확히 동일해야 합니다
+- 추가 필드나 주석을 포함하지 마세요
+- 수치는 정수로 반올림하여 표시하세요
+- amount는 "300g" 또는 "2개" 와 같이 표시하세요
+- 확실하지 않은 경우에도 표준 데이터를 기반으로 최선의 추정치 제공
+- 소스, 양념, 조리 시 사용된 기름 등도 모두 포함`,
                 },
+                // {
+                //   type: 'text',
+                //   text: '이 음식 사진을 분석해서 분석시에 음식의 크기나 부피, 갯수 등을 잘 살펴서 전체 칼로리와 각 영양소가 얼마나 되는지 잘 계산하여 각 값을 소수점은 버리고 아래 JSON 형식으로 응답해주세요: { "foodName": "음식 이름", "ingredients": [{"name": "재료명", "amount": "수량 또는 중량"}], "nutrition": {"calories": 칼로리(kcal), "protein": 단백질(g), "fat": 지방(g), "carbs": 탄수화물(g)} }',
+                // },
                 {
                   type: 'image_url',
                   image_url: {
@@ -209,17 +216,149 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
               ],
             },
           ],
-          max_tokens: 500,
+          max_tokens: 300,
           response_format: { type: 'json_object' },
         }),
       });
 
-      const initialData = await initialAnalysis.json();
-      const initialResult = JSON.parse(initialData.choices[0].message.content);
-      console.log('초기 분석 결과:', initialResult);
+      if (!response.ok) {
+        throw new Error('API request failed');
+      }
 
-      // 2단계: 영양소 계산
-      const finalResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      const data = await response.json();
+      const parsedData = JSON.parse(data.choices[0].message.content);
+      processApiResponse(parsedData);
+      setStep('complete');
+    } catch (error) {
+      console.error('Error:', error);
+      setAnalysis(null);
+      setStep('image-selected');
+    }
+  }; */
+
+  // const analyzeImage = async () => {
+  //   if (!selectedImage) return;
+
+  //   setStep('analyzing');
+  //   try {
+  //     const base64Image = await fileToBase64(selectedImage);
+  //     const fileType = selectedImage.type === 'image/png' ? 'png' : 'jpeg';
+
+  //     const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         Authorization: `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
+  //       },
+  //       body: JSON.stringify({
+  //         model: 'gpt-4o-mini',
+  //         messages: [
+  //           {
+  //             role: 'user',
+  //             content: [
+  //               {
+  //                 type: 'text',
+  //                 text: '이 음식 사진을 분석해서 분석시에 음식의 크기나 부피, 갯수 등을 잘 살펴서 전체 칼로리와 각 영양소가 얼마나 되는지 잘 계산하여 각 값을 소수점은 버리고 아래 JSON 형식으로 응답해주세요: { "foodName": "음식 이름", "ingredients": [{"name": "재료명", "amount": "수량 또는 중량"}], "nutrition": {"calories": 칼로리(kcal), "protein": 단백질(g), "fat": 지방(g), "carbs": 탄수화물(g)} }',
+  //               },
+  //               {
+  //                 type: 'image_url',
+  //                 image_url: {
+  //                   url: `data:image/${fileType};base64,${base64Image}`,
+  //                 },
+  //               },
+  //             ],
+  //           },
+  //         ],
+  //         max_tokens: 1000,
+  //         response_format: { type: 'json_object' },
+  //       }),
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error('API request failed');
+  //     }
+
+  //     const data = await response.json();
+  //     const parsedResponse = JSON.parse(data.choices[0].message.content);
+
+  //     // 전체 응답 내용을 콘솔에 출력
+  //     console.log('API 전체 응답:', parsedResponse);
+
+  //     // 기본 정보만 추출하여 UI에 표시
+  //     const basicInfo = {
+  //       foodName: parsedResponse.foodName,
+  //       ingredients: parsedResponse.ingredients,
+  //       nutrition: parsedResponse.nutrition,
+  //     };
+
+  //     processApiResponse(basicInfo);
+  //     setStep('complete');
+  //   } catch (error) {
+  //     console.error('Error:', error);
+  //     setAnalysis(null);
+  //     setStep('image-selected');
+  //   }
+  // };
+
+  /* 방법1 1회 질문 */
+  const analyzeImage = async () => {
+    if (!selectedImage) return;
+
+    setStep('analyzing');
+    try {
+      const base64Image = await fileToBase64(selectedImage);
+      const fileType = selectedImage.type === 'image/png' ? 'png' : 'jpeg';
+
+      const messages = [
+        {
+          role: 'system',
+          content: `당신은 음식 영양 분석 전문가입니다. 음식 사진을 보고 최대한 정확하게 분석해야 합니다. 
+          - 접시나 그릇, 식기가 있으면 그 크기와 비교하여 음식의 양을 추정하세요.
+          - 음식의 양과 크기를 기준으로 한 인분 기준과 비교하여 평가하세요
+          - 음식의 조리 방법을 고려하여 영양소를 분석하세요
+          - 소스나 토핑 등 모든 부가적인 재료도 포함하여 계산하세요
+          - 모든 수치는 보수적으로 계산하여 과대 추정을 피하세요`,
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `이 음식 사진을 상세히 분석해주세요. 수치는 정수로만 표시하세요. 다음 형식의 JSON으로 응답해주세요:
+      {
+        "foodName": "음식 이름",
+        "servingSize": "예상 인분 수",
+        "ingredients": [
+          {
+            "name": "재료명",
+            "amount": "추정 수량/중량",
+            "confidence": "신뢰도(상/중/하)"
+          }
+        ],
+        "nutrition": {
+          "calories": 칼로리(kcal),
+          "protein": 단백질(g),
+          "fat": 지방(g),
+          "carbs": 탄수화물(g)
+        },
+        "analysis": {
+          "sizeReference": "크기 추정 기준",
+          "confidenceLevel": "전체 분석 신뢰도(상/중/하)",
+          "notes": "특이사항이나 주의사항"
+        }
+      }`,
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: `data:image/${fileType};base64,${base64Image}`,
+              },
+            },
+          ],
+        },
+      ];
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -227,78 +366,31 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini',
-          messages: [
-            {
-              role: 'user',
-              content: `분석된 음식 정보:
-      ${JSON.stringify(initialResult, null, 2)}
-      
-      위 정보를 바탕으로 영양성분을 계산해주세요.
-      
-      계산 지침:
-1. 제시된 음식의 양이 범위로 주어진 경우 중간값을 사용해주세요.
-   예: 300-400g → 350g
-   예: 1-2인분 → 1.5인분
-
-2. 음식별 특성에 따른 계산:
-   a) 그램 단위로 주어진 경우:
-      - (실제 중량/100) * 기준 영양성분
-      예: 삼겹살 350g = 350/100 * 392 = 1,372kcal
-   
-   b) 인분/조각 단위로 주어진 경우:
-      - 1인분/1조각 기준 중량 확인
-      - 총 중량으로 환산 후 계산
-      예: 피자 2조각 (1조각=150g) = 300g = 300/100 * 266 = 798kcal
-
-   c) 여러 재료가 포함된 경우:
-      - 각 재료의 비중을 고려해 계산
-      예: 치즈토핑 피자 = 기본피자 + 추가 치즈 영양성분
-
-결과 검증:
-1. 계산된 영양성분이 기준값과 비교해 합리적인지 확인
-2. 인분수와 총 중량이 일반적인 상식선에서 맞는지 확인
-3. 확실하지 않은 경우 신뢰도를 '하'로 표시
-      
-      다음 JSON 형식으로 응답해주세요:
-      {
-        "foodName": "음식 이름",
-        "servingSize": "사용한 중간값",
-        "ingredients": [
-          {
-            "name": "재료명",
-            "amount": "정확한 중량",
-            "confidence": "신뢰도"
-          }
-        ],
-        "calculation": {
-          "method": "계산 방법 설명",
-          "details": "세부 계산 과정"
-        },
-        "nutrition": {
-          "calories": 계산된 총 칼로리,
-          "protein": 계산된 총 단백질,
-          "fat": 계산된 총 지방,
-          "carbs": 계산된 총 탄수화물
-        },
-        "analysis": {
-          "sizeReference": "크기 추정 기준",
-          "confidenceLevel": "전체 분석 신뢰도",
-          "notes": "특이사항이나 주의사항"
-        }
-      }`,
-            },
-          ],
-          max_tokens: 800,
-          temperature: 0.3,
+          messages: messages,
+          max_tokens: 1000,
+          temperature: 0.3, // 낮은 temperature로 일관된 응답 유도
           response_format: { type: 'json_object' },
         }),
       });
 
-      const finalData = await finalResponse.json();
-      const finalResult = JSON.parse(finalData.choices[0].message.content);
-      console.log('최종 계산 결과:', finalResult);
+      if (!response.ok) {
+        throw new Error('API request failed');
+      }
 
-      processApiResponse(finalResult);
+      const data = await response.json();
+      const parsedResponse = JSON.parse(data.choices[0].message.content);
+
+      // 전체 응답 내용을 콘솔에 출력
+      console.log('API 전체 응답:', parsedResponse);
+
+      // 기본 정보만 추출하여 UI에 표시
+      const basicInfo = {
+        foodName: parsedResponse.foodName,
+        ingredients: parsedResponse.ingredients,
+        nutrition: parsedResponse.nutrition,
+      };
+
+      processApiResponse(basicInfo);
       setStep('complete');
     } catch (error) {
       console.error('Error:', error);
@@ -306,6 +398,180 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       setStep('image-selected');
     }
   };
+
+  /* 방법2 여러 질문 */
+  // 1단계: 이미지 기본 분석 함수
+  // const analyzeImageBase = async (base64Image, fileType) => {
+  //   const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //       Authorization: `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
+  //     },
+  //     body: JSON.stringify({
+  //       model: 'gpt-4o-mini',
+  //       messages: [
+  //         {
+  //           role: 'system',
+  //           content: '당신은 음식 분석 전문가입니다. 음식 사진을 보고 상세하게 묘사해주세요.',
+  //         },
+  //         {
+  //           role: 'user',
+  //           content: [
+  //             {
+  //               type: 'text',
+  //               text: `이 음식 사진을 상세히 분석하여 다음 JSON 형식으로 응답해주세요:
+  //             {
+  //               "foodName": "음식 이름",
+  //               "description": {
+  //                 "appearance": "음식의 외관 상세 묘사",
+  //                 "size": "크기와 양에 대한 상세 설명",
+  //                 "cookingMethod": "조리 방법",
+  //                 "visible_ingredients": "눈으로 확인 가능한 재료들"
+  //               },
+  //               "plateInfo": {
+  //                 "type": "그릇/접시의 종류",
+  //                 "size": "그릇/접시의 추정 크기"
+  //               }
+  //             }`,
+  //             },
+  //             {
+  //               type: 'image_url',
+  //               image_url: {
+  //                 url: `data:image/${fileType};base64,${base64Image}`,
+  //               },
+  //             },
+  //           ],
+  //         },
+  //       ],
+  //       max_tokens: 1000,
+  //       temperature: 0.3,
+  //       response_format: { type: 'json_object' },
+  //     }),
+  //   });
+
+  //   if (!response.ok) throw new Error('First API request failed');
+  //   const data = await response.json();
+  //   return JSON.parse(data.choices[0].message.content);
+  // };
+
+  // // 2단계: 영양소 분석 함수
+  // const analyzeNutrition = async (baseAnalysis) => {
+  //   const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //       Authorization: `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
+  //     },
+  //     body: JSON.stringify({
+  //       model: 'gpt-4o-mini',
+  //       messages: [
+  //         {
+  //           role: 'system',
+  //           content:
+  //             '당신은 영양학 전문가입니다. 주어진 음식 설명을 바탕으로 정확한 영양소를 분석해주세요.',
+  //         },
+  //         {
+  //           role: 'user',
+  //           content: `다음 음식 분석 결과를 바탕으로 상세한 영양소 정보를 JSON 형식으로 제공해주세요:
+  //         ${JSON.stringify(baseAnalysis, null, 2)}
+
+  //         응답 형식:
+  //         {
+  //           "servingAnalysis": {
+  //             "totalServings": "총 인분 수",
+  //             "standardServing": "1인분 기준 설명"
+  //           },
+  //           "ingredients": [
+  //             {
+  //               "name": "재료명",
+  //               "amount": "추정 수량/중량",
+  //               "confidence": "신뢰도(상/중/하)"
+  //             }
+  //           ],
+  //           "nutritionInfo": {
+  //             "perServing": {
+  //               "calories": 칼로리(kcal),
+  //               "protein": 단백질(g),
+  //               "fat": 지방(g),
+  //               "carbs": 탄수화물(g)
+  //             },
+  //             "total": {
+  //               "calories": 총칼로리(kcal),
+  //               "protein": 총단백질(g),
+  //               "fat": 총지방(g),
+  //               "carbs": 총탄수화물(g)
+  //             }
+  //           },
+  //           "confidence": {
+  //             "level": "전체 분석 신뢰도(상/중/하)",
+  //             "factors": ["신뢰도에 영향을 준 요인들"]
+  //           }
+  //         }`,
+  //         },
+  //       ],
+  //       max_tokens: 1000,
+  //       temperature: 0.3,
+  //       response_format: { type: 'json_object' },
+  //     }),
+  //   });
+
+  //   if (!response.ok) throw new Error('Second API request failed');
+  //   const data = await response.json();
+  //   return JSON.parse(data.choices[0].message.content);
+  // };
+
+  // 메인 분석 함수
+  // const analyzeImage = async () => {
+  //   if (!selectedImage) return;
+
+  //   setStep('analyzing');
+  //   try {
+  //     const base64Image = await fileToBase64(selectedImage);
+  //     const fileType = selectedImage.type === 'image/png' ? 'png' : 'jpeg';
+
+  //     // 1단계: 기본 이미지 분석
+  //     const baseAnalysis = await analyzeImageBase(base64Image, fileType);
+  //     console.log('1단계 분석 결과:', baseAnalysis);
+
+  //     // 2단계: 영양소 상세 분석
+  //     const nutritionAnalysis = await analyzeNutrition(baseAnalysis);
+  //     console.log('2단계 분석 결과:', nutritionAnalysis);
+
+  //     // 최종 결과 조합
+  //     const finalAnalysis = {
+  //       foodName: baseAnalysis.foodName,
+  //       description: baseAnalysis.description,
+  //       ingredients: nutritionAnalysis.ingredients,
+  //       nutrition: nutritionAnalysis.nutritionInfo.total,
+  //       servingInfo: nutritionAnalysis.servingAnalysis,
+  //       confidence: nutritionAnalysis.confidence,
+  //     };
+
+  //     processApiResponse(finalAnalysis);
+  //     setStep('complete');
+  //   } catch (error) {
+  //     console.error('Error:', error);
+  //     setAnalysis(null);
+  //     setStep('image-selected');
+  //   }
+  // };
+
+  // 결과 처리 함수 업데이트
+  // const processApiResponse = (response) => {
+  //   const { foodName, description, ingredients, nutrition, servingInfo, confidence } = response;
+
+  //   // 신뢰도가 낮은 경우 경고 표시
+  //   if (confidence.level === '하') {
+  //     console.warn('분석 신뢰도가 낮습니다. 참고용으로만 사용하세요.');
+  //   }
+
+  //   setAnalysis({
+  //     ...response,
+  //     warning:
+  //       confidence.level === '하' ? '분석 신뢰도가 낮습니다. 참고용으로만 사용하세요.' : null,
+  //   });
+  // };
 
   const resetAnalyzer = () => {
     setStep('initial');
