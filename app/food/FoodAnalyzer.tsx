@@ -20,8 +20,16 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
+import AnalysisProgress from './Analysis Progress';
 
-type AnalysisStep = 'initial' | 'camera' | 'image-selected' | 'analyzing' | 'complete';
+type AnalysisStep =
+  | 'initial'
+  | 'camera'
+  | 'image-selected'
+  | 'compress'
+  | 'analyzing'
+  | 'calculate'
+  | 'complete';
 
 export interface NutritionData {
   foodName: string;
@@ -57,9 +65,7 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   });
 
   const router = useRouter();
-
   const videoRef = useRef<HTMLVideoElement>(null);
-
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
@@ -149,15 +155,136 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     setAnalysis(processedData);
   };
 
-  const analyzeImage = async () => {
+  const analyzeImage1 = async () => {
     if (!selectedImage) return;
-    setStep('analyzing');
 
     try {
-      // 1단계: 이미지 분석
+      setStep('compress');
       const base64Image = await fileToBase64(selectedImage);
       const fileType = selectedImage.type === 'image/png' ? 'png' : 'jpeg';
 
+      setStep('analyzing');
+      const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: `당신은 음식 영양 분석 전문가입니다. 다음 단계로 분석을 진행하세요:
+  
+  1단계: 시각적 분석
+  - 음식의 종류와 구성 요소를 정확히 파악
+  - 식기나 주변 사물을 기준으로 전체 양이나 중량 등 추정
+  - 각 구성 요소의 비율 파악해주세요
+  
+  2단계: 영양소 계산
+  - 복합 메뉴(예: 세트메뉴)는 반드시 각 구성 요소를 개별 계산 후 합산
+  - 각 음식의 표준 1인분 기준 영양성분을 바탕으로 계산
+  - 계산된 값이 일반적인 범위를 크게 벗어나면 재검토
+  
+  주의사항:
+  1. 여러 음식이 있거나 여러 재료가 있는 경우:
+  - 각 음식과 재료를 개별적으로 계산한 후 합산
+  - 예: "냉면과 초밥 세트"면 냉면의 영양성분과 초밥의 영양성분을 따로 계산
+  
+  2. 각 메뉴의 계산:
+  - 주요 재료들의 영양성분 합산
+  - serving.amount와 ingredients 정보를 모두 고려
+  - 메뉴의 특성에 맞는 조리 방법 반영
+  
+  3. 계산 과정 검증:
+  - 각 구성 요소별 계산 값이 합리적인지 확인
+  - 전체 합산 값이 일반적인 범위 내인지 확인
+  - 이상값 발견 시 재계산`,
+            },
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `이 음식 사진을 분석하고 정확한 영양성분을 계산해주세요.
+  
+  각 음식이 구분되는 세트메뉴의 경우 반드시 개별 계산 후 합산하세요.
+  각 계산 과정과 근거를 상세히 기록하세요.
+  
+  다음 형식의 JSON으로 응답해주세요:
+  {
+    "foodName": "string",
+    "description": "string",
+    "components": [
+      {
+        "name": "string",
+        "amount": "string",
+        "calories": "number",
+        "protein": "number",
+        "fat": "number",
+        "carbs": "number"
+      }
+    ],
+    "ingredients": [
+      {
+        "name": "string",
+        "amount": "string",
+        "confidence": "string"
+      }
+    ],
+    "nutrition": {
+      "calories": "number",
+      "protein": "number",
+      "fat": "number",
+      "carbs": "number"
+    },
+    "analysis": {
+      "calculationMethod": "string",
+      "breakdown": "string",
+      "verification": "string"
+    }
+  }`,
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: `data:image/${fileType};base64,${base64Image}`,
+                  },
+                },
+              ],
+            },
+          ],
+          max_tokens: 800,
+          temperature: 0.3,
+          response_format: { type: 'json_object' },
+        }),
+      });
+
+      const analysisData = await analysisResponse.json();
+      const result = JSON.parse(analysisData.choices[0].message.content);
+
+      console.log('분석 결과:', result);
+      processApiResponse(result);
+      setStep('complete');
+    } catch (error) {
+      console.error('Error:', error);
+      setAnalysis(null);
+      setStep('image-selected');
+    }
+  };
+
+  const analyzeImage = async () => {
+    if (!selectedImage) return;
+
+    try {
+      // 이미지 압축 단계
+      setStep('compress');
+      const base64Image = await fileToBase64(selectedImage);
+      const fileType = selectedImage.type === 'image/png' ? 'png' : 'jpeg';
+
+      // 음식 분석 단계
+      setStep('analyzing');
       const initialAnalysis = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -180,7 +307,6 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
                   text: `이 음식 사진을 자세히 분석해주세요. 다음 사항들을 고려해주세요:
                   - 음식의 양을 추정할 때는 식기나 주변 사물의 크기를 기준으로 삼아주세요
                   - 인분 수뿐만 아니라 실제 중량이나 부피도 반드시 추정해주세요
-                  - 확실하지 않은 정보는 신뢰도를 '하'로 표시해주세요
   
                   다음 형식의 JSON으로 응답해주세요:
                   {
@@ -189,13 +315,11 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
                     "serving": {
                       "amount": "정확한 중량 또는 부피 (범위로 표현)",
                       "reference": "크기 추정에 사용된 기준 (식기 또는 사물)",
-                      "confidence": "추정 신뢰도(상/중/하)"
                     },
                     "ingredients": [
                       {
                         "name": "재료명",
                         "amount": "추정 수량/중량",
-                        "confidence": "신뢰도(상/중/하)"
                       }
                     ]
                   }`,
@@ -218,7 +342,8 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       const initialResult = JSON.parse(initialData.choices[0].message.content);
       console.log('초기 분석 결과:', initialResult);
 
-      // 2단계: 영양소 계산
+      // 영양소 계산 단계
+      setStep('calculate');
       const finalResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -233,31 +358,15 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
               content: `분석된 음식 정보:
       ${JSON.stringify(initialResult, null, 2)}
       
-      위 정보를 바탕으로 영양성분을 계산해주세요.
-      
-      계산 지침:
-1. 제시된 음식의 양이 범위로 주어진 경우 중간값을 사용해주세요.
-   예: 300-400g → 350g
-   예: 1-2인분 → 1.5인분
+      위 정보를 바탕으로 각 재료의 영양분석을 다음 순서로 정확히 계산해주세요:
+0. 음식이 명확히 결정된 경우에는 그 음식의 일반적인 영양성분 정보 이용 아니면 아래의1,2,3에 따라 계산
+1. 각 재료/음식의 단위(1g 또는 1개)당 기본 영양성분을 먼저 결정
+2. 반드시 위 정보중 ingredients의 각 object의 amount를 이용하여 전체 중량이나 개수를 곱하여 최종 영양성분 계산
+3. 모든 재료의 영양성분을 합산
 
-2. 음식별 특성에 따른 계산:
-   a) 그램 단위로 주어진 경우:
-      - (실제 중량/100) * 기준 영양성분
-      예: 삼겹살 350g = 350/100 * 392 = 1,372kcal
-   
-   b) 인분/조각 단위로 주어진 경우:
-      - 1인분/1조각 기준 중량 확인
-      - 총 중량으로 환산 후 계산
-      예: 피자 2조각 (1조각=150g) = 300g = 300/100 * 266 = 798kcal
-
-   c) 여러 재료가 포함된 경우:
-      - 각 재료의 비중을 고려해 계산
-      예: 치즈토핑 피자 = 기본피자 + 추가 치즈 영양성분
-
-결과 검증:
-1. 계산된 영양성분이 기준값과 비교해 합리적인지 확인
-2. 인분수와 총 중량이 일반적인 상식선에서 맞는지 확인
-3. 확실하지 않은 경우 신뢰도를 '하'로 표시
+예) 음식 300g인 경우
+- 1g당 영양성분 먼저 결정
+- 결정된 값에 300을 곱하여 계산
       
       다음 JSON 형식으로 응답해주세요:
       {
@@ -267,7 +376,6 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
           {
             "name": "재료명",
             "amount": "정확한 중량",
-            "confidence": "신뢰도"
           }
         ],
         "calculation": {
@@ -275,14 +383,13 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
           "details": "세부 계산 과정"
         },
         "nutrition": {
-          "calories": 계산된 총 칼로리,
-          "protein": 계산된 총 단백질,
-          "fat": 계산된 총 지방,
-          "carbs": 계산된 총 탄수화물
+          "calories": 계산된 전체 칼로리의 합,
+          "protein": 계산된 전체 단백질의 합,
+          "fat": 계산된 전체 지방의 합,
+          "carbs": 계산된 전체 탄수화물의 합
         },
         "analysis": {
           "sizeReference": "크기 추정 기준",
-          "confidenceLevel": "전체 분석 신뢰도",
           "notes": "특이사항이나 주의사항"
         }
       }`,
@@ -411,10 +518,14 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
               exit={{ x: -300, opacity: 0 }}
               className="flex-1 flex flex-col"
             >
-              {step === 'analyzing' && (
+              {(step === 'compress' || step === 'analyzing' || step === 'calculate') && (
                 <div className="flex flex-col items-center justify-center h-full">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-black" />
-                  <p className="mt-4 text-gray-500">음식을 분석하고 있어요...</p>
+                  <AnalysisProgress currentStep={step} />
+                  <p className="mt-8 text-gray-500">
+                    {step === 'compress' && '이미지를 최적화하고 있어요...'}
+                    {step === 'analyzing' && '음식을 분석하고 있어요...'}
+                    {step === 'calculate' && '영양소를 계산하고 있어요...'}
+                  </p>
                 </div>
               )}
 

@@ -8,7 +8,14 @@ import { compressImage, fileToBase64 } from '@/utils/image';
 import NutritionCard from '../components/shared/ui/NutritionCard';
 import NavigationButtonSection from '../components/shared/ui/NavigationButtonSection';
 
-type AnalysisStep = 'initial' | 'camera' | 'image-selected' | 'analyzing' | 'complete';
+type AnalysisStep =
+  | 'initial'
+  | 'camera'
+  | 'image-selected'
+  | 'compress'
+  | 'analyzing'
+  | 'calculate'
+  | 'complete';
 
 interface NutritionData {
   foodName: string;

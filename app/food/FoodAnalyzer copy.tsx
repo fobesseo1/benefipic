@@ -21,7 +21,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 
-type AnalysisStep = 'initial' | 'camera' | 'image-selected' | 'analyzing' | 'complete';
+type AnalysisStep =
+  | 'initial'
+  | 'camera'
+  | 'image-selected'
+  | 'compress'
+  | 'analyzing'
+  | 'calculate'
+  | 'complete';
 
 export interface NutritionData {
   foodName: string;

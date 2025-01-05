@@ -12,8 +12,24 @@ import {
 import { compressImage } from '@/utils/image';
 
 interface NavigationButtonSectionProps {
-  step: 'initial' | 'camera' | 'image-selected' | 'analyzing' | 'complete';
-  setStep: (step: 'initial' | 'camera' | 'image-selected' | 'analyzing' | 'complete') => void;
+  step:
+    | 'initial'
+    | 'camera'
+    | 'image-selected'
+    | 'compress'
+    | 'analyzing'
+    | 'calculate'
+    | 'complete';
+  setStep: (
+    step:
+      | 'initial'
+      | 'camera'
+      | 'image-selected'
+      | 'compress'
+      | 'analyzing'
+      | 'calculate'
+      | 'complete'
+  ) => void;
   setSelectedImage: (file: File | null) => void;
   setImageUrl: (url: string) => void;
   onAnalyze: () => Promise<void>;
