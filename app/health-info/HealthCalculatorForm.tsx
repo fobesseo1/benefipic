@@ -2,9 +2,24 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, ChevronLeft, Info } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowDownRight,
+  ArrowUpRight,
+  CheckCircle,
+  ChevronLeft,
+  Info,
+  Plus,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { HealthCalculator, type UserInput, type NutritionResult } from './HealthCalculator';
+import {
+  HealthCalculator,
+  type UserInput,
+  type NutritionResult,
+  RecommendedGoal,
+  Gender,
+  ActivityLevel,
+} from './HealthCalculator';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
@@ -17,16 +32,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { RecommendedResultView } from './RecommendedResultView';
+import { CustomResultView } from './CustomResultView';
 
-interface HealthRecord {
+export interface HealthRecord {
   gender: string;
-  workout_frequency: string;
+  activity_level: string;
   height: number;
   weight: number;
   birth_date: string;
   bmr: number;
+  tdee: number;
   bmi: number;
   bmi_status: string;
+  recommended_weight: number;
+}
+
+interface CalculationStage {
+  type: 'initial' | 'recommended' | 'custom' | 'result';
 }
 
 const HealthCalculateForm = ({ currentUser_id }: { currentUser_id: string }) => {
@@ -47,6 +70,68 @@ const HealthCalculateForm = ({ currentUser_id }: { currentUser_id: string }) => 
   const [result, setResult] = useState<NutritionResult | null>(null);
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [showWarnings, setShowWarnings] = useState(true);
+  const [stage, setStage] = useState<CalculationStage['type']>('initial');
+  const [recommendedGoal, setRecommendedGoal] = useState<RecommendedGoal | null>(null);
+  const [showFullRecommendations, setShowFullRecommendations] = useState(false);
+
+  useEffect(() => {
+    if (healthRecord) {
+      // 건강 기록이 로드되면 권장 목표 계산
+      const recommended = HealthCalculator.calculateRecommendedGoal(
+        healthRecord.weight,
+        healthRecord.height,
+        healthRecord.gender as Gender
+      );
+      setRecommendedGoal(recommended);
+
+      // formData 업데이트
+      const birthDate = new Date(healthRecord.birth_date);
+      const age = new Date().getFullYear() - birthDate.getFullYear();
+
+      setFormData((prev) => ({
+        ...prev,
+        age,
+        gender: healthRecord.gender as Gender,
+        height: healthRecord.height,
+        weight: healthRecord.weight,
+        activityLevel: healthRecord.activity_level as ActivityLevel,
+      }));
+    }
+  }, [healthRecord]);
+
+  // 권장 목표 선택 시 처리
+  const handleRecommendedGoal = () => {
+    if (recommendedGoal && healthRecord) {
+      // formData 업데이트
+      const updatedFormData = {
+        ...formData,
+        goal: recommendedGoal.recommendedGoal,
+        targetWeight: recommendedGoal.targetWeight,
+        targetDuration: recommendedGoal.duration,
+      };
+
+      setFormData(updatedFormData);
+
+      // 결과 계산
+      const calculatedResult = HealthCalculator.calculateNutrition(updatedFormData);
+      setResult(calculatedResult);
+
+      // 바로 결과 화면으로 이동
+      setStage('recommended');
+    }
+  };
+
+  // 직접 설정으로 전환
+  const handleCustomGoal = () => {
+    setStage('custom');
+    // 기존 입력값 초기화
+    setFormData((prev) => ({
+      ...prev,
+      goal: 'maintain',
+      targetWeight: undefined,
+      targetDuration: undefined,
+    }));
+  };
 
   // health_records에서 데이터 가져오기
   useEffect(() => {
@@ -86,14 +171,20 @@ const HealthCalculateForm = ({ currentUser_id }: { currentUser_id: string }) => 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 직접 설정한 목표 계산
     const calculatedResult = HealthCalculator.calculateNutrition(formData);
     setResult(calculatedResult);
 
-    // 경고나 권장사항이 있으면 다이얼로그 표시
-    if (calculatedResult.healthWarnings.length > 0 || calculatedResult.recommendations.length > 0) {
+    // stage가 custom일 때만 경고 다이얼로그 표시
+    if (
+      stage === 'custom' &&
+      (calculatedResult.healthWarnings.length > 0 || calculatedResult.recommendations.length > 0)
+    ) {
       setShowWarningDialog(true);
     } else {
-      setCurrentSlide(1);
+      // 경고사항이 없거나 추천 목표를 선택한 경우 바로 결과로 이동
+      setStage('result');
     }
   };
 
@@ -178,6 +269,17 @@ const HealthCalculateForm = ({ currentUser_id }: { currentUser_id: string }) => 
     },
   ];
 
+  const renderIcon = (iconType: 'check' | 'up' | 'down') => {
+    switch (iconType) {
+      case 'check':
+        return <CheckCircle className="w-16 h-16 text-green-500" />;
+      case 'up':
+        return <Plus className="w-16 h-16 text-blue-500" />;
+      case 'down':
+        return <ArrowDownRight className="w-8 h-8 text-rose-500" />;
+    }
+  };
+
   if (!healthRecord) return <div>Loading...</div>;
 
   return (
@@ -204,41 +306,97 @@ const HealthCalculateForm = ({ currentUser_id }: { currentUser_id: string }) => 
           initial={{ x: 100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: -100, opacity: 0 }}
-          className="px-4 py-6"
+          className="p-4"
         >
           <h1 className="text-2xl font-semibold">{slides[currentSlide].title}</h1>
           <p className="text-gray-500 text-sm mt-2">{slides[currentSlide].subtitle}</p>
         </motion.div>
       </AnimatePresence>
-
+      {/* <hr className="mx-4 border-2 border-gray-200" /> */}
       {/* Content Section */}
-      <div className="flex-1 px-4">
+      <div className="flex-1 px-4 pb-4">
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentSlide}
+            key={stage}
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -100, opacity: 0 }}
           >
-            {currentSlide === 0 ? (
-              // 입력 폼
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* 현재 상태 표시 */}
-                <div className="space-y-4">
-                  <div className="p-4 bg-gray-50 rounded-xl">
-                    <div className="font-medium text-lg mb-2">현재 신체 정보</div>
-                    <div className="space-y-2">
-                      <div>키: {healthRecord.height}cm</div>
-                      <div>체중: {healthRecord.weight}kg</div>
-                      <div>
-                        BMI: {healthRecord.bmi.toFixed(1)} ({healthRecord.bmi_status})
+            {stage === 'initial' && (
+              <div className="space-y-6">
+                {/* 권장 목표 표시 */}
+                {recommendedGoal && (
+                  <div className="p-4 bg-white rounded-xl shadow-xl border-2 border-gray-200">
+                    {/* 아이콘과 메시지 */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <h3 className="text-xl font-semibold">{recommendedGoal.message}</h3>
+                    </div>
+
+                    {/* 그리드 레이아웃의 메시지 */}
+                    <div className="flex flex-col items-center justify-center gap-2 px-2 py-12 bg-gray-50 rounded-xl">
+                      <div className="flex flex-col">
+                        <p className="font-medium  text-gray-600">
+                          {recommendedGoal.messageGrid.title}
+                        </p>
+
+                        <div className="text-8xl gap-2 flex items-end">
+                          <p className="tracking-tighter">{recommendedGoal.messageGrid.content1}</p>
+                          {recommendedGoal.messageGrid.content2 && (
+                            <p className="text-4xl">{recommendedGoal.messageGrid.content2}</p>
+                          )}
+                        </div>
                       </div>
+                    </div>
+
+                    {/* 버튼 그룹 */}
+                    <div className="mt-6 space-y-3">
+                      <button
+                        onClick={handleRecommendedGoal}
+                        className="w-full py-4 rounded-xl bg-black text-white text-lg font-medium"
+                      >
+                        추천 목표로 시작하기
+                      </button>
+                      <button
+                        onClick={handleCustomGoal}
+                        className="w-full py-4 rounded-xl bg-gray-100 text-gray-900 text-lg font-medium"
+                      >
+                        직접 목표 설정하기
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {/* 현재 상태 표시 */}
+                <div className="p-4 bg-gray-50 rounded-xl">
+                  <div className="font-medium text-lg mb-2">현재 신체 정보</div>
+                  <div className="space-y-2">
+                    <div>키: {healthRecord.height}cm</div>
+                    <div>체중: {healthRecord.weight}kg</div>
+                    <div>
+                      BMI: {healthRecord.bmi.toFixed(1)} ({healthRecord.bmi_status})
+                    </div>
+                    <div>기초대사량(BMR): {healthRecord.bmr.toLocaleString()} kcal</div>
+                    <div>일일 에너지 소비량(TDEE): {healthRecord.tdee?.toLocaleString()} kcal</div>
+                    <div>권장체중: {healthRecord.recommended_weight?.toLocaleString()} kg</div>
+                    <div>
+                      활동량:{' '}
+                      {{
+                        sedentary: '좌식 생활',
+                        light: '가벼운 활동',
+                        moderate: '보통 활동',
+                        active: '활발한 활동',
+                        very_active: '매우 활발한 활동',
+                      }[healthRecord.activity_level] || healthRecord.activity_level}
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
 
-                {/* 목표 입력 */}
+            {stage === 'custom' && (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* 목표 입력 폼 */}
                 <div className="space-y-4">
+                  <h2 className="-mb-4 pl-4">*목표 선택*</h2>
                   <select
                     name="goal"
                     className="w-full p-4 rounded-xl bg-gray-50"
@@ -285,110 +443,75 @@ const HealthCalculateForm = ({ currentUser_id }: { currentUser_id: string }) => 
                     </>
                   )}
                 </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-4 rounded-xl bg-black text-white text-lg font-medium"
-                >
-                  계산하기
-                </button>
-              </form>
-            ) : (
-              // 결과 표시
-              <div className="space-y-4">
-                {result && (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-gray-50 rounded-xl">
-                      <div className="font-medium text-lg mb-2">기초대사량 (BMR)</div>
-                      <div className="text-2xl font-bold">{result.bmr.toLocaleString()} kcal</div>
-                      <div className="text-sm text-gray-500 mt-1">
-                        하루 동안 생명 유지에 필요한 최소한의 에너지량
+                {/* 버튼 모음 */}
+                <div className="space-y-3">
+                  <button
+                    type="submit"
+                    className="w-full py-4 rounded-xl bg-black text-white text-lg font-medium"
+                  >
+                    계산하기
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStage('initial')}
+                    className="w-full py-4 rounded-xl bg-gray-100 text-gray-900 text-lg font-medium"
+                  >
+                    추천 목표로 돌아가기
+                  </button>
+                </div>
+                {/* 현재 상태 표시 (직접 설정 시에도 표시) */}
+                {/* <div className="space-y-4">
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <div className="font-medium text-lg mb-2">현재 신체 정보</div>
+                    <div className="space-y-2">
+                      <div>키: {healthRecord.height}cm</div>
+                      <div>체중: {healthRecord.weight}kg</div>
+                      <div>
+                        BMI: {healthRecord.bmi.toFixed(1)} ({healthRecord.bmi_status})
                       </div>
-                    </div>
-                    <div className="p-4 bg-gray-50 rounded-xl">
-                      <div className="font-medium text-lg mb-2">일일 권장 칼로리</div>
-                      <div className="text-2xl font-bold">
-                        {result.totalCalories.toLocaleString()} kcal
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 bg-gray-50 rounded-xl">
-                        <div className="font-medium">단백질</div>
-                        <div className="text-xl font-bold">{result.protein}g</div>
-                      </div>
-
-                      <div className="p-4 bg-gray-50 rounded-xl">
-                        <div className="font-medium">지방</div>
-                        <div className="text-xl font-bold">{result.fat}g</div>
-                      </div>
-
-                      <div className="p-4 bg-gray-50 rounded-xl">
-                        <div className="font-medium">탄수화물</div>
-                        <div className="text-xl font-bold">{result.carbs}g</div>
-                      </div>
-
-                      <div className="p-4 bg-gray-50 rounded-xl">
-                        <div className="font-medium">물 섭취량</div>
-                        <div className="text-xl font-bold">{result.waterIntake}ml</div>
-                      </div>
-                    </div>
-                    <div className="p-4 bg-gray-50 rounded-xl">
-                      <div className="font-medium">권장 운동 시간</div>
-                      <div className="text-xl font-bold">하루 {result.exerciseMinutes}분</div>
-                    </div>
-                    {result.weightChangePerWeek !== 0 && (
-                      <div className="mt-4 p-4 bg-blue-50 rounded-xl">
-                        <div className="font-medium">주간 목표 변화량</div>
-                        <div className="text-xl">
-                          {Math.abs(result.weightChangePerWeek).toFixed(2)}kg/
-                          {result.weightChangePerWeek > 0 ? '증량' : '감량'}
-                        </div>
-                      </div>
-                    )}
-                    {showWarnings &&
-                      result.recommendations &&
-                      result.recommendations.length > 0 && (
-                        <Alert className="mt-4">
-                          <Info className="h-4 w-4" />
-                          <AlertTitle>권장사항</AlertTitle>
-                          {result.recommendations.map((recommendation, index) => (
-                            <AlertDescription key={index}>{recommendation}</AlertDescription>
-                          ))}
-                        </Alert>
-                      )}
-                    {showWarnings && result.healthWarnings && result.healthWarnings.length > 0 && (
-                      <Alert className="mt-4" variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>건강 관리 참고사항</AlertTitle>
-                        {result.healthWarnings.map((warning, index) => (
-                          <AlertDescription key={index}>{warning}</AlertDescription>
-                        ))}
-                      </Alert>
-                    )}
-
-                    <div className="mt-6">
-                      <button
-                        onClick={handleSave}
-                        className="w-full py-4 rounded-xl bg-black text-white text-lg font-medium"
-                      >
-                        저장하기
-                      </button>
+                      <div>권장체중: {healthRecord.recommended_weight?.toLocaleString()} kg</div>
                     </div>
                   </div>
+                </div> */}
+              </form>
+            )}
+
+            {(stage === 'result' || stage === 'recommended') && result && (
+              <>
+                {stage === 'recommended' && recommendedGoal ? (
+                  <RecommendedResultView
+                    result={result}
+                    recommendedGoal={recommendedGoal}
+                    healthRecord={healthRecord}
+                    showWarnings={showWarnings}
+                    onSave={handleSave}
+                  />
+                ) : (
+                  <CustomResultView
+                    result={result}
+                    formData={formData}
+                    healthRecord={healthRecord}
+                    showWarnings={showWarnings}
+                    onSave={handleSave}
+                  />
                 )}
-              </div>
+              </>
             )}
           </motion.div>
         </AnimatePresence>
       </div>
 
-      <AlertDialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
-        <AlertDialogContent>
+      {/* Alert Dialog - 직접 설정 시에만 표시 */}
+      <AlertDialog
+        open={stage === 'custom' && showWarningDialog}
+        onOpenChange={setShowWarningDialog}
+      >
+        <AlertDialogContent className="overflow-y-auto">
           <AlertDialogHeader>
-            <AlertDialogTitle>건강한 목표 설정 검토</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-4">
+            <AlertDialogTitle>목표 설정 검토</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4 overflow-y-auto">
               {result?.healthWarnings && result.healthWarnings.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-2 overflow-y-auto">
                   <p className="font-medium text-red-600">⚠️ 건강 관리 참고사항:</p>
                   {result.healthWarnings.map((warning, index) => (
                     <p key={index} className="text-sm">
@@ -398,43 +521,58 @@ const HealthCalculateForm = ({ currentUser_id }: { currentUser_id: string }) => 
                 </div>
               )}
 
+              <div className="p-4 bg-gray-50 rounded-lg mt-4">
+                <p className="font-medium mb-2">설정하신 목표</p>
+                <p>
+                  {formData.goal === 'lose'
+                    ? `현재 체중 ${healthRecord?.weight}kg에서 ${formData.targetWeight}kg까지 
+                ${formData.targetDuration}주 동안 감량 시 주당 
+                ${Math.abs(
+                  (healthRecord?.weight! - formData.targetWeight!) / formData.targetDuration!
+                ).toFixed(1)}kg의 감량이 필요합니다.`
+                    : `현재 체중 ${healthRecord?.weight}kg에서 ${formData.targetWeight}kg까지 
+                ${formData.targetDuration}주 동안 증량 시 주당 
+                ${Math.abs(
+                  (formData.targetWeight! - healthRecord?.weight!) / formData.targetDuration!
+                ).toFixed(1)}kg의 증량이 필요합니다.`}
+                </p>
+              </div>
+
               {result?.recommendations && result.recommendations.length > 0 && (
                 <div className="space-y-2 mt-4">
-                  <p className="font-medium text-blue-600">💡 권장사항:</p>
-                  {result.recommendations.map((rec, index) => (
-                    <p key={index} className="text-sm">
-                      {rec}
-                    </p>
-                  ))}
+                  <p className="font-medium text-blue-600">💡 전문가 권장사항:</p>
+                  <div
+                    className={`relative ${
+                      showFullRecommendations ? 'max-h-[200px] overflow-y-auto' : ''
+                    }`}
+                  >
+                    <div className={!showFullRecommendations ? 'line-clamp-3' : ''}>
+                      {result.recommendations.map((rec, index) => (
+                        <p key={index} className="text-sm">
+                          {rec}
+                        </p>
+                      ))}
+                    </div>
+                    {result.recommendations.length > 3 && (
+                      <button
+                        onClick={() => setShowFullRecommendations(!showFullRecommendations)}
+                        className="text-gray-600 text-sm mt-1 hover:underline"
+                      >
+                        {showFullRecommendations ? '접기' : '더보기'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 
-              <p className="mt-4">
-                {formData.goal === 'lose'
-                  ? `현재 체중 ${healthRecord?.weight}kg에서 ${formData.targetWeight}kg까지 
-            ${formData.targetDuration}주 동안 감량하시려면 주당 
-            ${Math.abs(
-              (healthRecord?.weight! - formData.targetWeight!) / formData.targetDuration!
-            ).toFixed(1)}kg의 
-            체중 감소가 필요합니다.`
-                  : `현재 체중 ${healthRecord?.weight}kg에서 ${formData.targetWeight}kg까지 
-            ${formData.targetDuration}주 동안 증량하시려면 주당 
-            ${Math.abs(
-              (formData.targetWeight! - healthRecord?.weight!) / formData.targetDuration!
-            ).toFixed(1)}kg의 
-            체중 증가가 필요합니다.`}
-              </p>
-
-              <p className="mt-2">
-                목표를 다시 설정하시겠습니까? 아니면 현재 설정된 목표로 진행하시겠습니까?
-              </p>
+              <p className="mt-4 font-medium">설정하신 목표로 진행하시겠습니까?</p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel
               onClick={() => {
                 setShowWarningDialog(false);
-                setCurrentSlide(0);
+                setStage('custom');
               }}
             >
               목표 다시 설정하기
@@ -443,10 +581,10 @@ const HealthCalculateForm = ({ currentUser_id }: { currentUser_id: string }) => 
               onClick={() => {
                 setShowWarningDialog(false);
                 setShowWarnings(false);
-                setCurrentSlide(1);
+                setStage('result');
               }}
             >
-              현재 목표로 진행하기
+              설정한 목표로 진행하기
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,3 +1,5 @@
+import { ThumbsUp } from 'lucide-react';
+
 export type Gender = 'male' | 'female';
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
 export type Goal = 'maintain' | 'gain' | 'lose';
@@ -41,11 +43,20 @@ export interface NutritionResult {
 
 // 활동 계수 맵핑
 const ACTIVITY_MULTIPLIERS = {
-  sedentary: 1.2, // 거의 운동 안함 (하루종일 앉아있는 경우)
-  light: 1.375, // 가벼운 활동 (주 1-2회 운동)
-  moderate: 1.55, // 보통 활동 (주 3-5회 운동)
-  active: 1.7, // 활동적 (거의 매일 운동)
-  very_active: 1.8, // 매우 활동적 (하루 2회 운동 또는 강도 높은 운동)
+  male: {
+    sedentary: 1.2,
+    light: 1.375,
+    moderate: 1.55,
+    active: 1.7,
+    very_active: 1.9,
+  },
+  female: {
+    sedentary: 1.1,
+    light: 1.325,
+    moderate: 1.5,
+    active: 1.65,
+    very_active: 1.8,
+  },
 };
 
 // 칼로리 안전 제한
@@ -56,18 +67,142 @@ const CALORIE_LIMITS = {
 
 // 영양소 비율
 const PROTEIN_MULTIPLIERS = {
-  maintain: 1.2, // 일반 성인: 1.2-1.4g/kg
-  gain: 1.6, // 근육 증가: 1.6-2.0g/kg
-  lose: 1.8, // 체중 감량: 1.8-2.0g/kg
+  male: {
+    maintain: 1.2, // 1.2-1.4g/kg
+    gain: 1.8, // 1.8-2.2g/kg
+    lose: 2.0, // 2.0-2.2g/kg
+  },
+  female: {
+    maintain: 1.1, // 1.1-1.3g/kg
+    gain: 1.6, // 1.6-1.8g/kg
+    lose: 1.8, // 1.8-2.0g/kg
+  },
 };
 
 const FAT_PERCENTAGES = {
-  maintain: 0.3, // 30%
-  gain: 0.3, // 30%
-  lose: 0.25, // 25%
+  male: {
+    maintain: 0.25, // 25%
+    gain: 0.3, // 30%
+    lose: 0.2, // 20%
+  },
+  female: {
+    maintain: 0.3, // 30%
+    gain: 0.3, // 30%
+    lose: 0.25, // 25%
+  },
 };
 
+const WEEKLY_CHANGE_LIMITS = {
+  male: 0.75, // kg/week
+  female: 0.5, // kg/week
+};
+
+const WATER_MULTIPLIERS = {
+  male: 35, // ml/kg
+  female: 31, // ml/kg
+};
+
+export interface RecommendedGoal {
+  recommendedGoal: Goal;
+  targetWeight: number;
+  duration: number;
+  stages?: {
+    stage1: { weight: number; duration: number };
+    stage2: { weight: number; duration: number };
+  };
+  iconType: 'check' | 'up' | 'down'; // icon 대신 iconType으로 변경
+  message: string;
+  messageGrid: {
+    title: string;
+    content1: string | React.ReactNode;
+    content2?: string;
+    content3?: string;
+  };
+  weightDiff: number;
+}
+
 export class HealthCalculator {
+  static calculateRecommendedGoal(
+    currentWeight: number,
+    height: number,
+    gender: Gender
+  ): RecommendedGoal {
+    const bmi = this.calculateBMI(currentWeight, height);
+    const heightInMeters = height / 100;
+
+    // 정상 체중 범위
+    if (bmi >= 18.5 && bmi <= 23) {
+      const weightDiff = 0;
+      return {
+        recommendedGoal: 'maintain',
+        targetWeight: currentWeight,
+        duration: 12,
+        iconType: 'check',
+        message: '추천 목표',
+        messageGrid: {
+          title: '체중 유지',
+          content1: 'Good',
+        },
+        weightDiff,
+      };
+    }
+
+    // 저체중
+    if (bmi < 18.5) {
+      const targetWeight = Number((18.5 * heightInMeters * heightInMeters).toFixed(1));
+      const weightDiff = Number((targetWeight - currentWeight).toFixed(1));
+      const recommendedDuration = Math.ceil(weightDiff / 0.5);
+
+      return {
+        recommendedGoal: 'gain',
+        targetWeight,
+        duration: recommendedDuration,
+        iconType: 'up',
+        message: '추천 목표',
+        messageGrid: {
+          title: `${recommendedDuration}주간`,
+          content1: `+${weightDiff}`,
+          content2: `kg`,
+        },
+        weightDiff,
+      };
+    }
+
+    // 과체중/비만 (bmi > 23)
+    const weeklyLoss = gender === 'male' ? 0.75 : 0.5;
+    const maxWeightLoss = weeklyLoss * 12;
+
+    const bmi25Weight = Number((25 * heightInMeters * heightInMeters).toFixed(1));
+
+    // BMR 기반 안전 감량 계산 추가
+    const bmr = this.calculateBMR(gender, currentWeight, height, 30); // 나이는 임시로 30 사용
+    const tdee = this.calculateTDEE(bmr, 'moderate', gender); // 활동량은 보통으로 가정
+    const safeCalorieDeficit = tdee - bmr;
+    const maxWeightLossFromCalories = Number(((safeCalorieDeficit * 7 * 12) / 7700).toFixed(1));
+
+    // 더 안전한 감량 목표 설정
+    const maxLossWeight = Number(
+      (currentWeight - Math.min(maxWeightLoss, maxWeightLossFromCalories)).toFixed(1)
+    );
+    const targetWeight = Math.max(bmi25Weight, maxLossWeight);
+
+    const weightDiff = Number((currentWeight - targetWeight).toFixed(1));
+
+    return {
+      recommendedGoal: 'lose',
+      targetWeight,
+      duration: 12,
+      iconType: 'down',
+      message: '추천 목표',
+      messageGrid: {
+        title: '12주간',
+        content1: `-${weightDiff}`,
+        content2: 'kg',
+      },
+      weightDiff,
+    };
+  }
+
   // BMR (기초대사량) 계산 - Mifflin-St Jeor 공식
   static calculateBMR(gender: Gender, weight: number, height: number, age: number): number {
     const baseBMR = 10 * weight + 6.25 * height - 5 * age;
@@ -75,8 +210,8 @@ export class HealthCalculator {
   }
 
   // TDEE (일일 총 에너지 소비량) 계산
-  static calculateTDEE(bmr: number, activityLevel: ActivityLevel): number {
-    return bmr * ACTIVITY_MULTIPLIERS[activityLevel];
+  static calculateTDEE(bmr: number, activityLevel: ActivityLevel, gender: Gender): number {
+    return bmr * ACTIVITY_MULTIPLIERS[gender][activityLevel];
   }
 
   // BMI 계산
@@ -86,7 +221,7 @@ export class HealthCalculator {
   }
 
   // BMI 기반 건강 경고
-  static addHealthWarnings(bmi: number, age: number): string[] {
+  static addHealthWarnings(bmi: number, age: number, gender: Gender): string[] {
     const warnings: string[] = [];
 
     if (age < 18 || age > 65) {
@@ -94,19 +229,50 @@ export class HealthCalculator {
     }
 
     if (bmi < 18.5) {
-      warnings.push('저체중 상태입니다. 전문의 상담을 권장합니다.');
-    } else if (bmi >= 23 && bmi < 25) {
-      warnings.push('과체중 위험군입니다. 생활습관 개선을 권장합니다.');
-    } else if (bmi >= 25) {
-      warnings.push('과체중 상태입니다. 전문의 상담을 권장합니다.');
+      warnings.push(
+        `저체중 상태입니다. ${
+          gender === 'female' ? '여성의 경우 생리불순 등 호르몬 교란이 발생할 수 있으니 ' : ''
+        }전문의 상담을 권장합니다.`
+      );
+    } else if (bmi > 23 && bmi < 25) {
+      warnings.push('비만 전 단계(과체중)입니다. 생활습관 개선을 권장합니다.');
+    } else if (bmi >= 25 && bmi < 30) {
+      warnings.push(
+        `1단계 비만 상태입니다. ${
+          gender === 'male' ? '남성의 경우 복부비만 위험이 높으니 ' : ''
+        }전문의 상담을 권장합니다.`
+      );
+    } else if (bmi >= 30 && bmi < 35) {
+      warnings.push('2단계 비만 상태입니다. 전문의 상담을 권장합니다.');
+    } else if (bmi >= 35) {
+      warnings.push('3단계 비만(고도비만) 상태입니다. 전문의 상담을 권장합니다.');
     }
 
     return warnings;
   }
 
+  static calculateRecommendedWeight(height: number, currentWeight: number): number {
+    const currentBMI = this.calculateBMI(currentWeight, height);
+    const heightInMeters = height / 100;
+
+    if (currentBMI >= 18.5 && currentBMI <= 23) {
+      return currentWeight;
+    }
+
+    if (currentBMI < 18.5) {
+      return Number((18.5 * heightInMeters * heightInMeters).toFixed(1));
+    }
+
+    return Number((23 * heightInMeters * heightInMeters).toFixed(1));
+  }
+
   // 물 섭취량 계산
-  static calculateWaterIntake(weight: number, activityLevel: ActivityLevel): number {
-    const baseWater = weight * 30; // 기본 30ml/kg
+  static calculateWaterIntake(
+    weight: number,
+    activityLevel: ActivityLevel,
+    gender: Gender
+  ): number {
+    const baseWater = weight * WATER_MULTIPLIERS[gender];
     const activityAddition =
       activityLevel === 'active' || activityLevel === 'very_active' ? 500 : 0;
     return baseWater + activityAddition;
@@ -116,7 +282,8 @@ export class HealthCalculator {
   static calculateExerciseRecommendation(
     goal: Goal,
     bmi: number,
-    activityLevel: ActivityLevel
+    activityLevel: ActivityLevel,
+    gender: Gender
   ): {
     cardioMinutes: number;
     strengthTraining: {
@@ -130,13 +297,14 @@ export class HealthCalculator {
     let cardioMinutes: number;
     const recommendations: string[] = [];
 
-    // 유산소 운동 시간 설정
     switch (goal) {
       case 'lose':
         cardioMinutes = bmi >= 25 ? 45 : 40;
         recommendations.push(
           `중강도 유산소 운동을 주 ${bmi >= 25 ? 5 : 4}회, 회당 ${cardioMinutes}분 실시하세요.`,
-          '걷기, 조깅, 수영 등 전신 운동을 선택하세요.'
+          gender === 'female'
+            ? '걷기, 수영, 댄스 등 전신 운동을 선택하세요.'
+            : '걷기, 조깅, 자전거 등 전신 운동을 선택하세요.'
         );
         break;
       case 'gain':
@@ -146,7 +314,7 @@ export class HealthCalculator {
           '중강도 유산소 운동을 주 3회, 회당 30분으로 제한하세요.'
         );
         break;
-      default: // maintain
+      default:
         cardioMinutes = 35;
         recommendations.push(
           '중강도 유산소 운동을 주 4회, 회당 35분 실시하세요.',
@@ -154,25 +322,31 @@ export class HealthCalculator {
         );
     }
 
-    // 근력 운동 가이드라인
     const strengthTraining = {
       gain: {
-        frequency: '주 3-4회',
-        sets: '3-4세트',
+        frequency: gender === 'male' ? '주 4회' : '주 3회',
+        sets: gender === 'male' ? '3-4세트' : '2-3세트',
         reps: '8-12회',
-        guide: '큰 근육군 운동을 먼저하고, 운동 간 1일 휴식',
+        guide:
+          gender === 'male'
+            ? '큰 근육군 운동을 먼저하고, 운동 간 1일 휴식'
+            : '전신 근력운동과 코어 강화 운동 병행',
       },
       lose: {
         frequency: '주 2-3회',
         sets: '2-3세트',
         reps: '12-15회',
-        guide: '유산소 운동 후 근력 운동 실시',
+        guide:
+          gender === 'male'
+            ? '유산소 운동 후 근력 운동 실시'
+            : '하체 위주의 근력 운동과 코어 운동 병행',
       },
       maintain: {
         frequency: '주 2-3회',
         sets: '2-3세트',
         reps: '10-12회',
-        guide: '모든 주요 근육군을 골고루 운동',
+        guide:
+          gender === 'male' ? '모든 주요 근육군을 골고루 운동' : '전신 근력운동과 스트레칭 병행',
       },
     }[goal];
 
@@ -183,10 +357,11 @@ export class HealthCalculator {
   static monitorHealthMetrics(
     currentWeight: number,
     targetWeight: number,
-    duration: number
+    duration: number,
+    gender: Gender
   ): { weeklyChange: number; recommendations: string[]; warnings: string[] } {
     const weeklyChange = (targetWeight - currentWeight) / duration;
-    const isHealthyRange = Math.abs(weeklyChange) <= 0.75;
+    const isHealthyRange = Math.abs(weeklyChange) <= WEEKLY_CHANGE_LIMITS[gender];
 
     const recommendations = [];
     const warnings = [];
@@ -195,7 +370,9 @@ export class HealthCalculator {
       recommendations.push('현재 체중 변화 속도는 적절합니다.');
     } else {
       warnings.push('체중 변화가 너무 급격합니다.');
-      recommendations.push('체중 변화 속도를 주당 0.5-0.75kg 이내로 조정하세요.');
+      recommendations.push(
+        `체중 변화 속도를 주당 ${WEEKLY_CHANGE_LIMITS[gender]}kg 이내로 조정하세요.`
+      );
     }
 
     return {
@@ -206,23 +383,19 @@ export class HealthCalculator {
   }
 
   // 영양소 계산
-  static calculateNutrients(weight: number, totalCalories: number, goal: Goal) {
-    // 단백질 계산
-    let proteinPerKg = PROTEIN_MULTIPLIERS[goal];
+  static calculateNutrients(weight: number, totalCalories: number, goal: Goal, gender: Gender) {
+    let proteinPerKg = PROTEIN_MULTIPLIERS[gender][goal];
     let protein = weight * proteinPerKg;
     let proteinCalories = protein * 4;
 
-    // 단백질이 총 칼로리의 40%를 넘지 않도록 조정
     if (proteinCalories > totalCalories * 0.4) {
       proteinCalories = totalCalories * 0.4;
       protein = proteinCalories / 4;
     }
 
-    // 지방 계산
-    let fatRatio = FAT_PERCENTAGES[goal];
+    let fatRatio = FAT_PERCENTAGES[gender][goal];
     let fatCalories = totalCalories * fatRatio;
 
-    // 최소 필수 지방 섭취량 확인 (체중당 0.5g)
     const minFatGrams = weight * 0.5;
     const minFatCalories = minFatGrams * 9;
 
@@ -232,14 +405,11 @@ export class HealthCalculator {
 
     let fat = fatCalories / 9;
 
-    // 탄수화물 계산
     const remainingCalories = totalCalories - proteinCalories - fatCalories;
     let carbs = remainingCalories / 4;
 
-    // 최소 탄수화물 확인 (100g)
     if (carbs < 100) {
       carbs = 100;
-      // 탄수화물 최소량을 맞추기 위해 지방 조정
       const carbsCalories = carbs * 4;
       const availableForFat = totalCalories - proteinCalories - carbsCalories;
       fat = availableForFat / 9;
@@ -264,38 +434,30 @@ export class HealthCalculator {
     const { gender, weight, height, age, activityLevel, goal, targetWeight, targetDuration } =
       userInput;
 
-    // BMI 계산
     const bmi = this.calculateBMI(weight, height);
-
-    // 건강 경고 및 권장사항 수집
-    const healthWarnings = this.addHealthWarnings(bmi, age);
+    const healthWarnings = this.addHealthWarnings(bmi, age, gender);
     let recommendations: string[] = [];
 
-    // 기초 계산
     const bmr = this.calculateBMR(gender, weight, height, age);
-    const tdee = this.calculateTDEE(bmr, activityLevel);
+    const tdee = this.calculateTDEE(bmr, activityLevel, gender);
 
-    // 목표에 따른 칼로리 조정
     let totalCalories = tdee;
     let weightChangePerWeek = 0;
 
     if (targetWeight && targetDuration) {
-      const healthMetrics = this.monitorHealthMetrics(weight, targetWeight, targetDuration);
+      const healthMetrics = this.monitorHealthMetrics(weight, targetWeight, targetDuration, gender);
       weightChangePerWeek = healthMetrics.weeklyChange;
       recommendations = [...recommendations, ...healthMetrics.recommendations];
       healthWarnings.push(...healthMetrics.warnings);
 
-      // 체중 변화에 따른 칼로리 조정
       const dailyCalorieChange = (weightChangePerWeek * 7700) / 7;
       totalCalories += dailyCalorieChange;
     }
 
-    // 칼로리 안전 제한 적용
     const limits = CALORIE_LIMITS[gender];
     const originalCalories = totalCalories;
     totalCalories = Math.min(Math.max(totalCalories, limits.min), limits.max);
 
-    // 실현 가능한 목표 계산
     if (totalCalories !== originalCalories && targetWeight && targetDuration) {
       const calorieDeficit = Math.abs(tdee - totalCalories);
       const totalDeficit = calorieDeficit * targetDuration * 7;
@@ -325,16 +487,22 @@ export class HealthCalculator {
       }
     }
 
-    // 영양소 계산
-    const nutritionInfo = this.calculateNutrients(weight, totalCalories, goal);
+    const nutritionInfo = this.calculateNutrients(weight, totalCalories, goal, gender);
     const { nutrients, ratio: macroRatio } = nutritionInfo;
 
-    // 운동 권장사항 및 물 섭취량 계산
-    const exercise = this.calculateExerciseRecommendation(goal, bmi, activityLevel);
-    const waterIntake = this.calculateWaterIntake(weight, activityLevel);
+    const exercise = this.calculateExerciseRecommendation(goal, bmi, activityLevel, gender);
+    const waterIntake = this.calculateWaterIntake(weight, activityLevel, gender);
 
-    // 영양소 관련 권장사항 추가
+    const genderSpecificAdvice =
+      gender === 'female'
+        ? [
+            '호르몬 균형을 위해 규칙적인 식사가 중요합니다.',
+            '철분이 풍부한 식품 섭취를 고려하세요.',
+          ]
+        : ['단백질 섭취와 근력 운동을 병행하세요.', '충분한 수분 섭취가 중요합니다.'];
+
     recommendations.push(
+      ...genderSpecificAdvice,
       `일일 권장 영양소 섭취량:`,
       `- 단백질: ${nutrients.protein}g (${macroRatio.protein}%)`,
       `- 지방: ${nutrients.fat}g (${macroRatio.fat}%)`,

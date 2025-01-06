@@ -34,6 +34,10 @@ export const NutritionCard = ({
 
   const [editValues, setEditValues] = useState(nutrition);
 
+  const roundNumber = (num: number): number => {
+    return Math.round(num);
+  };
+
   const handleEdit = (field: keyof NutritionData, value: string) => {
     if (value === '') {
       const newNutrition = { ...editValues, [field]: 0 };
@@ -102,7 +106,7 @@ export const NutritionCard = ({
                 </button>
               )}
             </div>
-            {renderEditableValue('calories', nutrition.calories, 'kcal')}
+            {renderEditableValue('calories', roundNumber(nutrition.calories), 'kcal')}
           </div>
         </div>
 
@@ -122,7 +126,7 @@ export const NutritionCard = ({
                 </button>
               )}
             </div>
-            {renderEditableValue('protein', nutrition.protein, 'g')}
+            {renderEditableValue('protein', roundNumber(nutrition.protein), 'g')}
           </div>
         </div>
 
@@ -142,7 +146,7 @@ export const NutritionCard = ({
                 </button>
               )}
             </div>
-            {renderEditableValue('fat', nutrition.fat, 'g')}
+            {renderEditableValue('fat', roundNumber(nutrition.fat), 'g')}
           </div>
         </div>
 
@@ -162,7 +166,7 @@ export const NutritionCard = ({
                 </button>
               )}
             </div>
-            {renderEditableValue('carbs', nutrition.carbs, 'g')}
+            {renderEditableValue('carbs', roundNumber(nutrition.carbs), 'g')}
           </div>
         </div>
       </div>

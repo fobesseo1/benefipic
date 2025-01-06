@@ -8,25 +8,15 @@ import { ChevronLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Answers, Question } from './tpye';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
+import { HealthCalculator, Gender, ActivityLevel } from '@/app/health-info/HealthCalculator';
 
-const calculateBMR = (gender: string, weight: number, height: number, age: number): number => {
-  if (gender === 'male') {
-    return 88.362 + 13.397 * weight + 4.799 * height - 5.677 * age;
-  }
-  return 447.593 + 9.247 * weight + 3.098 * height - 4.33 * age;
-};
-
-const calculateBMI = (weight: number, height: number): number => {
-  const heightInMeters = height / 100;
-  return weight / (heightInMeters * heightInMeters);
-};
-
-const getBMIStatus = (bmi: number): string => {
+export const getBMIStatus = (bmi: number): string => {
   if (bmi < 18.5) return '저체중';
-  if (bmi < 23) return '정상체중';
-  if (bmi < 25) return '과체중';
-  if (bmi < 30) return '경도비만';
-  return '중등도 이상 비만';
+  if (bmi <= 23) return '정상체중'; // < 에서 <= 로 수정
+  if (bmi < 25) return '비만 전 단계(과체중)';
+  if (bmi < 30) return '1단계 비만';
+  if (bmi < 35) return '2단계 비만';
+  return '3단계 비만(고도비만)';
 };
 
 const QuestionSlidePage = ({
@@ -93,7 +83,7 @@ const QuestionSlidePage = ({
       ],
     },
     {
-      id: 'workout-frequency',
+      id: 'activity_level',
       title: '평소 활동량은 어느 정도인가요?',
       subtitle: '정확한 제안을 위해 필요해요',
       type: 'select',
@@ -149,13 +139,15 @@ const QuestionSlidePage = ({
     const healthRecord = {
       user_id: currentUser_id,
       gender: answers['gender'],
-      workout_frequency: answers['workout-frequency'],
+      activity_level: answers['activity_level'],
       height: Number(answers['height']),
       weight: Number(answers['weight']),
       birth_date: answers['birthdate'],
       bmr: results.bmr,
+      tdee: results.tdee,
       bmi: Number(results.bmi),
       bmi_status: results.bmiStatus,
+      recommended_weight: results.recommendedWeight,
     };
 
     try {
@@ -227,17 +219,22 @@ const QuestionSlidePage = ({
 
     const weight = Number(answers['weight']);
     const height = Number(answers['height']);
-    const gender = answers['gender'] as string;
+    const gender = answers['gender'] as Gender;
+    const activityLevel = answers['activity_level'] as ActivityLevel;
 
-    const bmr = calculateBMR(gender, weight, height, age);
-    const bmi = calculateBMI(weight, height);
+    const bmr = HealthCalculator.calculateBMR(gender, weight, height, age);
+    const tdee = HealthCalculator.calculateTDEE(bmr, activityLevel, gender);
+    const bmi = HealthCalculator.calculateBMI(weight, height);
     const bmiStatus = getBMIStatus(bmi);
+    const recommendedWeight = HealthCalculator.calculateRecommendedWeight(height, weight);
 
     return {
       bmr: Math.round(bmr),
+      tdee: Math.round(tdee),
       bmi: bmi.toFixed(1),
       bmiStatus,
       age,
+      recommendedWeight,
     };
   };
 
@@ -348,9 +345,31 @@ const QuestionSlidePage = ({
           </div>
 
           <div className="p-4 bg-gray-50 rounded-xl">
+            <div className="font-medium text-lg mb-2">일일 총 에너지 소비량 (TDEE)</div>
+            <div className="text-2xl font-bold">{results.tdee.toLocaleString()} kcal</div>
+            <div className="text-sm text-gray-500 mt-1">
+              활동량을 고려한 하루 실제 소비 에너지량
+            </div>
+          </div>
+
+          <div className="p-4 bg-gray-50 rounded-xl">
             <div className="font-medium text-lg mb-2">체질량지수 (BMI)</div>
             <div className="text-2xl font-bold">{results.bmi}</div>
             <div className="text-sm text-gray-500 mt-1">현재 상태: {results.bmiStatus}</div>
+          </div>
+
+          <div className="p-4 bg-gray-50 rounded-xl">
+            <div className="font-medium text-lg mb-2">권장 체중</div>
+            <div className="text-2xl font-bold">{results.recommendedWeight} kg</div>
+            <div className="text-sm text-gray-500 mt-1">
+              {results.recommendedWeight === Number(answers['weight'])
+                ? '현재 정상 체중 범위에 있습니다.'
+                : `목표 감량/증량: ${Math.abs(
+                    results.recommendedWeight - Number(answers['weight'])
+                  ).toFixed(1)}kg ${
+                    results.recommendedWeight > Number(answers['weight']) ? '증량' : '감량'
+                  }`}
+            </div>
           </div>
 
           <div className="p-4 bg-gray-50 rounded-xl">
@@ -362,7 +381,7 @@ const QuestionSlidePage = ({
               <div>
                 활동량:{' '}
                 {questions[1].type === 'select' &&
-                  questions[1].options.find((opt) => opt.value === answers['workout-frequency'])
+                  questions[1].options.find((opt) => opt.value === answers['activity_level'])
                     ?.label}
               </div>
             </div>
