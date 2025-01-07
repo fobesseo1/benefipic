@@ -3,16 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
 import { useUserStore } from '../store/userStore';
-import { CartesianGrid, Line, LineChart, XAxis, YAxis, LabelList } from 'recharts';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { CartesianGrid, Line, LineChart, XAxis, YAxis, LabelList, ReferenceLine } from 'recharts';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { TrendingUp, TrendingDown, MoveUpRight, MoveDownRight, LoaderCircle } from 'lucide-react';
 
 interface WeightRecord {
   weight: number;
@@ -56,6 +49,7 @@ export default function WeightTracker() {
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [targetWeight, setTargetWeight] = useState<number | null>(null);
   const [weightTrend, setWeightTrend] = useState<{
     direction: 'up' | 'down' | 'stable';
     percentage: number;
@@ -73,20 +67,31 @@ export default function WeightTracker() {
       startDate.setHours(startDate.getHours() + 9);
       startDate.setHours(0, 0, 0, 0);
 
-      console.log('조회 시작 날짜:', startDate.toISOString());
+      // 체중 기록과 목표 체중을 동시에 가져오기
+      const [weightResponse, goalResponse] = await Promise.all([
+        supabase
+          .from('weight_tracking')
+          .select('weight, created_at')
+          .eq('user_id', currentUser.currentUser.id)
+          .gte('created_at', startDate.toISOString())
+          .order('created_at'),
+        supabase
+          .from('fitness_goals')
+          .select('target_weight')
+          .eq('user_id', currentUser.currentUser.id)
+          .eq('status', 'active')
+          .single(),
+      ]);
 
-      const { data, error } = await supabase
-        .from('weight_tracking')
-        .select('weight, created_at')
-        .eq('user_id', currentUser.currentUser.id)
-        .gte('created_at', startDate.toISOString())
-        .order('created_at');
+      if (weightResponse.error) throw weightResponse.error;
+      const data = weightResponse.data;
 
-      if (error) throw error;
+      if (goalResponse.data) {
+        setTargetWeight(goalResponse.data.target_weight);
+        console.log('목표 체중:', goalResponse.data.target_weight);
+      }
 
       if (data) {
-        console.log('서버에서 받은 데이터:', data);
-
         const dates = Array.from({ length: 7 }, (_, i) => {
           const date = new Date();
           date.setHours(date.getHours() + 9);
@@ -95,22 +100,24 @@ export default function WeightTracker() {
           return date.toISOString().split('T')[0];
         });
 
-        console.log('생성된 날짜 배열:', dates);
-
         const processedData = dates.map((date) => {
-          // 현재 날짜의 기록 찾기
-          const record = data.find((r) => {
+          // 해당 날짜의 모든 기록 찾기
+          const dayRecords = data.filter((r) => {
             const recordDate = new Date(r.created_at);
             recordDate.setHours(recordDate.getHours() + 9);
             const recordDateStr = recordDate.toISOString().split('T')[0];
             return recordDateStr === date;
           });
 
-          // 해당 날짜의 기록이 있으면 그 값을 사용
-          if (record) {
+          // 해당 날짜의 기록이 있으면, 가장 최근 시간의 기록 사용
+          if (dayRecords.length > 0) {
+            const latestRecord = dayRecords.sort(
+              (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            )[0];
+
             return {
               date,
-              weight: record.weight,
+              weight: latestRecord.weight,
             };
           }
 
@@ -123,7 +130,6 @@ export default function WeightTracker() {
           });
 
           if (previousRecords.length > 0) {
-            // 가장 최근 날짜의 기록 사용
             previousRecords.sort(
               (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
             );
@@ -142,7 +148,6 @@ export default function WeightTracker() {
           });
 
           if (nextRecords.length > 0) {
-            // 가장 빠른 날짜의 기록 사용
             nextRecords.sort(
               (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
             );
@@ -152,14 +157,12 @@ export default function WeightTracker() {
             };
           }
 
-          // 아무 기록도 없는 경우 (이전/이후 모두)
           return {
             date,
-            weight: data[0]?.weight || 0, // 첫 번째 기록의 값을 사용하거나 0
+            weight: data[0]?.weight || 0,
           };
         });
 
-        console.log('최종 처리된 데이터:', processedData);
         setChartData(processedData);
 
         if (data.length >= 2) {
@@ -179,7 +182,7 @@ export default function WeightTracker() {
         }
       }
     } catch (error) {
-      console.error('Error fetching weight records:', error);
+      console.error('Error fetching records:', error);
     }
   }, [currentUser.currentUser?.id, supabase]);
 
@@ -209,18 +212,43 @@ export default function WeightTracker() {
   }, [fetchWeightRecords]);
 
   if (isInitialLoading) {
-    return <div className="max-w-md mx-auto p-4">데이터를 불러오는 중...</div>;
+    return (
+      <div className="max-w-md h-screen mx-auto p-4  flex items-center justify-center gap-2">
+        <LoaderCircle className="h-8 w-8 animate-spin" />
+        <p className="text-xl">Processing...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-xl mx-auto p-4">
-      <Card className="mb-6">
+    <div className="max-w-xl mx-auto py-12 px-6 flex flex-col gap-6">
+      <Card className="pb-6">
         <CardHeader>
           <CardTitle>체중 변화 추이</CardTitle>
-          <CardDescription>최근 7일간의 체중 변화</CardDescription>
+          <CardDescription></CardDescription>
+          <div className="flex flex-col items-start gap-1 text-sm mt-4">
+            <div className="text-lg flex gap-2 font-medium tracking-tighter">
+              {weightTrend.direction !== 'stable' && (
+                <>
+                  이번 주 {weightTrend.percentage.toFixed(1)}%
+                  {weightTrend.direction === 'up' ? '증가' : '감소'}
+                  <p>
+                    {weightTrend.direction === 'up' ? (
+                      <MoveUpRight className="h-6 w-6 text-red-600 font-bold" />
+                    ) : (
+                      <MoveDownRight className="h-6 w-6 text-blue-600 font-bold" />
+                    )}
+                  </p>
+                </>
+              )}
+            </div>
+            <div className="text-xs text-muted-foreground ">
+              최근 7일간의 체중 변화를 보여줍니다
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div ref={setContainerRef} className="w-full h-[300px]">
+          <div ref={setContainerRef} className="w-full h-[240px]">
             {containerRef && lastRecord && (
               <LineChart
                 width={Math.min(containerWidth - 16, 500)}
@@ -244,9 +272,31 @@ export default function WeightTracker() {
                   style={{ fontSize: '12px' }}
                 />
                 <YAxis
-                  domain={[Math.floor(lastRecord.weight - 5), Math.ceil(lastRecord.weight + 5)]}
+                  domain={[
+                    Math.min(
+                      Math.floor(lastRecord.weight - 5),
+                      targetWeight ? targetWeight - 1 : 0
+                    ),
+                    Math.max(Math.ceil(lastRecord.weight + 5), targetWeight ? targetWeight + 1 : 0),
+                  ]}
                   hide
                 />
+                {targetWeight && (
+                  <ReferenceLine
+                    y={targetWeight}
+                    stroke="#dc2626"
+                    strokeDasharray="3 3"
+                    label={{
+                      position: 'top',
+                      value: `< 목표: ${targetWeight}kg >`,
+                      style: {
+                        fontSize: '14px',
+                        fill: '#dc2626',
+                        letterSpacing: '-0.05em',
+                      },
+                    }}
+                  />
+                )}
                 <Line
                   type="monotone"
                   dataKey="weight"
@@ -258,9 +308,9 @@ export default function WeightTracker() {
                   <LabelList
                     position="top"
                     offset={12}
-                    formatter={(value: number) => value}
+                    formatter={(value: number) => Number(value.toFixed(1))}
                     style={{
-                      fontSize: '14px',
+                      fontSize: '16px',
                       letterSpacing: '-0.05em',
                       fontWeight: 'bold',
                     }}
@@ -270,38 +320,12 @@ export default function WeightTracker() {
             )}
           </div>
         </CardContent>
-        <CardFooter className="flex-col items-start gap-2 text-sm">
-          <div className="flex gap-2 font-medium leading-none tracking-tighter">
-            {weightTrend.direction !== 'stable' && (
-              <>
-                {weightTrend.direction === 'up' ? '증가' : '감소'}:{' '}
-                {weightTrend.percentage.toFixed(1)}% 이번 주
-                {weightTrend.direction === 'up' ? (
-                  <TrendingUp className="h-4 w-4 text-destructive" />
-                ) : (
-                  <TrendingDown className="h-4 w-4 text-primary" />
-                )}
-              </>
-            )}
-          </div>
-          <div className="leading-none text-muted-foreground">
-            최근 7일간의 체중 변화를 보여줍니다
-          </div>
-        </CardFooter>
       </Card>
-
-      {lastRecord && (
-        <div className="mb-6 p-4 bg-gray-100 rounded-lg">
-          <h3 className="font-semibold mb-2">최근 기록</h3>
-          <p>체중: {lastRecord.weight}kg</p>
-          <p>날짜: {new Date(lastRecord.created_at).toLocaleDateString()}</p>
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="weight" className="block text-sm font-medium mb-1">
-            오늘의 체중 (kg)
+            오늘의 체중 입력 (kg)
           </label>
           <input
             type="number"
@@ -319,7 +343,7 @@ export default function WeightTracker() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
+          className="w-full bg-gray-800 text-white p-2 py-4 rounded disabled:bg-gray-400"
         >
           {isLoading ? '저장 중...' : '저장하기'}
         </button>

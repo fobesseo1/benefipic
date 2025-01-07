@@ -14,7 +14,6 @@ export default async function WeightTrackerPage() {
 
   return (
     <div>
-      <h2>WeightTrackerPage</h2>
       <WeightTracker />
     </div>
   );

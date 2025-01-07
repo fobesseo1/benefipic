@@ -74,7 +74,7 @@ export default function CircleButtonWithAlert() {
               <p className="text-sm text-gray-900 font-bold">운동입력</p>
             </div>
           </Link>
-          <Link href="/exercise" onClick={() => setIsOpen(false)}>
+          <Link href="/weight-tracker" onClick={() => setIsOpen(false)}>
             <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
               <Gauge className="w-8 h-8 text-gray-900 " strokeWidth={1} />
               <p className="text-sm text-gray-900 font-bold">체중입력</p>
@@ -83,7 +83,7 @@ export default function CircleButtonWithAlert() {
           <Link href="/health-info" onClick={() => setIsOpen(false)}>
             <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
               <Goal className="w-8 h-8 text-gray-900 " strokeWidth={1} />
-              <p className="text-sm text-gray-900 font-bold">목표수정</p>
+              <p className="text-sm text-gray-900 font-bold">목표입력</p>
             </div>
           </Link>
         </div>
