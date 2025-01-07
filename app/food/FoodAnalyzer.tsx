@@ -229,8 +229,18 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
           messages: [
             {
               role: 'system',
-              content:
-                '당신은 음식 영양 분석 전문가입니다. 음식 사진을 보고 최대한 정확하게 분석하고 음식이 아닌경우 isFood의 항목 false로 음식이라면 true',
+              content: `당신은 음식 영양 분석 전문가입니다.- 분석 대상:
+    * 모든 섭취 가능한 음식과 음료
+    * 포장된 식품/음료 제품
+    * 물을 포함한 모든 음료
+    * 영양소가 있거나 없더라도 인간이 섭취할 수 있는 모든 것
+  
+  - 영양소 분석 지침:
+    * 물의 경우도 영양소 0으로 기록하되 분석 대상에 포함
+    * 포장 제품의 경우 영양성분표 기준으로 분석
+    * 액체류도 100ml 기준으로 영양소 분석 진행
+    
+  -최종적으로 음식 사진을 보고 최대한 정확하게 분석하고 명백하게 음식이나 음료가 아닌경우 isFood의 항목 false로 음식,음료 및 포장된 음식,음료이라면 true`,
             },
             {
               role: 'user',
@@ -459,9 +469,11 @@ ${JSON.stringify(initialResult, null, 2)}
 
       {/* Content Section */}
       <div
-        className={`absolute bottom-[92px] w-full ${
-          step === 'complete' ? 'h-[calc(100vh-50vw-60px)]' : 'h-[calc(100vh-100vw-60px)]'
-        } flex flex-col px-6 py-8 rounded-t-3xl bg-white`}
+        className={`absolute bottom-0 w-full ${
+          step === 'complete'
+            ? 'h-[calc(100vh-50vw+32px)] py-8 pb-32'
+            : 'h-[calc(100vh-100vw+32px)] py-8'
+        } flex flex-col px-6  rounded-t-3xl bg-white`}
       >
         <div className="flex-1 overflow-y-auto">
           <AnimatePresence mode="wait">

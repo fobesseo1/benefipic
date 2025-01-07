@@ -121,7 +121,7 @@ export default function NavigationButtonSection({
               사진 촬영하기
             </button>
           ) : step === 'image-selected' ? (
-            <div className="flex flex-col gap-4 pb-48">
+            <div className="flex flex-col gap-4  pt-8 pb-48">
               <button
                 onClick={onAnalyze}
                 className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"

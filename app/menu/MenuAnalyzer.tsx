@@ -190,9 +190,11 @@ const MenuAnalyzer = () => {
 
       {/* Content Section */}
       <div
-        className={`absolute bottom-[92px] w-full ${
-          step === 'complete' ? 'h-[calc(100vh-50vw-60px)]' : 'h-[calc(100vh-100vw-60px)]'
-        } flex flex-col px-6 py-8 rounded-t-3xl bg-white`}
+        className={`absolute bottom-0 w-full ${
+          step === 'complete'
+            ? 'h-[calc(100vh-50vw+32px)] py-8 pb-32'
+            : 'h-[calc(100vh-100vw+32px)] py-8'
+        } flex flex-col px-6  rounded-t-3xl bg-white`}
       >
         <div className="flex-1 overflow-y-auto">
           <AnimatePresence mode="wait">
