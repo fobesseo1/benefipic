@@ -1,8 +1,6 @@
-//app/main/CurrentWeekCalendar.tsx
-
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface CurrentWeekCalendarProps {
@@ -15,20 +13,26 @@ const CurrentWeekCalendar: React.FC<CurrentWeekCalendarProps> = ({
   onDateSelect,
 }) => {
   const [weekOffset, setWeekOffset] = useState<number>(0);
+  const [baseDate, setBaseDate] = useState<Date>(new Date(selectedDate));
+
+  useEffect(() => {
+    setBaseDate(new Date(selectedDate));
+    setWeekOffset(0);
+  }, [selectedDate]);
 
   const getKoreanTime = (date: Date = new Date()): Date => {
     return new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
   };
 
   const getCurrentWeekDates = (): Date[] => {
-    const now = getKoreanTime(selectedDate);
-    now.setDate(now.getDate() + weekOffset * 7);
+    const currentDate = new Date(baseDate);
+    currentDate.setDate(currentDate.getDate() + weekOffset * 7);
 
-    const currentDay = now.getDay();
-    const diff = now.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
+    const currentDay = currentDate.getDay();
+    const diff = currentDate.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
 
     const weekDates: Date[] = [];
-    const tempDate = new Date(now);
+    const tempDate = new Date(currentDate);
     tempDate.setDate(diff);
 
     for (let i = 0; i < 7; i++) {
@@ -44,7 +48,10 @@ const CurrentWeekCalendar: React.FC<CurrentWeekCalendarProps> = ({
   const today = getKoreanTime();
 
   const getMonthDisplay = (): string => {
-    return selectedDate.toLocaleString('ko-KR', {
+    const displayDate = new Date(baseDate);
+    displayDate.setDate(displayDate.getDate() + weekOffset * 7);
+
+    return displayDate.toLocaleString('ko-KR', {
       year: 'numeric',
       month: 'long',
     });
@@ -67,7 +74,6 @@ const CurrentWeekCalendar: React.FC<CurrentWeekCalendarProps> = ({
   };
 
   const handleDateClick = (date: Date): void => {
-    // 현재 날짜보다 미래의 날짜는 선택할 수 없음
     if (date > today) return;
     onDateSelect(date);
   };

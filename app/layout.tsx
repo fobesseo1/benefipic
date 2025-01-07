@@ -4,9 +4,10 @@ import './globals.css';
 import MysticSymbolsEffect from './Layout-component/BubbleEffect/MysticSymbolsEffect';
 import StoreInitializer from './Layout-component/StoreInitializer';
 import { getUser } from '@/lib/supabse/server';
-import { ChevronLeft, Circle, Menu } from 'lucide-react';
+import { ChevronLeft, Circle, House, Menu, Plus } from 'lucide-react';
 import CircleButtonWithAlert from './components/shared/CircleButtonWithAlert';
 import { headers } from 'next/headers';
+import Link from 'next/link';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -57,8 +58,22 @@ export default async function RootLayout({
         <MysticSymbolsEffect />
 
         {shouldShowNav && (
-          <div className="fixed bottom-6 right-6 z-50 ml-auto w-fit flex items-center justify-center">
+          <div className="fixed bottom-20 right-6 z-50 ml-auto w-fit flex items-center justify-center">
             <CircleButtonWithAlert />
+          </div>
+        )}
+        {shouldShowNav && (
+          <div className="fixed bottom-6 right-6 z-50 ml-auto w-fit flex items-center justify-center">
+            <Link href="/main">
+              <div
+                className="bg-gray-400 w-12 h-12 flex items-center justify-center rounded-full cursor-pointer shadow-xl"
+                style={{
+                  boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.6)', // 더 진한 검은색 그림자, spread 반경 증가
+                }}
+              >
+                <House className="w-7 h-7 text-white" />
+              </div>
+            </Link>
           </div>
         )}
       </body>

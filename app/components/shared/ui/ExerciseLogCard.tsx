@@ -163,13 +163,13 @@ export const ExerciseLogCard = ({
           const IconComponent = getExerciseIcon(log.exercise_name);
 
           return (
-            <div key={log.id} className="flex items-center gap-4 rounded-lg shadow-sm">
-              <div className="relative min-h-28 aspect-square rounded-lg overflow-hidden flex items-center justify-center bg-gray-400">
-                <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center">
+            <div key={log.id} className="flex gap-4 rounded-lg shadow-sm">
+              <div className="relative min-h-28 aspect-square rounded-lg overflow-hidden flex items-center justify-center bg-gray-200">
+                <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center">
                   {IconComponent ? (
                     <IconComponent className="w-12 h-12 text-gray-400" />
                   ) : (
-                    <span className="text-xl font-semibold text-gray-600">
+                    <span className="text-3xl font-semibold text-gray-400">
                       {log.exercise_name[0].toUpperCase()}
                     </span>
                   )}
@@ -184,21 +184,23 @@ export const ExerciseLogCard = ({
                     {formatTime(log.logged_at)}
                   </p>
                 </div>
-                <div className="flex items-center tracking-tighter gap-1">
-                  <div className="flex items-center gap-1">
-                    <Flame size={16} color="#F87171" />
-                    <div className="flex items-center gap-[2px]">
-                      <p className="text-gray-600 font-bold">{log.calories_burned}</p>
-                      <span className="text-gray-600 text-xs">kcal</span>
+                <div className="flex flex-col mt-2">
+                  <div className="flex items-center tracking-tighter gap-1">
+                    <div className="flex items-center gap-1 ">
+                      <Flame size={16} color="#4b5563" />
+                      <div className="flex items-center gap-[2px]">
+                        <p className="text-gray-600 font-bold">{log.calories_burned}</p>
+                        <span className="text-gray-600 text-xs">kcal</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center tracking-tighter gap-1">
-                  <div className="flex items-center gap-1">
-                    <Timer size={16} className="text-blue-400" />
-                    <div className="flex items-center gap-[2px]">
-                      <p className="text-gray-500 font-bold">{log.duration_minutes}</p>
-                      <span className="text-gray-500 text-xs">분</span>
+                  <div className="flex items-center tracking-tighter gap-1">
+                    <div className="flex items-center gap-1">
+                      <Timer size={16} className="text-gray-600" />
+                      <div className="flex items-center gap-[2px]">
+                        <p className="text-gray-500 font-bold">{log.duration_minutes}</p>
+                        <span className="text-gray-500 text-xs">분</span>
+                      </div>
                     </div>
                   </div>
                 </div>

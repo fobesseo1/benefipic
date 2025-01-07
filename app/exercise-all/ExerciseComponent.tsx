@@ -20,7 +20,7 @@ export type DailyStatus = {
   remainingCarbs: number;
 };
 
-export default function ExerciseComponent() {
+export default function ExerciseComponent({ user_id }: { user_id: string }) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dailyStatus, setDailyStatus] = useState<DailyStatus | null>(null);
   const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]);
@@ -47,6 +47,7 @@ export default function ExerciseComponent() {
         const { data } = await supabase
           .from('exercise_logs')
           .select('*')
+          .eq('user_id', user_id)
           .gte('logged_at', utcStart.toISOString())
           .lte('logged_at', utcEnd.toISOString())
           .order('logged_at', { ascending: false });

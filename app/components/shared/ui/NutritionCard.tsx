@@ -92,7 +92,7 @@ export const NutritionCard = ({
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-gray-50 p-2 rounded-lg grid grid-cols-10 gap-1 shadow">
           <div className="col-span-3 flex items-center justify-center">
-            <Flame size={32} color="#F87171" />
+            <Flame size={32} color="#4b5563" />
           </div>
           <div className="col-span-7 flex flex-col gap-1 justify-center">
             <div className="flex items-center justify-between">
@@ -112,7 +112,7 @@ export const NutritionCard = ({
 
         <div className="bg-gray-50 p-2 rounded-lg grid grid-cols-10 gap-1 shadow-md">
           <div className="col-span-3 flex items-center justify-center">
-            <Beef size={32} color="#F472B6" />
+            <Beef size={32} color="#4b5563" />
           </div>
           <div className="col-span-7 flex flex-col gap-1 justify-center">
             <div className="flex items-center justify-between">
@@ -132,7 +132,7 @@ export const NutritionCard = ({
 
         <div className="bg-gray-50 p-2 rounded-lg grid grid-cols-10 gap-1 shadow-md">
           <div className="col-span-3 flex items-center justify-center">
-            <Droplet size={32} color="#94A3B8" />
+            <Droplet size={32} color="#4b5563" />
           </div>
           <div className="col-span-7 flex flex-col gap-1 justify-center">
             <div className="flex items-center justify-between">
@@ -151,8 +151,8 @@ export const NutritionCard = ({
         </div>
 
         <div className="bg-gray-50 p-2 rounded-lg grid grid-cols-10 gap-1 shadow-md">
-          <div className="col-span-3 flex items-center justify-center">
-            <Wheat size={32} color="#EAB308" />
+          <div className="col-span-3 flex items-center justify-center ">
+            <Wheat size={32} color="#4b5563" />
           </div>
           <div className="col-span-7 flex flex-col gap-1 justify-center">
             <div className="flex items-center justify-between">

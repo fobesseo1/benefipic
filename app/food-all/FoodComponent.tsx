@@ -3,9 +3,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, Suspense } from 'react';
-import NutritionCard from '../components/shared/ui/NutritionCard';
 import FoodLogCard from '../components/shared/ui/FoodLogCard';
-import ExerciseLogCard from '../components/shared/ui/ExerciseLogCard';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
 import { FoodLog, ExerciseLog } from '../types/types';
 import CurrentWeekCalendar from '../main/CurrentWeekCalendar';
@@ -20,7 +18,7 @@ export type DailyStatus = {
   remainingCarbs: number;
 };
 
-export default function FoodComponent() {
+export default function FoodComponent({ user_id }: { user_id: string }) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dailyStatus, setDailyStatus] = useState<DailyStatus | null>(null);
   const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]);
@@ -47,6 +45,7 @@ export default function FoodComponent() {
         const { data } = await supabase
           .from('food_logs')
           .select('*')
+          .eq('user_id', user_id)
           .gte('logged_at', utcStart.toISOString())
           .lte('logged_at', utcEnd.toISOString())
           .order('logged_at', { ascending: false });
