@@ -151,32 +151,47 @@ const QuestionSlidePage = ({
     };
 
     try {
-      // 먼저 해당 user_id의 데이터가 있는지 확인
-      const { data: existingRecord } = await supabase
-        .from('health_records')
-        .select('*')
-        .eq('user_id', currentUser_id)
-        .single();
+      // 트랜잭션처럼 처리하기 위해 모든 DB 작업을 Promise.all로 묶음
+      await Promise.all([
+        // 1. health_records 테이블 처리 (기존 로직)
+        (async () => {
+          const { data: existingRecord } = await supabase
+            .from('health_records')
+            .select('*')
+            .eq('user_id', currentUser_id)
+            .single();
 
-      if (existingRecord) {
-        // 기존 데이터가 있으면 업데이트
-        const { error: updateError } = await supabase
-          .from('health_records')
-          .update(healthRecord)
-          .eq('user_id', currentUser_id);
+          if (existingRecord) {
+            const { error: updateError } = await supabase
+              .from('health_records')
+              .update(healthRecord)
+              .eq('user_id', currentUser_id);
 
-        if (updateError) throw updateError;
-      } else {
-        // 기존 데이터가 없으면 새로 삽입
-        const { error: insertError } = await supabase.from('health_records').insert([healthRecord]);
+            if (updateError) throw updateError;
+          } else {
+            const { error: insertError } = await supabase
+              .from('health_records')
+              .insert([healthRecord]);
 
-        if (insertError) throw insertError;
-      }
+            if (insertError) throw insertError;
+          }
+        })(),
+
+        // 2. weight_tracking 테이블에 체중 기록 추가
+        (async () => {
+          const { error: weightError } = await supabase.from('weight_tracking').upsert({
+            user_id: currentUser_id,
+            weight: Number(answers['weight']),
+          });
+
+          if (weightError) throw weightError;
+        })(),
+      ]);
 
       // 저장 성공 후 다음 페이지로 이동
       router.push('/health-info');
     } catch (error) {
-      console.error('Error saving health record:', error);
+      console.error('Error saving records:', error);
       // 에러 처리 로직 추가 (예: 토스트 메시지 표시)
     }
   };

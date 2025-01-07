@@ -1,6 +1,16 @@
 'use client';
 
-import { Camera, Dumbbell, Plus, ScanBarcode, SquareMenu, SquarePen, X } from 'lucide-react';
+import {
+  Camera,
+  Dumbbell,
+  Gauge,
+  Goal,
+  Plus,
+  ScanBarcode,
+  SquareMenu,
+  SquarePen,
+  X,
+} from 'lucide-react';
 import { AlertDialog, AlertDialogContent, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -62,6 +72,18 @@ export default function CircleButtonWithAlert() {
             <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
               <Dumbbell className="w-8 h-8 text-gray-900 " strokeWidth={1} />
               <p className="text-sm text-gray-900 font-bold">운동입력</p>
+            </div>
+          </Link>
+          <Link href="/exercise" onClick={() => setIsOpen(false)}>
+            <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
+              <Gauge className="w-8 h-8 text-gray-900 " strokeWidth={1} />
+              <p className="text-sm text-gray-900 font-bold">체중입력</p>
+            </div>
+          </Link>
+          <Link href="/health-info" onClick={() => setIsOpen(false)}>
+            <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
+              <Goal className="w-8 h-8 text-gray-900 " strokeWidth={1} />
+              <p className="text-sm text-gray-900 font-bold">목표수정</p>
             </div>
           </Link>
         </div>
