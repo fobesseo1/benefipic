@@ -21,7 +21,6 @@ export const GoalSettingView: React.FC<GoalSettingViewProps> = ({
     <form onSubmit={onSubmit} className="space-y-6">
       {/* 목표 입력 폼 */}
       <div className="space-y-4">
-        <h2 className="-mb-4 pl-4">*목표 선택*</h2>
         <select
           name="goal"
           className="w-full p-4 rounded-xl bg-gray-50"
@@ -35,31 +34,41 @@ export const GoalSettingView: React.FC<GoalSettingViewProps> = ({
 
         {formData.goal !== 'maintain' && (
           <>
-            <div className="relative">
-              <input
-                type="number"
-                name="targetWeight"
-                className="w-full p-4 rounded-xl bg-gray-50"
-                value={formData.targetWeight || ''}
-                onChange={onInputChange}
-                placeholder="목표 체중을 입력하세요"
-                step="0.1"
-              />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">kg</span>
+            <div className="space-y-1">
+              <div className="relative">
+                <input
+                  type="number"
+                  name="targetWeight"
+                  className="w-full p-4 rounded-xl bg-gray-50"
+                  value={formData.targetWeight || ''}
+                  onChange={onInputChange}
+                  placeholder="목표 체중을 입력하세요"
+                  step="0.1"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">kg</span>
+              </div>
+              <p className="text-red-500 text-sm pl-4 tracking-tighter">
+                *현재 체중: {healthRecord.weight}kg
+              </p>
             </div>
 
-            <div className="relative">
-              <input
-                type="number"
-                name="targetDuration"
-                className="w-full p-4 rounded-xl bg-gray-50"
-                value={formData.targetDuration || ''}
-                onChange={onInputChange}
-                placeholder="목표 기간을 입력하세요"
-                min="1"
-                max="52"
-              />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">주</span>
+            <div className="space-y-1">
+              <div className="relative">
+                <input
+                  type="number"
+                  name="targetDuration"
+                  className="w-full p-4 rounded-xl bg-gray-50"
+                  value={formData.targetDuration || ''}
+                  onChange={onInputChange}
+                  placeholder="목표 기간을 입력하세요"
+                  min="1"
+                  max="52"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">주</span>
+              </div>
+              <p className="text-gray-500 text-sm pl-4 tracking-tighter">
+                *미입력 시 12주로 설정됩니다. (1~52주 입력 가능)
+              </p>
             </div>
           </>
         )}
@@ -71,7 +80,7 @@ export const GoalSettingView: React.FC<GoalSettingViewProps> = ({
           type="submit"
           className="w-full py-4 rounded-xl bg-black text-white text-lg font-medium"
         >
-          계산하기
+          설정하기
         </button>
         <button
           type="button"

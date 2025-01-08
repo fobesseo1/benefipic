@@ -9,6 +9,7 @@ import ExerciseLogCard from '../components/shared/ui/ExerciseLogCard';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
 import { FoodLog, ExerciseLog } from '../types/types';
 import CurrentWeekCalendar from '../main/CurrentWeekCalendar';
+import MainLoading from '../Mainloading';
 
 export type DailyStatus = {
   totalCalories: number;
@@ -103,16 +104,12 @@ export default function ExerciseComponent({ user_id }: { user_id: string }) {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
+    return <MainLoading />;
   }
 
   return (
     <div className="relative min-h-screen min-w-screen flex flex-col overflow-hidden">
-      <div className="w-full aspect-square py-12 px-6 flex flex-col space-y-6">
+      <div className="w-full aspect-square p-4 flex flex-col space-y-6">
         <div className="flex flex-col space-y-6">
           <CurrentWeekCalendar selectedDate={selectedDate} onDateSelect={handleDateSelect} />
         </div>

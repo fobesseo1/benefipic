@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import AnalysisProgress from './Analysis Progress';
 import FoodDetectionAlert from './FoodDetectionAlert';
+import { completedFoodDatabase, ingredientDatabase } from '../food-description/foodDatabase';
 
 // 타입 정의
 type AnalysisStep =
@@ -39,16 +40,21 @@ interface NutritionPer100g {
   carbs: number;
 }
 
-interface IngredientWithNutrition {
-  name: string;
-  amount: string;
-  unit: string;
-  nutritionPer100g: NutritionPer100g;
-}
-
 interface ApiResponse {
+  isFood: boolean;
   foodName: string;
-  ingredients: IngredientWithNutrition[];
+  description?: string;
+  ingredients: Array<{
+    name: string;
+    amount: number;
+    unit: string;
+    nutritionPer100g: {
+      calories: number;
+      protein: number;
+      fat: number;
+      carbs: number;
+    };
+  }>;
 }
 
 export interface NutritionData {
@@ -69,12 +75,240 @@ export interface NutritionData {
   };
 }
 
+interface Ingredient {
+  name: string;
+  amount: number;
+  unit: string;
+  nutritionPer100g: {
+    calories: number;
+    protein: number;
+    fat: number;
+    carbs: number;
+  };
+}
+
+interface FoodAnalysis {
+  isFood: boolean;
+  foodName: string;
+  description?: string; // optional로 변경
+  ingredients: Ingredient[];
+}
+
+// 유사도 비교함수
+const getLevenshteinDistance = (str1: string, str2: string): number => {
+  const matrix = Array(str1.length + 1)
+    .fill(null)
+    .map(() => Array(str2.length + 1).fill(null));
+
+  for (let i = 0; i <= str1.length; i++) matrix[i][0] = i;
+  for (let j = 0; j <= str2.length; j++) matrix[0][j] = j;
+
+  for (let i = 1; i <= str1.length; i++) {
+    for (let j = 1; j <= str2.length; j++) {
+      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost
+      );
+    }
+  }
+
+  return matrix[str1.length][str2.length];
+};
+
+const isSimilarName = (name1: string, name2: string, threshold = 0.7): boolean => {
+  const distance = getLevenshteinDistance(name1, name2);
+  const maxLength = Math.max(name1.length, name2.length);
+  const similarity = 1 - distance / maxLength;
+  return similarity >= threshold;
+};
+
+//완벽매치함수
+const isExactMatch = (name1: string, name2: string): boolean => {
+  return name1 === name2;
+};
+
+const findExactMatchFood = (foodName: string) => {
+  return completedFoodDatabase.find((food) => food.name === foodName);
+};
+
+// 기존 correctIngredient 함수를 findMatchingIngredient 함수 추가하고 수정
+const findMatchingIngredient = (name: string) => {
+  console.log('--- 재료 매칭 시작 ---');
+  console.log('찾을 재료명:', name);
+
+  // 1. 완성품 DB에서 정확히 찾기
+  const exactCompletedMatch = completedFoodDatabase.find((food) => food.name === name);
+  console.log('완성품 DB 정확 매칭 결과:', exactCompletedMatch);
+
+  if (exactCompletedMatch) {
+    console.log('완성품 DB에서 정확한 매칭 성공');
+    return {
+      type: 'completed',
+      data: exactCompletedMatch,
+    };
+  }
+
+  // 2. 재료 DB에서 정확히 찾기
+  const exactIngredientMatch = ingredientDatabase.find((ing) => ing.name === name);
+  console.log('재료 DB 정확 매칭 결과:', exactIngredientMatch);
+
+  if (exactIngredientMatch) {
+    console.log('재료 DB에서 정확한 매칭 성공');
+    return {
+      type: 'ingredient',
+      data: exactIngredientMatch,
+    };
+  }
+
+  // 3. 완성품 DB에서 유사 매칭
+  const similarCompleted = completedFoodDatabase.find((food) => isSimilarName(food.name, name));
+  console.log('완성품 DB 유사 매칭 결과:', similarCompleted);
+
+  if (similarCompleted) {
+    console.log('완성품 DB에서 유사 매칭 성공');
+    return {
+      type: 'completed',
+      data: similarCompleted,
+    };
+  }
+
+  // 4. 재료 DB에서 유사 매칭
+  const similarIngredient = ingredientDatabase.find((ing) => isSimilarName(ing.name, name));
+  console.log('재료 DB 유사 매칭 결과:', similarIngredient);
+
+  if (similarIngredient) {
+    console.log('재료 DB에서 유사 매칭 성공');
+    return {
+      type: 'ingredient',
+      data: similarIngredient,
+    };
+  }
+
+  console.log('!!! 매칭 실패 !!!');
+  return null;
+};
+
+const correctIngredient = (ingredient: Ingredient): Ingredient => {
+  console.log('보정 전 재료:', ingredient);
+
+  const matchedItem = findMatchingIngredient(ingredient.name);
+  console.log('매칭된 결과:', matchedItem);
+
+  if (!matchedItem) {
+    console.log('매칭 실패, 원본 데이터 사용:', ingredient);
+    return ingredient;
+  }
+
+  // DB에서 찾은 영양정보를 100g/100ml 기준으로 변환
+  const nutrition = {
+    calories: (matchedItem.data.nutrition.calories * 100) / matchedItem.data.unitWeight,
+    protein: (matchedItem.data.nutrition.protein * 100) / matchedItem.data.unitWeight,
+    fat: (matchedItem.data.nutrition.fat * 100) / matchedItem.data.unitWeight,
+    carbs: (matchedItem.data.nutrition.carbs * 100) / matchedItem.data.unitWeight,
+  };
+
+  console.log('변환된 100g/100ml 당 영양소:', nutrition);
+
+  const result = {
+    ...ingredient,
+    nutritionPer100g: nutrition,
+  };
+  console.log('최종 보정된 재료:', result);
+  return result;
+};
+// 전체요리매칭함수
+const validateAndCorrectAnalysis = (analysis: FoodAnalysis): FoodAnalysis => {
+  if (findExactMatchFood(analysis.foodName)) {
+    return analysis;
+  }
+  console.log('분석 시작 데이터:', analysis);
+
+  // 1. 정확한 매칭 시도
+  const exactMatchedFood = completedFoodDatabase.find((food) =>
+    isExactMatch(food.name, analysis.foodName)
+  );
+
+  // 정확히 일치하는 경우, 데이터베이스 값을 그대로 사용
+  if (exactMatchedFood) {
+    console.log('정확히 일치하는 요리 발견:', exactMatchedFood);
+    return {
+      ...analysis, // 기존 정보 유지
+      ingredients: analysis.ingredients.map((ing) => ({
+        ...ing, // 원래 재료명과 양은 유지
+        nutritionPer100g: {
+          // 영양정보만 데이터베이스 값으로 수정
+          calories: (exactMatchedFood.nutrition.calories / exactMatchedFood.unitWeight) * 100,
+          protein: (exactMatchedFood.nutrition.protein / exactMatchedFood.unitWeight) * 100,
+          fat: (exactMatchedFood.nutrition.fat / exactMatchedFood.unitWeight) * 100,
+          carbs: (exactMatchedFood.nutrition.carbs / exactMatchedFood.unitWeight) * 100,
+        },
+      })),
+    };
+  }
+
+  // 2. 유사 매칭 및 재료 기반 분석 (기존 로직)
+  const matchedFood = completedFoodDatabase.find((food) =>
+    isSimilarName(food.name, analysis.foodName)
+  );
+
+  const correctedIngredients = analysis.ingredients.map(correctIngredient);
+  console.log('보정된 재료들:', correctedIngredients);
+
+  if (matchedFood) {
+    const totalWeight = correctedIngredients.reduce((sum, ing) => sum + ing.amount, 0);
+    console.log('전체 중량:', totalWeight);
+
+    const ratio = totalWeight / matchedFood.unitWeight;
+    console.log('중량 비율:', ratio);
+
+    const gptTotal = calculateTotalNutrition(correctedIngredients);
+    console.log('GPT 계산 총 영양소:', gptTotal);
+
+    const dbTotal = {
+      calories: matchedFood.nutrition.calories * ratio,
+      protein: matchedFood.nutrition.protein * ratio,
+      fat: matchedFood.nutrition.fat * ratio,
+      carbs: matchedFood.nutrition.carbs * ratio,
+    };
+    console.log('DB 기반 총 영양소:', dbTotal);
+
+    const threshold = 0.3;
+    const difference = Math.abs(gptTotal.calories - dbTotal.calories) / dbTotal.calories;
+    console.log('차이 비율:', difference);
+
+    if (difference > threshold) {
+      const result = {
+        ...analysis,
+        ingredients: correctedIngredients.map((ing) => ({
+          ...ing,
+          nutritionPer100g: {
+            calories: (dbTotal.calories / totalWeight) * 100,
+            protein: (dbTotal.protein / totalWeight) * 100,
+            fat: (dbTotal.fat / totalWeight) * 100,
+            carbs: (dbTotal.carbs / totalWeight) * 100,
+          },
+        })),
+      };
+      console.log('DB 값 우선 적용 결과:', result);
+      return result;
+    }
+  }
+
+  const result = {
+    ...analysis,
+    ingredients: correctedIngredients,
+  };
+  console.log('최종 보정 결과:', result);
+  return result;
+};
+
 // 유틸리티 함수
-const calculateTotalNutrition = (ingredients: IngredientWithNutrition[]): NutritionPer100g => {
+const calculateTotalNutrition = (ingredients: ApiResponse['ingredients']): NutritionPer100g => {
   return ingredients.reduce(
     (total, ingredient) => {
-      const amount = parseFloat(ingredient.amount);
-      const ratio = amount / 100;
+      const ratio = ingredient.amount / 100;
 
       return {
         calories: total.calories + ingredient.nutritionPer100g.calories * ratio,
@@ -86,7 +320,6 @@ const calculateTotalNutrition = (ingredients: IngredientWithNutrition[]): Nutrit
     { calories: 0, protein: 0, fat: 0, carbs: 0 }
   );
 };
-
 const roundNutritionValues = (nutrition: NutritionPer100g): NutritionPer100g => {
   return {
     calories: Math.round(nutrition.calories),
@@ -187,19 +420,33 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   };
 
   const processApiResponse = (apiData: ApiResponse): NutritionData => {
-    // 전체 영양소 계산
-    const totalNutrition = calculateTotalNutrition(apiData.ingredients);
-    const roundedNutrition = roundNutritionValues(totalNutrition);
+    console.log('API 응답 데이터:', apiData);
 
-    // ingredients 형식 변환
+    // 정확한 매칭 확인
+    const exactMatch = findExactMatchFood(apiData.foodName);
+
+    // ingredients 형식 변환 (항상 OpenAI 결과 사용)
     const processedIngredients = apiData.ingredients.map((ingredient) => ({
       name: ingredient.name,
-      amount: `${ingredient.amount}${ingredient.unit}`,
+      amount: `${ingredient.amount.toString()}${ingredient.unit}`,
       originalAmount: {
-        value: parseFloat(ingredient.amount),
+        value: ingredient.amount,
         unit: ingredient.unit,
       },
     }));
+
+    if (exactMatch) {
+      // 정확히 일치하는 경우 DB의 영양정보 직접 사용
+      return {
+        foodName: apiData.foodName,
+        ingredients: processedIngredients,
+        nutrition: exactMatch.nutrition, // DB 값 그대로 사용
+      };
+    }
+
+    // 일치하지 않는 경우 기존 로직대로 계산
+    const totalNutrition = calculateTotalNutrition(apiData.ingredients);
+    const roundedNutrition = roundNutritionValues(totalNutrition);
 
     return {
       foodName: apiData.foodName,
@@ -209,6 +456,7 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   };
 
   // API 통신
+
   const analyzeImage = async () => {
     if (!selectedImage) return;
 
@@ -218,7 +466,7 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       const fileType = selectedImage.type === 'image/png' ? 'png' : 'jpeg';
 
       setStep('analyzing');
-      const initialAnalysis = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -229,22 +477,27 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
           messages: [
             {
               role: 'system',
-              content: `당신은 음식 영양 분석 전문가입니다.- 분석 대상:
-  * 모든 섭취 가능한 음식과 음료
-  * 포장된 식품/음료 제품
-  * 물을 포함한 모든 음료
-  * 영양소가 있거나 없더라도 인간이 섭취할 수 있는 모든 것
-  
-- 영양소 분석 지침:
-  * 물의 경우도 영양소 0으로 기록하되 분석 대상에 포함
-  * 포장 제품의 경우 영양성분표 기준으로 분석
-  * 액체류도 100ml 기준으로 영양소 분석 진행
-  
-- isFood 판단 기준:
-  * true: 모든 음식, 음료, 포장식품을 포함
-  * false: 섭취 불가능한 물체나 비식품만 해당
-  
-주의: 음료도 식품으로 간주하여 isFood를 true로 설정해야 합니다.`,
+              content: `당신은 음식 영양 분석 전문가입니다.
+              - 분석 대상:
+                * 모든 섭취 가능한 음식과 음료
+                * 포장된 식품/음료 제품
+                * 물을 포함한 모든 음료
+                * 영양소가 있거나 없더라도 인간이 섭취할 수 있는 모든 것
+              
+              - 영양소 분석 지침:
+                * 물의 경우도 영양소 0으로 기록하되 분석 대상에 포함
+                * 포장 제품의 경우 영양성분표 기준으로 분석
+                * 액체류도 100ml 기준으로 영양소 분석 진행
+              
+              - isFood 판단 기준:
+                * true: 모든 음식, 음료, 포장식품을 포함
+                * false: 섭취 불가능한 물체나 비식품만 해당
+              
+              - foodName 음식이름 기준 :
+                * 완성된 음식이 두 개이상 보일경우 (예시: 햄버거, 감자튀김, 콜라) 이경우에는 반드시 힘식이름을 햄버거와 감자튀김 그리고 콜라와 같은 식으로 만들어
+                
+              
+              주의: 음료도 식품으로 간주하여 isFood를 true로 설정해야 합니다.`,
             },
             {
               role: 'user',
@@ -261,17 +514,20 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   
                   다음 형식의 JSON으로 응답해주세요:
                   {
-                    "isFood": true/false, 
-                    "foodName": "음식 이름",
-                    "description": "음식의 상세 설명 (조리 방법, 식재료 특징 등)",
-                    "serving": {
-                      "amount": "정확한 중량 또는 부피 (범위로 표현)",
-                      "reference": "크기 추정에 사용된 기준 (식기 또는 사물)"
-                    },
+                    "isFood": true/false,
+                    "foodName": "음식 이름(반드시 한글로 작성해)",
+                    "description": "음식이 아닐 경우 설명",
                     "ingredients": [
                       {
                         "name": "재료명",
-                        "amount": "추정 수량/중량"
+                        "amount": number,
+                        "unit": "g 또는 ml",
+                        "nutritionPer100g": {
+                          "calories": number,
+                          "protein": number,
+                          "fat": number,
+                          "carbs": number
+                        }
                       }
                     ]
                   }`,
@@ -285,99 +541,29 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
               ],
             },
           ],
-          max_tokens: 500,
-          response_format: { type: 'json_object' },
-        }),
-      });
-
-      const initialData = await initialAnalysis.json();
-      const initialResult = JSON.parse(initialData.choices[0].message.content);
-
-      // 테스트용 데이터
-      // const initialResult = {
-      //   isFood: true,
-      //   foodName: '비빔밥',
-      //   description: '신선한 야채와 고추장이 들어간 전통적인 한식 비빔밥',
-      //   serving: {
-      //     amount: '1인분',
-      //     reference: '일반적인 식당 제공량',
-      //   },
-      //   ingredients: [
-      //     {
-      //       name: '밥',
-      //       amount: '한 공기',
-      //     },
-      //     {
-      //       name: '당근',
-      //       amount: '한 줌',
-      //     },
-      //     {
-      //       name: '시금치',
-      //       amount: '적당량',
-      //     },
-      //     {
-      //       name: '고추장',
-      //       amount: '한 스푼',
-      //     },
-      //   ],
-      // };
-      console.log('초기 분석 결과:', initialResult);
-
-      if (!initialResult.isFood) {
-        setNotFoodAlert({
-          isOpen: true,
-          detectedContent: initialResult.description,
-        });
-        setStep('image-selected');
-        return;
-      }
-
-      setStep('calculate');
-      const finalResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            {
-              role: 'user',
-              content: `분석된 음식 정보:
-${JSON.stringify(initialResult, null, 2)}
-만약 amount에 숫자가 아닐경우는 무조건 정수로 바꿔서 입력해주세요 반드시
-위 정보를 바탕으로 각 재료의 영양분석을 다음 형식의 JSON으로 응답해주세요:
-
-{
-  "foodName": "음식 이름",
-  "ingredients": [
-    {
-      "name": "재료명",
-      "amount": "정확한 중량 (숫자만)",
-      "unit": "단위(g/ml)",
-      "nutritionPer100g": {
-        "calories": "number",
-        "protein": "number",
-        "fat": "number",
-        "carbs": "number"
-      }
-    }
-  ]
-}`,
-            },
-          ],
           max_tokens: 800,
           temperature: 0.3,
           response_format: { type: 'json_object' },
         }),
       });
 
-      const finalData = await finalResponse.json();
-      const finalResult = JSON.parse(finalData.choices[0].message.content);
-      console.log('최종 계산 결과:', finalResult);
+      const data = await response.json();
+      const result = JSON.parse(data.choices[0].message.content) as ApiResponse;
+      console.log('분석 결과:', result);
 
-      const processedData = processApiResponse(finalResult);
+      if (!result.isFood) {
+        setNotFoodAlert({
+          isOpen: true,
+          detectedContent: result.description || '음식이 아닌 것으로 판단됩니다.',
+        });
+        setStep('image-selected');
+        return;
+      }
+
+      // 분석 결과 보정
+      const correctedResult = validateAndCorrectAnalysis(result);
+
+      const processedData = processApiResponse(correctedResult);
       setOriginalAnalysis(processedData);
       setAnalysis(processedData);
       setStep('complete');

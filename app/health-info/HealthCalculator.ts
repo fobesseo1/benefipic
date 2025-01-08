@@ -172,7 +172,7 @@ export class HealthCalculator {
     const weeklyLoss = gender === 'male' ? 0.75 : 0.5;
     const maxWeightLoss = weeklyLoss * 12;
 
-    const bmi25Weight = Number((25 * heightInMeters * heightInMeters).toFixed(1));
+    const bmi23Weight = Number((23 * heightInMeters * heightInMeters).toFixed(1));
 
     // BMR 기반 안전 감량 계산 추가
     const bmr = this.calculateBMR(gender, currentWeight, height, 30); // 나이는 임시로 30 사용
@@ -184,9 +184,13 @@ export class HealthCalculator {
     const maxLossWeight = Number(
       (currentWeight - Math.min(maxWeightLoss, maxWeightLossFromCalories)).toFixed(1)
     );
-    const targetWeight = Math.max(bmi25Weight, maxLossWeight);
+    const targetWeight = Math.max(bmi23Weight, maxLossWeight);
+    console.log('targetWeight:', targetWeight);
+    console.log('maxLossWeight:', maxLossWeight);
+    console.log('bmi23Weight:', bmi23Weight);
 
     const weightDiff = Number((currentWeight - targetWeight).toFixed(1));
+    console.log('weightDiff:', weightDiff);
 
     return {
       recommendedGoal: 'lose',

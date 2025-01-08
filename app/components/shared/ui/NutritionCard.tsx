@@ -154,9 +154,9 @@ export const NutritionCard = ({
           <div className="col-span-3 flex items-center justify-center ">
             <Wheat size={32} color="#4b5563" />
           </div>
-          <div className="col-span-7 flex flex-col gap-1 justify-center">
+          <div className="col-span-7 flex flex-col  justify-center">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-600">탄수화물</p>
+              <p className="text-sm text-gray-600 tracking-tighter">탄수화물</p>
               {editable && (
                 <button
                   onClick={() => toggleEdit('carbs')}

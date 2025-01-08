@@ -178,7 +178,7 @@ export default function MainComponent({ user_id }: { user_id: string }) {
 
   return (
     <div className="relative min-h-screen min-w-screen flex flex-col overflow-hidden">
-      <div className="w-full aspect-square py-12 px-6 flex flex-col space-y-6">
+      <div className="w-full aspect-square p-4 flex flex-col space-y-6">
         <div className="flex flex-col space-y-6">
           <CurrentWeekCalendar selectedDate={selectedDate} onDateSelect={handleDateSelect} />
           <Suspense fallback={<div>Loading nutrition...</div>}>

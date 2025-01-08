@@ -6,6 +6,7 @@ import { useUserStore } from '../store/userStore';
 import { CartesianGrid, Line, LineChart, XAxis, YAxis, LabelList, ReferenceLine } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, MoveUpRight, MoveDownRight, LoaderCircle } from 'lucide-react';
+import MainLoading from '../Mainloading';
 
 interface WeightRecord {
   weight: number;
@@ -64,8 +65,9 @@ export default function WeightTracker() {
     try {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 6);
-      startDate.setHours(startDate.getHours() + 9);
       startDate.setHours(0, 0, 0, 0);
+
+      console.log('Query startDate:', startDate.toISOString()); // 쿼리 시작 날짜 확인
 
       // 체중 기록과 목표 체중을 동시에 가져오기
       const [weightResponse, goalResponse] = await Promise.all([
@@ -86,34 +88,59 @@ export default function WeightTracker() {
       if (weightResponse.error) throw weightResponse.error;
       const data = weightResponse.data;
 
+      console.log('Fetched data:', data); // 가져온 데이터 확인
+
       if (goalResponse.data) {
         setTargetWeight(goalResponse.data.target_weight);
-        console.log('목표 체중:', goalResponse.data.target_weight);
       }
 
       if (data) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const date = now.getDate();
+
+        console.log('Current browser time:', now);
+
+        // 2. 날짜 배열 생성 (KST 기준)
         const dates = Array.from({ length: 7 }, (_, i) => {
-          const date = new Date();
-          date.setHours(date.getHours() + 9);
-          date.setDate(date.getDate() - (6 - i));
-          date.setHours(0, 0, 0, 0);
-          return date.toISOString().split('T')[0];
+          const today = new Date(); // 현재 시각 (1월 8일)
+          console.log('Today:', today);
+          const d = new Date(today);
+          console.log('d:', d);
+          d.setDate(today.getDate() - (6 - i));
+          return d.toISOString().split('T')[0];
         });
 
-        const processedData = dates.map((date) => {
-          // 해당 날짜의 모든 기록 찾기
-          const dayRecords = data.filter((r) => {
-            const recordDate = new Date(r.created_at);
-            recordDate.setHours(recordDate.getHours() + 9);
-            const recordDateStr = recordDate.toISOString().split('T')[0];
-            return recordDateStr === date;
-          });
+        console.log('Generated dates:', dates);
 
-          // 해당 날짜의 기록이 있으면, 가장 최근 시간의 기록 사용
-          if (dayRecords.length > 0) {
-            const latestRecord = dayRecords.sort(
-              (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-            )[0];
+        // 2. 모든 기록을 KST로 변환하고 날짜별로 그룹화
+        const groupedByDate = data.reduce((acc: { [key: string]: WeightRecord[] }, record) => {
+          const kstDate = new Date(new Date(record.created_at).getTime() + 9 * 60 * 60 * 1000);
+          const dateStr = kstDate.toISOString().split('T')[0];
+
+          if (!acc[dateStr]) {
+            acc[dateStr] = [];
+          }
+          acc[dateStr].push(record);
+
+          console.log('Record KST conversion:', {
+            originalDate: record.created_at,
+            convertedDate: dateStr,
+            weight: record.weight,
+          }); // 각 기록의 변환 결과 확인
+
+          return acc;
+        }, {});
+
+        console.log('Grouped data:', groupedByDate); // 그룹화된 데이터 확인
+
+        // 3. 각 날짜별로 가장 최신 기록 선택하여 차트 데이터 생성
+        const processedData = dates.map((date) => {
+          if (groupedByDate[date]) {
+            const latestRecord = groupedByDate[date].reduce((latest, current) =>
+              new Date(current.created_at) > new Date(latest.created_at) ? current : latest
+            );
 
             return {
               date,
@@ -121,39 +148,30 @@ export default function WeightTracker() {
             };
           }
 
-          // 해당 날짜의 기록이 없으면 이전 날짜들의 기록 중 가장 최근 값 사용
-          const previousRecords = data.filter((r) => {
-            const recordDate = new Date(r.created_at);
-            recordDate.setHours(recordDate.getHours() + 9);
-            const recordDateStr = recordDate.toISOString().split('T')[0];
-            return recordDateStr < date;
-          });
+          const previousDate = dates
+            .slice(0, dates.indexOf(date))
+            .reverse()
+            .find((d) => groupedByDate[d]);
 
-          if (previousRecords.length > 0) {
-            previousRecords.sort(
-              (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          if (previousDate) {
+            const latestPreviousRecord = groupedByDate[previousDate].reduce((latest, current) =>
+              new Date(current.created_at) > new Date(latest.created_at) ? current : latest
             );
             return {
               date,
-              weight: previousRecords[0].weight,
+              weight: latestPreviousRecord.weight,
             };
           }
 
-          // 이전 기록도 없으면 이후 날짜들의 기록 중 가장 빠른 값 사용
-          const nextRecords = data.filter((r) => {
-            const recordDate = new Date(r.created_at);
-            recordDate.setHours(recordDate.getHours() + 9);
-            const recordDateStr = recordDate.toISOString().split('T')[0];
-            return recordDateStr > date;
-          });
+          const nextDate = dates.slice(dates.indexOf(date) + 1).find((d) => groupedByDate[d]);
 
-          if (nextRecords.length > 0) {
-            nextRecords.sort(
-              (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          if (nextDate) {
+            const earliestNextRecord = groupedByDate[nextDate].reduce((earliest, current) =>
+              new Date(current.created_at) < new Date(earliest.created_at) ? current : earliest
             );
             return {
               date,
-              weight: nextRecords[0].weight,
+              weight: earliestNextRecord.weight,
             };
           }
 
@@ -163,11 +181,14 @@ export default function WeightTracker() {
           };
         });
 
+        console.log('Final processed data:', processedData); // 최종 처리된 데이터 확인
+
         setChartData(processedData);
 
-        if (data.length >= 2) {
-          const firstWeight = data[0].weight;
-          const lastWeight = data[data.length - 1].weight;
+        // 4. 추세 계산을 위한 처리
+        if (processedData.length >= 2) {
+          const firstWeight = processedData[0].weight;
+          const lastWeight = processedData[processedData.length - 1].weight;
           const weightChange = ((lastWeight - firstWeight) / firstWeight) * 100;
 
           setWeightTrend({
@@ -176,9 +197,21 @@ export default function WeightTracker() {
           });
         }
 
-        const latestRecord = data[data.length - 1];
-        if (latestRecord) {
+        // 5. 마지막 기록 설정
+        const lastDate = dates[dates.length - 1];
+        if (groupedByDate[lastDate]) {
+          const latestRecord = groupedByDate[lastDate].reduce((latest, current) =>
+            new Date(current.created_at) > new Date(latest.created_at) ? current : latest
+          );
           setLastRecord(latestRecord);
+        } else {
+          const lastRecordDate = [...dates].reverse().find((d) => groupedByDate[d]);
+          if (lastRecordDate) {
+            const latestRecord = groupedByDate[lastRecordDate].reduce((latest, current) =>
+              new Date(current.created_at) > new Date(latest.created_at) ? current : latest
+            );
+            setLastRecord(latestRecord);
+          }
         }
       }
     } catch (error) {
@@ -212,21 +245,16 @@ export default function WeightTracker() {
   }, [fetchWeightRecords]);
 
   if (isInitialLoading) {
-    return (
-      <div className="max-w-md h-screen mx-auto p-4  flex items-center justify-center gap-2">
-        <LoaderCircle className="h-8 w-8 animate-spin" />
-        <p className="text-xl">Processing...</p>
-      </div>
-    );
+    return <MainLoading />;
   }
 
   return (
-    <div className="max-w-xl mx-auto py-12 px-6 flex flex-col gap-6">
+    <div className="max-w-xl mx-auto p-4 flex flex-col gap-6">
       <Card className="pb-6">
         <CardHeader>
           <CardTitle>체중 변화 추이</CardTitle>
           <CardDescription></CardDescription>
-          <div className="flex flex-col items-start gap-1 text-sm mt-4">
+          <div className="flex flex-col items-start text-sm mt-4">
             <div className="text-lg flex gap-2 font-medium tracking-tighter">
               {weightTrend.direction !== 'stable' && (
                 <>
@@ -242,16 +270,18 @@ export default function WeightTracker() {
                 </>
               )}
             </div>
-            <div className="text-xs text-muted-foreground ">
-              최근 7일간의 체중 변화를 보여줍니다
-            </div>
+
+            <p className="text-red-600">
+              <span className="text-2xl font-bold">{targetWeight}</span>
+              kg <span className="text-gray-400">(★=목표체중)</span>
+            </p>
           </div>
         </CardHeader>
         <CardContent>
           <div ref={setContainerRef} className="w-full h-[240px]">
             {containerRef && lastRecord && (
               <LineChart
-                width={Math.min(containerWidth - 16, 500)}
+                width={Math.min(containerWidth, 500)}
                 height={300}
                 data={chartData}
                 margin={{ top: 20, left: 16, right: 16, bottom: 20 }}
@@ -286,13 +316,16 @@ export default function WeightTracker() {
                     y={targetWeight}
                     stroke="#dc2626"
                     strokeDasharray="3 3"
+                    className="-ml-2"
                     label={{
-                      position: 'top',
-                      value: `< 목표: ${targetWeight}kg >`,
+                      position: 'right',
+                      value: `★`,
                       style: {
-                        fontSize: '14px',
+                        fontSize: '16px',
                         fill: '#dc2626',
-                        letterSpacing: '-0.05em',
+                        letterSpacing: '-0.1em',
+                        zIndex: 50,
+                        transform: 'translateX(-4px)',
                       },
                     }}
                   />

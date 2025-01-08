@@ -134,6 +134,10 @@ export const FoodLogCard = ({
     }
   };
 
+  function roundToInteger(number: number) {
+    return Math.round(number);
+  }
+
   return (
     <Card className={`p-4 ${className}`}>
       {/* 기존 헤더 부분 */}
@@ -185,32 +189,34 @@ export const FoodLogCard = ({
               </div>
               {/* <hr className="mt-2" /> */}
               <div className="flex flex-col mt-2">
-                <div className="flex items-center tracking-tighter gap-1">
+                <div className="flex items-center tracking-tighter">
                   <Flame size={16} color="#4b5563" />
                   <div className="flex items-center gap-[2px]">
                     <p className="text-gray-600 font-bold">{log.calories}</p>
                     <span className="text-gray-600 text-xs">kcal</span>
                   </div>
                 </div>
-                <div className="flex justify-between items-center tracking-tighter text-sm gap-1">
-                  <div className="flex items-center tracking-tighter gap-1">
+                <div className="flex justify-between items-center tracking-tighter text-sm ">
+                  <div className="flex items-center tracking-tighter">
                     <Beef size={16} color="#4b5563" />
                     <div className="flex items-center gap-[2px]">
-                      <p className="text-gray-600 font-bold">{log.protein}</p>
+                      <p className="text-gray-600 font-bold text-sm">
+                        {roundToInteger(log.protein)}
+                      </p>
                       <span className="text-gray-600 text-xs">g</span>
                     </div>
                   </div>
-                  <div className="flex items-center tracking-tighter gap-1">
+                  <div className="flex items-center tracking-tighter ">
                     <Droplet size={16} color="#4b5563" />
                     <div className="flex items-center gap-[2px]">
-                      <p className="text-gray-600 font-bold">{log.fat}</p>
+                      <p className="text-gray-600 font-bold text-sm">{roundToInteger(log.fat)}</p>
                       <span className="text-gray-600 text-xs">g</span>
                     </div>
                   </div>
-                  <div className="flex items-center tracking-tighter gap-1">
+                  <div className="flex items-center tracking-tighter">
                     <Wheat size={16} color="#4b5563" />
                     <div className="flex items-center gap-[2px]">
-                      <p className="text-gray-600 font-bold">{log.carbs}</p>
+                      <p className="text-gray-600 font-bold text-sm">{roundToInteger(log.carbs)}</p>
                       <span className="text-gray-600 text-xs">g</span>
                     </div>
                   </div>

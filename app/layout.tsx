@@ -4,10 +4,11 @@ import './globals.css';
 import MysticSymbolsEffect from './Layout-component/BubbleEffect/MysticSymbolsEffect';
 import StoreInitializer from './Layout-component/StoreInitializer';
 import { getUser } from '@/lib/supabse/server';
-import { ChevronLeft, Circle, House, Menu, Plus } from 'lucide-react';
+import { Check, ChevronLeft, Circle, House, Menu, Plus } from 'lucide-react';
 import CircleButtonWithAlert from './components/shared/CircleButtonWithAlert';
 import { headers } from 'next/headers';
 import Link from 'next/link';
+import { CheckCircleNavigation } from './CheckCircleNavigation';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -31,13 +32,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const currentUser = await getUser();
+  // console.log('layout currentUser:', currentUser);
 
   // 현재 경로 가져오기
   const headersList = headers();
   const pathname = headersList.get('x-pathname') || '';
 
   // 숨길 경로 목록
-  const hiddenNavPaths = ['/start', '/question', '/health-info'];
+  const hiddenNavPaths = ['/start', '/question'];
   const shouldShowNav = !hiddenNavPaths.includes(pathname);
 
   return (
@@ -45,19 +47,24 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased relative mx-auto max-w-lg`}
       >
-        {shouldShowNav && (
+        {/* {shouldShowNav && (
           <div className="w-full h-12 absolute top-0 z-50 flex px-6 items-center justify-between">
             <ChevronLeft color="#9CA3AF" size={32} />
             <Menu color="#9CA3AF" size={32} />
           </div>
-        )}
+        )} */}
+
+        {/* <div className="w-full px-6  h-12 flex items-end ">
+          <h2>{currentUser?.username}님 반가워요!</h2>
+        </div> */}
 
         {children}
 
         <StoreInitializer currentUser={currentUser} />
         <MysticSymbolsEffect />
+        <CheckCircleNavigation currentUser={currentUser} />
 
-        {shouldShowNav && (
+        {/* {shouldShowNav && (
           <div className="fixed bottom-20 right-6 z-50 ml-auto w-fit flex items-center justify-center">
             <CircleButtonWithAlert />
           </div>
@@ -75,7 +82,7 @@ export default async function RootLayout({
               </div>
             </Link>
           </div>
-        )}
+        )} */}
       </body>
     </html>
   );

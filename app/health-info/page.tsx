@@ -40,9 +40,9 @@ export default async function HealthCalculatorPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-white p-4">
       {/* Header - Back button and Progress bar */}
-      <div className="px-4 pt-4 pb-2">
+      <div className="  pb-2">
         <div className="flex items-center gap-4">
           <Link href="/main" className="p-2 rounded-full hover:bg-gray-100">
             <ChevronLeft className="w-6 h-6" />
@@ -54,7 +54,7 @@ export default async function HealthCalculatorPage() {
       </div>
 
       {/* Title Section */}
-      <div className="p-4">
+      <div className="py-4">
         <h1 className="text-2xl font-semibold">{slides[0].title}</h1>
         <p className="text-gray-500 text-sm mt-2">{slides[0].subtitle}</p>
       </div>

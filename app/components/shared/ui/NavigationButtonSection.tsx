@@ -136,12 +136,20 @@ export default function NavigationButtonSection({
               </button>
             </div>
           ) : step === 'complete' ? (
-            <button
-              onClick={onSave}
-              className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
-            >
-              저장하기
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={resetAnalyzer}
+                className="w-full bg-gray-100 text-gray-400 rounded-xl py-4 text-lg font-medium"
+              >
+                다시하기
+              </button>
+              <button
+                onClick={onSave}
+                className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
+              >
+                저장하기
+              </button>
+            </div>
           ) : (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>

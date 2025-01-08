@@ -13,7 +13,31 @@ export interface FoodItem {
   nutrition: Nutrition;
 }
 
-const ingredientDatabase: FoodItem[] = [
+export const ingredientDatabase: FoodItem[] = [
+  {
+    id: 'whopper_jr',
+    name: '와퍼 주니어',
+    unit: '개',
+    unitWeight: 158,
+    nutrition: {
+      calories: 399,
+      protein: 17,
+      fat: 8,
+      carbs: 46,
+    },
+  },
+  {
+    id: 'whole_chicken',
+    name: '닭고기',
+    unit: '마리',
+    unitWeight: 1000, // 1kg 기준
+    nutrition: {
+      calories: 1130, // 실제 한 마리 기준으로 수정
+      protein: 120, // 약 120g
+      fat: 65, // 약 65g
+      carbs: 0, // 탄수화물은 거의 없음
+    },
+  },
   {
     id: 'taro',
     name: '토란',
@@ -2810,7 +2834,19 @@ const ingredientDatabase: FoodItem[] = [
   },
 ];
 
-const completedFoodDatabase: FoodItem[] = [
+export const completedFoodDatabase: FoodItem[] = [
+  {
+    id: 'french_fries',
+    name: '프렌치 프라이',
+    unit: '개',
+    unitWeight: 100,
+    nutrition: {
+      calories: 317,
+      protein: 3,
+      fat: 15,
+      carbs: 50,
+    },
+  },
   {
     id: 'coffee_milk',
     name: '커피우유',
@@ -3051,6 +3087,7 @@ const completedFoodDatabase: FoodItem[] = [
       carbs: 35.5,
     },
   },
+
   {
     id: 'sprite',
     name: '사이다',
@@ -4374,97 +4411,109 @@ const completedFoodDatabase: FoodItem[] = [
   {
     id: 'pepperoni_pizza',
     name: '페퍼로니피자',
-    unit: '조각',
-    unitWeight: 150,
+    unit: '판',
+    unitWeight: 1200,
     nutrition: {
-      calories: 385,
-      protein: 16,
-      fat: 18,
-      carbs: 42,
+      calories: 3080,
+      protein: 128,
+      fat: 144,
+      carbs: 336,
     },
   },
   {
     id: 'combination_pizza',
     name: '콤비네이션피자',
-    unit: '조각',
-    unitWeight: 150,
+    unit: '판',
+    unitWeight: 1200,
     nutrition: {
-      calories: 365,
-      protein: 14,
-      fat: 16,
-      carbs: 44,
+      calories: 2920,
+      protein: 112,
+      fat: 128,
+      carbs: 352,
     },
   },
   {
     id: 'hawaiian_pizza',
     name: '하와이안피자',
-    unit: '조각',
-    unitWeight: 150,
+    unit: '판',
+    unitWeight: 1200,
     nutrition: {
-      calories: 345,
-      protein: 12,
-      fat: 14,
-      carbs: 46,
+      calories: 2760,
+      protein: 96,
+      fat: 112,
+      carbs: 368,
     },
   },
   {
     id: 'cheese_pizza',
     name: '치즈피자',
-    unit: '조각',
-    unitWeight: 150,
+    unit: '판',
+    unitWeight: 1200,
     nutrition: {
-      calories: 355,
-      protein: 14,
-      fat: 16,
-      carbs: 42,
+      calories: 2840,
+      protein: 112,
+      fat: 128,
+      carbs: 336,
     },
   },
   {
     id: 'potato_pizza',
     name: '포테이토피자',
-    unit: '조각',
-    unitWeight: 150,
+    unit: '판',
+    unitWeight: 1200,
     nutrition: {
-      calories: 375,
-      protein: 12,
-      fat: 16,
-      carbs: 48,
+      calories: 3000,
+      protein: 96,
+      fat: 128,
+      carbs: 384,
     },
   },
   {
     id: 'margherita_pizza',
     name: '마르게리타피자',
-    unit: '조각',
-    unitWeight: 150,
+    unit: '판',
+    unitWeight: 1200,
     nutrition: {
-      calories: 325,
-      protein: 12,
-      fat: 14,
-      carbs: 42,
+      calories: 2600,
+      protein: 96,
+      fat: 112,
+      carbs: 336,
     },
   },
   {
     id: 'sweet_potato_pizza',
     name: '고구마피자',
-    unit: '조각',
-    unitWeight: 150,
+    unit: '판',
+    unitWeight: 1200,
     nutrition: {
-      calories: 365,
-      protein: 12,
-      fat: 15,
-      carbs: 48,
+      calories: 2920,
+      protein: 96,
+      fat: 120,
+      carbs: 384,
     },
   },
   {
     id: 'seafood_pizza',
     name: '시푸드피자',
-    unit: '조각',
-    unitWeight: 150,
+    unit: '판',
+    unitWeight: 1200,
     nutrition: {
-      calories: 345,
-      protein: 16,
-      fat: 14,
-      carbs: 42,
+      calories: 2760,
+      protein: 128,
+      fat: 112,
+      carbs: 336,
+    },
+  },
+  {
+    id: 'regular_pizza',
+    name: '피자',
+    unit: '판',
+    unitWeight: 1200,
+    nutrition: {
+      calories: 2800,
+      protein: 104,
+      fat: 120,
+      carbs: 344,
     },
   },
   {
@@ -5662,11 +5711,11 @@ const completedFoodDatabase: FoodItem[] = [
     id: 'samgyetang',
     name: '삼계탕',
     unit: '그릇',
-    unitWeight: 800,
+    unitWeight: 600,
     nutrition: {
-      calories: 420,
-      protein: 45,
-      fat: 18,
+      calories: 578,
+      protein: 67,
+      fat: 24,
       carbs: 24,
     },
   },

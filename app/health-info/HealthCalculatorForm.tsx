@@ -124,20 +124,38 @@ const HealthCalculateForm = ({ currentUser_id, initialHealthRecord }: HealthCalc
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
-        value === ''
-          ? undefined
-          : ['targetWeight', 'targetDuration'].includes(name)
-          ? Number(value)
-          : value,
-    }));
+
+    setFormData((prev) => {
+      const newData = {
+        ...prev,
+        [name]:
+          value === ''
+            ? undefined
+            : ['targetWeight', 'targetDuration'].includes(name)
+            ? Number(value)
+            : value,
+      };
+
+      // goal이 maintain이 아니고 targetDuration이 undefined일 때 12주로 설정
+      if (name === 'goal' && value !== 'maintain' && !newData.targetDuration) {
+        newData.targetDuration = 12;
+      }
+
+      return newData;
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const calculatedResult = HealthCalculator.calculateNutrition(formData);
+
+    // 목표 기간이 입력되지 않았을 경우 12주로 설정
+    const submissionData = {
+      ...formData,
+      targetDuration:
+        formData.goal !== 'maintain' && !formData.targetDuration ? 12 : formData.targetDuration,
+    };
+
+    const calculatedResult = HealthCalculator.calculateNutrition(submissionData);
     setResult(calculatedResult);
 
     if (
@@ -194,7 +212,7 @@ const HealthCalculateForm = ({ currentUser_id, initialHealthRecord }: HealthCalc
   };
 
   return (
-    <div className="flex-1 px-4 pb-4">
+    <div className="flex-1 pb-4">
       <AnimatePresence mode="wait">
         <motion.div
           key={stage}

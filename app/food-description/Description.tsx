@@ -261,7 +261,7 @@ export default function FoodDescription({ currentUser_id }: { currentUser_id: st
   };
 
   return (
-    <div className="w-full h-screen max-w-md p-4 py-12 flex flex-col relative ">
+    <div className="w-full h-screen max-w-md p-4 flex flex-col relative ">
       <div className="flex-1 overflow-y-auto pb-16 space-y-4">
         {/* 음식 검색 */}
         <Card className="p-4">
