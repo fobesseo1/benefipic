@@ -34,6 +34,39 @@ interface NutritionData {
   };
 }
 
+// 사용자의 health record를 조회하는 함수를 MenuAnalyzer 컴포넌트 위에 추가
+const getUserHealthProfile = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('health_records')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error) {
+    console.error('Health records 조회 실패:', error);
+    return null;
+  }
+
+  if (!data) return null;
+
+  // 나이 계산
+  const birthDate = new Date(data.birth_date);
+  const today = new Date();
+  const age = today.getFullYear() - birthDate.getFullYear();
+
+  return {
+    age,
+    gender: data.gender,
+    bmiStatus: data.bmi_status,
+    activityLevel: data.activity_level,
+    currentWeight: data.weight,
+    recommendedWeight: data.recommended_weight,
+    tdee: data.tdee,
+  };
+};
+
 const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   const [step, setStep] = useState<AnalysisStep>('initial');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -55,6 +88,8 @@ const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       }
     };
   }, [stream]);
+
+  //사용자 건강정보 가져오기
 
   const processApiResponse = (apiData: any): NutritionData => {
     try {
@@ -81,8 +116,6 @@ const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   };
 
   const handleAdComplete = async () => {
-    const supabase = createSupabaseBrowserClient();
-
     // 광고 시청 시간 업데이트
     const { error } = await supabase
       .from('userdata')
@@ -103,7 +136,6 @@ const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   const analyzeImage = async () => {
     if (!selectedImage) return;
 
-    const supabase = createSupabaseBrowserClient();
     const { checkEligibility } = useAnalysisEligibility(currentUser_id);
 
     // 권한 체크
@@ -136,6 +168,28 @@ const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       const base64Image = await fileToBase64(selectedImage);
       const fileType = selectedImage.type === 'image/png' ? 'png' : 'jpeg';
 
+      const healthProfile = await getUserHealthProfile(currentUser_id);
+
+      // 건강 프로필 기반 프롬프트 생성
+      const userDescription = healthProfile
+        ? `
+  대상자 정보:
+  - ${healthProfile.age}세 ${healthProfile.gender === 'female' ? '여성' : '남성'}
+  - ${
+    healthProfile.bmiStatus === 'overweight' || healthProfile.bmiStatus === 'obese'
+      ? '체중 관리가 필요한'
+      : '건강한'
+  } 체형
+  - 하루 필요 열량: ${healthProfile.tdee}kcal
+  - 권장 체중: ${healthProfile.recommendedWeight}kg (현재 ${healthProfile.currentWeight}kg)
+  - 활동량: ${healthProfile.activityLevel}
+  `
+        : `
+  대상자 정보:
+  - 일반적인 성인
+  - 건강한 식단 관리 필요
+  `;
+
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -151,35 +205,28 @@ const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
                 {
                   type: 'text',
                   text: `당신은 영양 전문가입니다. 사진에서 보이는 메뉴들을 분석하고 다음 조건에 맞는 메뉴를 하나만 추천해주세요:
-
-대상자 정보:
-- 26세 여성
-- 다이어트 중
-- 피부 미용에 관심 있음
-
-필수 요구사항:
-1. 반드시 사진에 있는 메뉴들 중에서만 선택할 것
-2. 사진에 없는 메뉴는 절대 추천하지 말 것
-3. 오직 한 개의 메뉴만 추천할 것
-4. 선택한 메뉴에 대해 다음 정보를 반드시 포함할 것:
-   - 다이어트와 피부미용에 좋은 이유 (필수)
-   - 반드시 nutrition은 1인분 기준의 정확한 영양성분 (칼로리, 단백질, 지방, 탄수화물)
-
-선택 사항:
-- 선택한 메뉴를 건강하게 먹는 방법
-- 영양학적으로 함께 섭취하면 좋은 음식 추천 (단, 현재 메뉴에 있는 것만 가능)
-
-다음의 정확한 JSON 형식으로 응답해주세요:
-{
-  "foodName": "선택한 메뉴 이름",
-  "healthTip": "다이어트와 피부미용에 좋은 이유(필수) + 건강하게 먹는 방법(선택) + 함께 먹으면 좋은 음식(선택)",
-  "nutrition": {
-    "calories": 1인분 기준 숫자로만(kcal),
-    "protein": 1인분 기준 숫자로만(g),
-    "fat": 1인분 기준 숫자로만(g),
-    "carbs": 1인분 기준 숫자로만(g)
-  }
-}`,
+  
+  ${userDescription}
+  
+  필수 요구사항:
+  1. 반드시 사진에 있는 메뉴들 중에서만 선택할 것
+  2. 사진에 없는 메뉴는 절대 추천하지 말 것
+  3. 오직 한 개의 메뉴만 추천할 것
+  4. 선택한 메뉴에 대해 다음 정보를 반드시 포함할 것:
+     - 대상자의 건강 상태와 필요 영양소를 고려한 추천 이유
+     - 1인분 기준의 정확한 영양성분 (칼로리, 단백질, 지방, 탄수화물)
+  
+  다음의 정확한 JSON 형식으로 응답해주세요:
+  {
+    "foodName": "선택한 메뉴 이름",
+    "healthTip": "개인별 맞춤 영양 조언",
+    "nutrition": {
+      "calories": 1인분 기준 숫자로만(kcal),
+      "protein": 1인분 기준 숫자로만(g),
+      "fat": 1인분 기준 숫자로만(g),
+      "carbs": 1인분 기준 숫자로만(g)
+    }
+  }`,
                 },
                 {
                   type: 'image_url',
