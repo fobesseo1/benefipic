@@ -46,3 +46,17 @@ export interface ExerciseLog {
   calories_per_hour: number;
   calories_burned: number;
 }
+
+export type DailyStatusResponse = {
+  status: {
+    totalCalories: number;
+    remainingCalories: number;
+    totalExerciseMinutes: number;
+    remainingExerciseMinutes: number;
+    remainingProtein: number;
+    remainingFat: number;
+    remainingCarbs: number;
+  };
+  foodLogs: FoodLog[];
+  exerciseLogs: ExerciseLog[];
+};

@@ -7,6 +7,8 @@ import { CartesianGrid, Line, LineChart, XAxis, YAxis, LabelList, ReferenceLine 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, MoveUpRight, MoveDownRight, LoaderCircle } from 'lucide-react';
 import MainLoading from '../Mainloading';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 interface WeightRecord {
   weight: number;
@@ -58,6 +60,7 @@ export default function WeightTracker() {
   const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
   const containerWidth = useResizeObserver(containerRef)?.width ?? 500;
   const currentUser = useUserStore();
+  const router = useRouter();
 
   const fetchWeightRecords = useCallback(async () => {
     if (!currentUser.currentUser?.id) return;
@@ -373,13 +376,18 @@ export default function WeightTracker() {
             required
           />
         </div>
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full bg-gray-800 text-white p-2 py-4 rounded disabled:bg-gray-400"
-        >
-          {isLoading ? '저장 중...' : '저장하기'}
-        </button>
+        <div className="flex flex-col gap-2">
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-gray-800 text-white p-6 rounded disabled:bg-gray-400"
+          >
+            {isLoading ? '저장 중...' : '저장하기'}
+          </Button>
+          <Button className="w-full p-6" variant={'outline'} onClick={() => router.back()}>
+            뒤로가기
+          </Button>
+        </div>
       </form>
     </div>
   );

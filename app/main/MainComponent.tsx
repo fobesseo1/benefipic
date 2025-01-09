@@ -1,14 +1,11 @@
-//app/main/MainComponent.tsx
-
 'use client';
 
 import { useState, useCallback, useEffect, Suspense } from 'react';
-
 import NutritionCard from '../components/shared/ui/NutritionCard';
 import FoodLogCard from '../components/shared/ui/FoodLogCard';
 import ExerciseLogCard from '../components/shared/ui/ExerciseLogCard';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
-import { FoodLog, ExerciseLog } from '../types/types';
+import { FoodLog, ExerciseLog, DailyStatusResponse } from '../types/types';
 import dynamic from 'next/dynamic';
 
 const CurrentWeekCalendar = dynamic(() => import('./CurrentWeekCalendar'), { ssr: false });
@@ -42,81 +39,22 @@ export default function MainComponent({ user_id }: { user_id: string }) {
     return { utcStart: start, utcEnd: end };
   };
 
-  // 영양 상태 데이터 가져오기
-  const fetchNutritionStatus = useCallback(async (date: Date) => {
+  // 모든 데이터 가져오기
+  const fetchAllData = useCallback(async (date: Date) => {
     try {
+      setIsLoading(true);
       const response = await fetch(`/api/daily-status?date=${date.toISOString()}`);
-      const statusData = await response.json();
-      setDailyStatus(statusData);
+      const data: DailyStatusResponse = await response.json();
+
+      setDailyStatus(data.status);
+      setFoodLogs(data.foodLogs);
+      setExerciseLogs(data.exerciseLogs);
     } catch (error) {
-      console.error('Error fetching nutrition status:', error);
+      console.error('Error fetching all data:', error);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
-
-  // 식사 기록 데이터 가져오기
-  const fetchFoodLogs = useCallback(
-    async (date: Date) => {
-      try {
-        const { utcStart, utcEnd } = getSelectedDateRange(date);
-        const { data } = await supabase
-          .from('food_logs')
-          .select('*')
-          .eq('user_id', user_id) // user_id 필터링 추가
-          .gte('logged_at', utcStart.toISOString())
-          .lte('logged_at', utcEnd.toISOString())
-          .order('logged_at', { ascending: false });
-
-        if (data) {
-          setFoodLogs(data as FoodLog[]);
-        }
-      } catch (error) {
-        console.error('Error fetching food logs:', error);
-      }
-    },
-    [supabase, user_id] // user_id 의존성 추가
-  );
-
-  // 운동 기록 데이터 가져오기
-  const fetchExerciseLogs = useCallback(
-    async (date: Date) => {
-      try {
-        const { utcStart, utcEnd } = getSelectedDateRange(date);
-        const { data } = await supabase
-          .from('exercise_logs')
-          .select('*')
-          .eq('user_id', user_id) // user_id 필터링 추가
-          .gte('logged_at', utcStart.toISOString())
-          .lte('logged_at', utcEnd.toISOString())
-          .order('logged_at', { ascending: false });
-
-        if (data) {
-          setExerciseLogs(data as ExerciseLog[]);
-        }
-      } catch (error) {
-        console.error('Error fetching exercise logs:', error);
-      }
-    },
-    [supabase, user_id] // user_id 의존성 추가
-  );
-
-  // 모든 데이터 가져오기
-  const fetchAllData = useCallback(
-    async (date: Date) => {
-      try {
-        setIsLoading(true);
-        await Promise.all([
-          fetchNutritionStatus(date),
-          fetchFoodLogs(date),
-          fetchExerciseLogs(date),
-        ]);
-      } catch (error) {
-        console.error('Error fetching all data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [fetchNutritionStatus, fetchFoodLogs, fetchExerciseLogs]
-  );
 
   // 날짜가 변경될 때마다 데이터 다시 불러오기
   useEffect(() => {
@@ -133,11 +71,9 @@ export default function MainComponent({ user_id }: { user_id: string }) {
         .from('food_logs')
         .delete()
         .eq('id', id)
-        .eq('user_id', user_id); // user_id 체크 추가
+        .eq('user_id', user_id);
       if (error) throw error;
-      setFoodLogs((prevLogs) => prevLogs.filter((log) => log.id !== id));
-      await fetchNutritionStatus(selectedDate);
-      await fetchFoodLogs(selectedDate);
+      await fetchAllData(selectedDate); // Refresh all data after deletion
     } catch (error) {
       console.error('Error deleting food log:', error);
     }
@@ -149,23 +85,13 @@ export default function MainComponent({ user_id }: { user_id: string }) {
         .from('exercise_logs')
         .delete()
         .eq('id', id)
-        .eq('user_id', user_id); // user_id 체크 추가
+        .eq('user_id', user_id);
       if (error) throw error;
-      setExerciseLogs((prevLogs) => prevLogs.filter((log) => log.id !== id));
-      await fetchNutritionStatus(selectedDate);
-      await fetchExerciseLogs(selectedDate);
+      await fetchAllData(selectedDate); // Refresh all data after deletion
     } catch (error) {
       console.error('Error deleting exercise log:', error);
     }
   };
-
-  // if (isLoading) {
-  //   return (
-  //     <div className="flex items-center justify-center min-h-screen">
-  //       <div className="text-lg">Loading...</div>
-  //     </div>
-  //   );
-  // }
 
   const isToday = (date: Date) => {
     const today = new Date();
@@ -202,10 +128,10 @@ export default function MainComponent({ user_id }: { user_id: string }) {
           <Suspense fallback={<div>Loading food logs...</div>}>
             <FoodLogCard
               foodLogs={foodLogs}
+              dailyCalorieGoal={dailyStatus?.totalCalories || 2000}
               onDelete={handleFoodDelete}
               onDeleteSuccess={async () => {
-                await fetchNutritionStatus(selectedDate);
-                await fetchFoodLogs(selectedDate);
+                await fetchAllData(selectedDate);
               }}
               maxItems={3}
               selectedDate={selectedDate}
@@ -219,8 +145,7 @@ export default function MainComponent({ user_id }: { user_id: string }) {
               exerciseLogs={exerciseLogs}
               onDelete={handleExerciseDelete}
               onDeleteSuccess={async () => {
-                await fetchNutritionStatus(selectedDate);
-                await fetchExerciseLogs(selectedDate);
+                await fetchAllData(selectedDate);
               }}
               maxItems={3}
               selectedDate={selectedDate}

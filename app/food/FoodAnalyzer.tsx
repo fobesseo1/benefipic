@@ -22,6 +22,9 @@ import {
 import AnalysisProgress from './Analysis Progress';
 import FoodDetectionAlert from './FoodDetectionAlert';
 import { completedFoodDatabase, ingredientDatabase } from '../food-description/foodDatabase';
+import { useAnalysisEligibility } from '../hooks/useAnalysisEligibility';
+import AdDialog from '../components/shared/ui/AdDialog';
+import { Button } from '@/components/ui/button';
 
 // 타입 정의
 type AnalysisStep =
@@ -347,10 +350,32 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     isOpen: false,
     detectedContent: '',
   });
+  const [showAdDialog, setShowAdDialog] = useState(false);
+  const { checkEligibility } = useAnalysisEligibility(currentUser_id);
 
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const supabase = createSupabaseBrowserClient();
+
+  const handleAdComplete = async () => {
+    const supabase = createSupabaseBrowserClient();
+
+    // 광고 시청 시간 업데이트
+    const { error } = await supabase
+      .from('userdata')
+      .update({
+        last_ad_view: new Date().toISOString(),
+      })
+      .eq('id', currentUser_id);
+
+    if (error) {
+      console.error('광고 시청 기록 실패:', error);
+      return;
+    }
+
+    setShowAdDialog(false);
+    analyzeImage(); // 분석 재시작
+  };
 
   // Effect Hooks
   useEffect(() => {
@@ -459,6 +484,36 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
 
   const analyzeImage = async () => {
     if (!selectedImage) return;
+
+    // 권한 체크
+    const supabase = createSupabaseBrowserClient();
+    const { checkEligibility } = useAnalysisEligibility(currentUser_id);
+
+    // 권한 체크
+    const eligibility = await checkEligibility();
+
+    if (!eligibility.canAnalyze) {
+      if (eligibility.reason === 'needs_ad') {
+        setShowAdDialog(true);
+        return;
+      }
+      return;
+    }
+
+    // 오늘의 무료 사용인 경우, last_free_use 업데이트
+    if (eligibility.reason === 'daily_free') {
+      const { error: updateError } = await supabase
+        .from('userdata')
+        .update({
+          last_free_use: new Date().toISOString(),
+        })
+        .eq('id', currentUser_id);
+
+      if (updateError) {
+        console.error('무료 사용 기록 실패:', updateError);
+        return;
+      }
+    }
 
     try {
       setStep('compress');
@@ -813,7 +868,9 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={successSave}>확인</AlertDialogAction>
+            <Button onClick={successSave} className="p-6">
+              확인
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -823,6 +880,12 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
         isOpen={notFoodAlert.isOpen}
         onClose={closeNotFoodAlert}
         detectedContent={notFoodAlert.detectedContent}
+      />
+      {/* 광고 알림 */}
+      <AdDialog
+        isOpen={showAdDialog}
+        onClose={() => setShowAdDialog(false)}
+        onAdComplete={handleAdComplete}
       />
     </div>
   );

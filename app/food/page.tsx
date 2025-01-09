@@ -1,7 +1,7 @@
 import { getUser } from '@/lib/supabse/server';
 import FoodAnalyzer from './FoodAnalyzer';
 
-export default async function Page() {
+export default async function FoodPage() {
   const currentUser = await getUser();
   const currentUser_id = currentUser?.id;
   return (

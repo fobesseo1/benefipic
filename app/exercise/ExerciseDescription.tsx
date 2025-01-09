@@ -23,6 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 
 interface SelectedExercise extends Exercise {
   duration: number;
@@ -383,7 +384,9 @@ export default function ExerciseDescription({ currentUser_id }: { currentUser_id
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={successSave}>확인</AlertDialogAction>
+            <Button onClick={successSave} className="p-6">
+              확인
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

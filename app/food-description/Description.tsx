@@ -20,6 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 
 interface SelectedFoodItem extends FoodItem {
   quantity: number;
@@ -393,7 +394,9 @@ export default function FoodDescription({ currentUser_id }: { currentUser_id: st
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={successSave}>확인</AlertDialogAction>
+            <Button onClick={successSave} className="p-6">
+              확인
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

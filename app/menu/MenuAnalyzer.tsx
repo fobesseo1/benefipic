@@ -8,6 +8,11 @@ import { compressImage, fileToBase64 } from '@/utils/image';
 import NutritionCard from '../components/shared/ui/NutritionCard';
 import NavigationButtonSection from '../components/shared/ui/NavigationButtonSection';
 import Link from 'next/link';
+import { useAnalysisEligibility } from '../hooks/useAnalysisEligibility';
+import createSupabaseBrowserClient from '@/lib/supabse/client';
+import AdDialog from '../components/shared/ui/AdDialog';
+
+const supabase = createSupabaseBrowserClient();
 
 type AnalysisStep =
   | 'initial'
@@ -29,7 +34,7 @@ interface NutritionData {
   };
 }
 
-const MenuAnalyzer = () => {
+const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   const [step, setStep] = useState<AnalysisStep>('initial');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -37,6 +42,9 @@ const MenuAnalyzer = () => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  // 광고
+  const [showAdDialog, setShowAdDialog] = useState(false);
+  const { checkEligibility } = useAnalysisEligibility(currentUser_id);
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -72,9 +80,57 @@ const MenuAnalyzer = () => {
     }
   };
 
+  const handleAdComplete = async () => {
+    const supabase = createSupabaseBrowserClient();
+
+    // 광고 시청 시간 업데이트
+    const { error } = await supabase
+      .from('userdata')
+      .update({
+        last_ad_view: new Date().toISOString(),
+      })
+      .eq('id', currentUser_id);
+
+    if (error) {
+      console.error('광고 시청 기록 실패:', error);
+      return;
+    }
+
+    setShowAdDialog(false);
+    analyzeImage(); // 분석 재시작
+  };
+
   const analyzeImage = async () => {
     if (!selectedImage) return;
 
+    const supabase = createSupabaseBrowserClient();
+    const { checkEligibility } = useAnalysisEligibility(currentUser_id);
+
+    // 권한 체크
+    const eligibility = await checkEligibility();
+
+    if (!eligibility.canAnalyze) {
+      if (eligibility.reason === 'needs_ad') {
+        setShowAdDialog(true);
+        return;
+      }
+      return;
+    }
+
+    // 오늘의 무료 사용인 경우, last_free_use 업데이트
+    if (eligibility.reason === 'daily_free') {
+      const { error: updateError } = await supabase
+        .from('userdata')
+        .update({
+          last_free_use: new Date().toISOString(),
+        })
+        .eq('id', currentUser_id);
+
+      if (updateError) {
+        console.error('무료 사용 기록 실패:', updateError);
+        return;
+      }
+    }
     setStep('analyzing');
     try {
       const base64Image = await fileToBase64(selectedImage);
@@ -276,6 +332,13 @@ const MenuAnalyzer = () => {
           videoRef={videoRef}
         />
       )}
+
+      {/* 광고 알림 */}
+      <AdDialog
+        isOpen={showAdDialog}
+        onClose={() => setShowAdDialog(false)}
+        onAdComplete={handleAdComplete}
+      />
     </div>
   );
 };

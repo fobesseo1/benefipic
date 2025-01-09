@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { FoodLog } from '@/app/types/types';
 import {
   Beef,
+  ChefHat,
   CircleX,
   Droplet,
   Eraser,
@@ -27,9 +28,11 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export interface FoodLogCardProps {
   foodLogs: FoodLog[];
+  dailyCalorieGoal: number;
   className?: string;
   onDelete?: (id: string) => Promise<void>; // optional로 변경
   onUpdate?: (id: string, updatedData: Partial<FoodLog>) => Promise<void>; // optional로 변경
@@ -53,6 +56,7 @@ interface EditableFood {
 
 export const FoodLogCard = ({
   foodLogs,
+  dailyCalorieGoal,
   className = '',
   onDelete,
   onUpdate,
@@ -138,6 +142,43 @@ export const FoodLogCard = ({
     return Math.round(number);
   }
 
+  // 점수 계산 함수 추가
+  const calculateHealthScore = (foodLog: FoodLog, dailyCalorieGoal: number) => {
+    let score = 6; // 기본 점수
+
+    // 1. 칼로리 밀도 점수 (최대 2점)
+    // 칼로리가 낮으면서 단백질이 높은 음식 보상
+    const caloriePerProteinRatio = foodLog.calories / (foodLog.protein + 1); // +1은 0 나누기 방지
+    if (caloriePerProteinRatio < 15) {
+      // 복어회, 닭가슴살 같은 고단백 저칼로리 음식
+      score += 2;
+    } else if (caloriePerProteinRatio < 25) {
+      score += 1;
+    }
+
+    // 2. 영양소 균형 점수 (최대 2점)
+    // 단백질 비중이 높고 지방이 적절한 음식 보상
+    const proteinRatio = (foodLog.protein * 4) / foodLog.calories;
+    const fatRatio = (foodLog.fat * 9) / foodLog.calories;
+
+    if (proteinRatio > 0.3 && fatRatio < 0.3) {
+      // 복어회, 연어회 같은 건강한 단백질 음식
+      score += 2;
+    } else if (proteinRatio > 0.2 && fatRatio < 0.35) {
+      score += 1;
+    }
+
+    return Math.min(10, score);
+  };
+
+  // 점수에 따른 색상 반환 함수
+  const getScoreColor = (score: number) => {
+    if (score >= 9) return 'text-gray-800';
+    if (score >= 7) return 'text-gray-600';
+    if (score >= 5) return 'text-gray-400';
+    return 'text-red-500';
+  };
+
   return (
     <Card className={`p-4 ${className}`}>
       {/* 기존 헤더 부분 */}
@@ -180,7 +221,7 @@ export const FoodLogCard = ({
             <div className="min-h-28 flex-1 flex flex-col  ">
               {/* 기존 정보 표시 부분 */}
               <div className="grid grid-cols-4 items-end tracking-tighter">
-                <p className="col-span-3 text-lg font-bold text-gray-900 line-clamp-1">
+                <p className="col-span-3 text-base font-bold text-gray-900 line-clamp-1">
                   {log.food_name}
                 </p>
                 <p className="col-span-1 text-sm  text-gray-400 text-end">
@@ -188,7 +229,7 @@ export const FoodLogCard = ({
                 </p>
               </div>
               {/* <hr className="mt-2" /> */}
-              <div className="flex flex-col mt-2">
+              <div className="flex flex-col mt-1">
                 <div className="flex items-center tracking-tighter">
                   <Flame size={16} color="#4b5563" />
                   <div className="flex items-center gap-[2px]">
@@ -224,14 +265,27 @@ export const FoodLogCard = ({
               </div>
 
               {/* 버튼 그룹 */}
-              <div className="w-full mt-3 flex justify-end items-center gap-2">
+              <div className="w-full mt-1 flex justify-between items-center gap-2">
+                <div className="flex items-center gap-1 tracking-tighter text-sm">
+                  <div className="text-gray-600 flex items-center ">
+                    <ChefHat size={20} /> <span>:</span>
+                  </div>
+                  <p
+                    className={`font-bold text-lg ${getScoreColor(
+                      calculateHealthScore(log, dailyCalorieGoal) // 하드코딩된 2000 대신 prop 사용
+                    )}`}
+                  >
+                    {calculateHealthScore(log, dailyCalorieGoal)}
+                    <span className="text-xs text-gray-600"> /10</span>
+                  </p>
+                </div>
                 {/* 수정 버튼 */}
                 {showEditButton && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <div
                         onClick={() => handleEdit(log)}
-                        className="py-1 px-3 bg-gray-100 flex justify-center items-center gap-1 cursor-pointer rounded-lg hover:bg-gray-600 group"
+                        className="py-[2px] px-3 bg-gray-100 flex justify-center items-center gap-1 cursor-pointer rounded-lg hover:bg-gray-600 group"
                       >
                         <Pencil size={16} className="text-gray-400 group-hover:text-white" />
                         <p className="text-sm text-gray-400 group-hover:text-white">수정</p>
@@ -322,9 +376,9 @@ export const FoodLogCard = ({
                         {/* 삭제 확인을 위한 중첩 AlertDialog */}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <button className="bg-gray-400 h-10 px-4 py-2 rounded-md text-white">
+                            <Button className="bg-gray-400 h-10 p-6 rounded-md text-white">
                               삭제하기
-                            </button>
+                            </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
@@ -337,56 +391,24 @@ export const FoodLogCard = ({
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>돌아가기</AlertDialogCancel>
-                              <AlertDialogAction
+
+                              <Button
                                 onClick={() => handleDelete(log.id)}
-                                className="bg-red-500 hover:bg-red-600"
+                                className="bg-red-500 p-4 hover:bg-red-600"
                               >
                                 삭제하기
-                              </AlertDialogAction>
+                              </Button>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
 
-                        <AlertDialogAction
-                          onClick={() => handleUpdate(log.id)}
-                          className="bg-gray-800 "
-                        >
+                        <Button onClick={() => handleUpdate(log.id)} className="bg-gray-800 p-6">
                           수정하기
-                        </AlertDialogAction>
+                        </Button>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
                 )}
-
-                {/* 삭제 버튼 */}
-                {/* {showDeleteButton && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <div className="py-1 px-3 bg-gray-50 flex justify-center items-center gap-1 cursor-pointer rounded-lg hover:bg-gray-600 group ">
-                        <CircleX size={16} className="text-gray-400 group-hover:text-white" />
-                      </div>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>음식 기록 삭제</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          {log.food_name}을(를) 삭제하시겠습니까?
-                          <br />
-                          삭제된 기록은 복구할 수 없습니다.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>돌아가기</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(log.id)}
-                          className="bg-red-500 hover:bg-red-600"
-                        >
-                          삭제하기
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )} */}
               </div>
             </div>
           </div>

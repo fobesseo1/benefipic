@@ -1,33 +1,25 @@
 //app/food-all/FoodComponent.tsx
-
 'use client';
 
 import { useState, useCallback, useEffect, Suspense } from 'react';
 import FoodLogCard from '../components/shared/ui/FoodLogCard';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
-import { FoodLog, ExerciseLog } from '../types/types';
+import { FoodLog } from '../types/types'; // ExerciseLog 제거
 import CurrentWeekCalendar from '../main/CurrentWeekCalendar';
 import MainLoading from '../Mainloading';
 
-export type DailyStatus = {
+// DailyStatus 타입을 필요한 것만 남기기
+type DailyStatus = {
   totalCalories: number;
-  remainingCalories: number;
-  totalExerciseMinutes: number;
-  remainingExerciseMinutes: number;
-  remainingProtein: number;
-  remainingFat: number;
-  remainingCarbs: number;
 };
 
 export default function FoodComponent({ user_id }: { user_id: string }) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dailyStatus, setDailyStatus] = useState<DailyStatus | null>(null);
   const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]);
-  const [exerciseLogs, setExerciseLogs] = useState<ExerciseLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createSupabaseBrowserClient();
 
-  // 날짜 범위 가져오기
   const getSelectedDateRange = (date: Date) => {
     const koreanDate = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
     const start = new Date(koreanDate);
@@ -38,35 +30,26 @@ export default function FoodComponent({ user_id }: { user_id: string }) {
     return { utcStart: start, utcEnd: end };
   };
 
-  // 식사 기록 데이터 가져오기
-  const fetchFoodLogs = useCallback(
-    async (date: Date) => {
-      try {
-        const { utcStart, utcEnd } = getSelectedDateRange(date);
-        const { data } = await supabase
-          .from('food_logs')
-          .select('*')
-          .eq('user_id', user_id)
-          .gte('logged_at', utcStart.toISOString())
-          .lte('logged_at', utcEnd.toISOString())
-          .order('logged_at', { ascending: false });
+  const fetchDailyStatus = useCallback(async (date: Date) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/food-status?date=${date.toISOString()}`);
+      const data = await response.json();
 
-        if (data) {
-          setFoodLogs(data as FoodLog[]);
-        }
-      } catch (error) {
-        console.error('Error fetching food logs:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [supabase]
-  );
+      setDailyStatus({
+        totalCalories: data.status.totalCalories,
+      });
+      setFoodLogs(data.foodLogs);
+    } catch (error) {
+      console.error('Error fetching food status:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  // 날짜가 변경될 때마다 데이터 다시 불러오기
   useEffect(() => {
-    fetchFoodLogs(selectedDate);
-  }, [selectedDate, fetchFoodLogs]);
+    fetchDailyStatus(selectedDate);
+  }, [selectedDate, fetchDailyStatus]);
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
@@ -76,9 +59,7 @@ export default function FoodComponent({ user_id }: { user_id: string }) {
     try {
       const { error } = await supabase.from('food_logs').delete().eq('id', id);
       if (error) throw error;
-      setFoodLogs((prevLogs) => prevLogs.filter((log) => log.id !== id));
-
-      await fetchFoodLogs(selectedDate);
+      await fetchDailyStatus(selectedDate);
     } catch (error) {
       console.error('Error deleting food log:', error);
     }
@@ -87,14 +68,8 @@ export default function FoodComponent({ user_id }: { user_id: string }) {
   const handleFoodUpdate = async (id: string, updatedData: Partial<FoodLog>) => {
     try {
       const { error } = await supabase.from('food_logs').update(updatedData).eq('id', id);
-
       if (error) throw error;
-      setFoodLogs((prevLogs) =>
-        prevLogs.map((log) => (log.id === id ? { ...log, ...updatedData } : log))
-      );
-
-      // 데이터 다시 불러오기
-      await fetchFoodLogs(selectedDate);
+      await fetchDailyStatus(selectedDate);
     } catch (error) {
       console.error('Error updating food log:', error);
     }
@@ -115,13 +90,14 @@ export default function FoodComponent({ user_id }: { user_id: string }) {
           <Suspense fallback={<div>Loading food logs...</div>}>
             <FoodLogCard
               foodLogs={foodLogs}
+              dailyCalorieGoal={dailyStatus?.totalCalories || 2000}
               onDelete={handleFoodDelete}
               onUpdate={handleFoodUpdate}
               onDeleteSuccess={async () => {
-                await fetchFoodLogs(selectedDate);
+                await fetchDailyStatus(selectedDate);
               }}
               onUpdateSuccess={async () => {
-                await fetchFoodLogs(selectedDate);
+                await fetchDailyStatus(selectedDate);
               }}
               selectedDate={selectedDate}
               showMoreButton={false}
