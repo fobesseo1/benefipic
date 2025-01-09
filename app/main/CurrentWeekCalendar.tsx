@@ -125,7 +125,7 @@ const CurrentWeekCalendar: React.FC<CurrentWeekCalendarProps> = ({
                   isSelected
                     ? 'bg-gray-900 text-white text-lg font-semibold'
                     : isToday
-                    ? 'bg-blue-500 text-white text-lg font-semibold'
+                    ? 'bg-rose-600 text-white text-lg font-semibold'
                     : 'text-gray-400 hover:bg-gray-100'
                 }
                 ${date.getMonth() !== selectedDate.getMonth() ? 'text-gray-300' : ''}

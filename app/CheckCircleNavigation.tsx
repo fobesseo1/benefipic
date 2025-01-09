@@ -14,10 +14,10 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
 
   return (
     <>
-      <div className="fixed bottom-[168px] right-6 z-50 ml-auto w-fit flex items-center justify-center">
+      <div className="fixed bottom-[108px] right-6 z-50 ml-auto w-fit flex items-center justify-center">
         <CircleButtonWithAlert />
       </div>
-      <div className="fixed bottom-28 right-6 z-50 ml-auto w-fit flex items-center justify-center">
+      <div className="fixed bottom-12 right-6 z-50 ml-auto w-fit flex items-center justify-center">
         <Link href="/main">
           <div
             className="bg-gray-400 w-12 h-12 flex items-center justify-center rounded-full cursor-pointer shadow-xl"

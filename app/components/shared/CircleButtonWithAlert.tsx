@@ -5,6 +5,7 @@ import {
   Dumbbell,
   Gauge,
   Goal,
+  Menu,
   Plus,
   ScanBarcode,
   SquareMenu,
@@ -29,7 +30,7 @@ export default function CircleButtonWithAlert() {
           }}
           onClick={() => setIsOpen(true)}
         >
-          <Plus className="w-8 h-8 text-white" />
+          <Menu className="w-8 h-8 text-white" />
         </div>
       </AlertDialogTrigger>
       <AlertDialogContent className="sm:max-w-md ">

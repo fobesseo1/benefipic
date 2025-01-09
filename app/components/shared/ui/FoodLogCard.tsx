@@ -11,6 +11,7 @@ import {
   CircleX,
   Droplet,
   Eraser,
+  EraserIcon,
   Flame,
   Pencil,
   UtensilsCrossed,
@@ -195,9 +196,9 @@ export const FoodLogCard = ({
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-8">
         {displayLogs.map((log) => (
-          <div key={log.id} className="rounded-lg shadow-sm bg-white">
+          <div key={log.id} className="rounded-lg  bg-white">
             {/* 이미지 영역 */}
             <div className="relative w-full aspect-square">
               {log.image_url ? (
@@ -216,15 +217,15 @@ export const FoodLogCard = ({
                 </div>
               )}
               {/* 헬스스코어 */}
-              <div className="absolute bottom-2 right-2 bg-white/80 rounded-lg p-2">
+              <div className="absolute bottom-2 right-2 bg-white/80 rounded-full px-4 py-2">
                 <div className="flex items-center gap-1 tracking-tighter text-sm">
-                  <div className="text-orange-500 flex items-center">
+                  <div className="text-gray-600 flex items-center">
                     <ChefHat size={20} />
                     <span>:</span>
                   </div>
-                  <p className={`font-bold text-lg text-orange-500`}>
+                  <p className={`font-bold text-2xl text-rose-600`}>
                     {calculateHealthScore(log, dailyCalorieGoal)}
-                    <span className="text-xs text-gray-600">/10</span>
+                    <span className="text-xs text-gray-600"> /10</span>
                   </p>
                 </div>
               </div>
@@ -233,7 +234,7 @@ export const FoodLogCard = ({
             {/* 정보 영역 */}
             <div className="pt-4">
               {/* 음식 이름과 시간 */}
-              <div className="grid grid-cols-4 items-end tracking-tighter">
+              <div className="grid grid-cols-4 items-end tracking-tighter border-b-[1px] border-gray-600">
                 <p className="col-span-3 text-xl font-bold text-gray-900 line-clamp-1">
                   {log.food_name}
                 </p>
@@ -243,40 +244,42 @@ export const FoodLogCard = ({
               </div>
 
               {/* 영양 정보 */}
-              <div className="mt-2">
-                <div className="flex items-center tracking-tighter">
-                  <Flame size={16} color="#4b5563" />
-                  <div className="flex items-center gap-[2px]">
-                    <p className="text-gray-600 font-bold">{log.calories}</p>
-                    <span className="text-gray-600 text-xs">kcal</span>
+              <div className="mt-4">
+                <div className="flex items-center tracking-tighter gap-[2px] border-t-[1px] border-gray-200">
+                  <Flame size={16} className="text-rose-600" />
+                  <div className="flex items-center gap-1">
+                    <p className="text-rose-600 text-2xl font-bold">
+                      {log.calories}
+                      <span className="text-rose-600 text-xs"> kcal</span>
+                    </p>
                   </div>
                 </div>
-                <div className="flex justify-between items-center tracking-tighter text-sm mt-2">
-                  <div className="flex  items-center tracking-tighter">
+                <div className="flex justify-between items-center tracking-tighter text-sm border-y-[1px] border-gray-200 ">
+                  <div className="flex  items-center tracking-tighter gap-[2px]">
                     <Beef size={16} color="#4b5563" />
                     <div className="flex items-center gap-[2px]">
-                      <p className="text-gray-600 text-sm font-bold">
+                      <p className="text-gray-600 text-lg font-bold">
                         {roundToInteger(log.protein)}
+                        <span className="text-gray-600 text-xs"> g</span>
                       </p>
-                      <span className="text-gray-600 text-xs">g</span>
                     </div>
-                    {/* <div className="flex">
-                      <Beef size={16} color="#4b5563" />
-                      <p className="text-gray-600 text-xs">단백질</p>
-                    </div> */}
                   </div>
-                  <div className="flex items-center tracking-tighter">
+                  <div className="flex items-center tracking-tighter gap-[2px]">
                     <Droplet size={16} color="#4b5563" />
                     <div className="flex items-center gap-[2px]">
-                      <p className="text-gray-600 font-bold text-sm">{roundToInteger(log.fat)}</p>
-                      <span className="text-gray-600 text-xs">g</span>
+                      <p className="text-gray-600 font-bold text-lg">
+                        {roundToInteger(log.fat)}
+                        <span className="text-gray-600 text-xs"> g</span>
+                      </p>
                     </div>
                   </div>
-                  <div className="flex items-center tracking-tighter">
+                  <div className="flex items-center tracking-tighter gap-[2px]">
                     <Wheat size={16} color="#4b5563" />
                     <div className="flex items-center gap-[2px]">
-                      <p className="text-gray-600 font-bold text-sm">{roundToInteger(log.carbs)}</p>
-                      <span className="text-gray-600 text-xs">g</span>
+                      <p className="text-gray-600 font-bold text-lg">
+                        {roundToInteger(log.carbs)}
+                        <span className="text-gray-600 text-xs"> g</span>
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -287,12 +290,17 @@ export const FoodLogCard = ({
                 <div className="mt-2">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <div
-                        onClick={() => handleEdit(log)}
-                        className="py-[2px] px-3 bg-gray-100 flex justify-center items-center gap-1 cursor-pointer rounded-lg hover:bg-gray-600 group"
-                      >
-                        <Pencil size={16} className="text-gray-400 group-hover:text-white" />
-                        <p className="text-sm text-gray-400 group-hover:text-white">수정</p>
+                      <div className="flex justify-end items-center mt-4">
+                        <div
+                          onClick={() => handleEdit(log)}
+                          className="w-1/2 p-3 border-[1px] border-gray-200 flex justify-center items-center gap-1 cursor-pointer rounded-full hover:bg-gray-600 group"
+                        >
+                          <Pencil size={16} className="text-gray-400 group-hover:text-white" />
+                          <p className="text-sm text-gray-400 group-hover:text-white">수정</p>
+                          <p className="text-sm text-gray-400 group-hover:text-white"> / </p>
+                          <EraserIcon size={16} className="text-gray-400 group-hover:text-white" />
+                          <p className="text-sm text-gray-400 group-hover:text-white">삭제</p>
+                        </div>
                       </div>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
