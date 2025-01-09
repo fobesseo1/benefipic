@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
 import { Card } from '@/components/ui/card';
 import { compressImage, fileToBase64 } from '@/utils/image';
 import NutritionCard from '../components/shared/ui/NutritionCard';
@@ -11,8 +10,15 @@ import Link from 'next/link';
 import { useAnalysisEligibility } from '../hooks/useAnalysisEligibility';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
 import AdDialog from '../components/shared/ui/AdDialog';
-
-const supabase = createSupabaseBrowserClient();
+import {
+  ApiResponse,
+  calculateTotalNutrition,
+  findExactMatchFood,
+  NutritionData,
+  roundNutritionValues,
+  validateAndCorrectAnalysis,
+} from '@/utils/food-analysis';
+import { completedFoodDatabase } from '../food-description/foodDatabase';
 
 type AnalysisStep =
   | 'initial'
@@ -23,19 +29,8 @@ type AnalysisStep =
   | 'calculate'
   | 'complete';
 
-interface NutritionData {
-  foodName: string;
-  healthTip: string;
-  nutrition: {
-    calories: number;
-    protein: number;
-    fat: number;
-    carbs: number;
-  };
-}
-
-// 사용자의 health record를 조회하는 함수를 MenuAnalyzer 컴포넌트 위에 추가
 const getUserHealthProfile = async (userId: string) => {
+  const supabase = createSupabaseBrowserClient();
   const { data, error } = await supabase
     .from('health_records')
     .select('*')
@@ -51,7 +46,6 @@ const getUserHealthProfile = async (userId: string) => {
 
   if (!data) return null;
 
-  // 나이 계산
   const birthDate = new Date(data.birth_date);
   const today = new Date();
   const age = today.getFullYear() - birthDate.getFullYear();
@@ -73,12 +67,8 @@ const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   const [imageUrl, setImageUrl] = useState<string>('');
   const [analysis, setAnalysis] = useState<NutritionData | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [quantity, setQuantity] = useState(1);
-  // 광고
   const [showAdDialog, setShowAdDialog] = useState(false);
   const { checkEligibility } = useAnalysisEligibility(currentUser_id);
-
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -89,34 +79,46 @@ const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     };
   }, [stream]);
 
-  //사용자 건강정보 가져오기
+  const processApiResponse = (apiData: ApiResponse): NutritionData => {
+    console.log('API 응답 데이터:', apiData);
 
-  const processApiResponse = (apiData: any): NutritionData => {
-    try {
-      console.log('API Response:', apiData);
+    // 정확한 매칭 확인
+    const exactMatch = findExactMatchFood(apiData.foodName, completedFoodDatabase);
 
-      const nutrition = {
-        calories: Number(apiData.nutrition.calories) || 0,
-        protein: Number(apiData.nutrition.protein) || 0,
-        fat: Number(apiData.nutrition.fat) || 0,
-        carbs: Number(apiData.nutrition.carbs) || 0,
+    // ingredients 형식 변환
+    const processedIngredients = apiData.ingredients.map((ingredient) => ({
+      name: ingredient.name,
+      amount: `${ingredient.amount.toString()}${ingredient.unit}`,
+      originalAmount: {
+        value: ingredient.amount,
+        unit: ingredient.unit,
+      },
+    }));
+
+    if (exactMatch) {
+      return {
+        foodName: apiData.foodName,
+        healthTip: apiData.healthTip,
+        ingredients: processedIngredients,
+        nutrition: exactMatch.nutrition,
       };
-
-      const processedData: NutritionData = {
-        foodName: String(apiData.foodName),
-        healthTip: String(apiData.healthTip),
-        nutrition: nutrition,
-      };
-
-      return processedData;
-    } catch (error) {
-      console.error('API 응답 처리 중 오류:', error);
-      throw error;
     }
+
+    // 보정 로직 적용
+    const correctedResult = validateAndCorrectAnalysis(apiData, completedFoodDatabase);
+    const totalNutrition = calculateTotalNutrition(correctedResult.ingredients);
+    const roundedNutrition = roundNutritionValues(totalNutrition);
+
+    return {
+      foodName: apiData.foodName,
+      healthTip: apiData.healthTip,
+      ingredients: processedIngredients,
+      nutrition: roundedNutrition,
+    };
   };
 
   const handleAdComplete = async () => {
-    // 광고 시청 시간 업데이트
+    const supabase = createSupabaseBrowserClient();
     const { error } = await supabase
       .from('userdata')
       .update({
@@ -130,17 +132,14 @@ const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     }
 
     setShowAdDialog(false);
-    analyzeImage(); // 분석 재시작
+    analyzeImage();
   };
 
   const analyzeImage = async () => {
     if (!selectedImage) return;
 
-    const { checkEligibility } = useAnalysisEligibility(currentUser_id);
-
     // 권한 체크
     const eligibility = await checkEligibility();
-
     if (!eligibility.canAnalyze) {
       if (eligibility.reason === 'needs_ad') {
         setShowAdDialog(true);
@@ -149,8 +148,9 @@ const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       return;
     }
 
-    // 오늘의 무료 사용인 경우, last_free_use 업데이트
+    // 무료 사용 업데이트
     if (eligibility.reason === 'daily_free') {
+      const supabase = createSupabaseBrowserClient();
       const { error: updateError } = await supabase
         .from('userdata')
         .update({
@@ -163,33 +163,32 @@ const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
         return;
       }
     }
-    setStep('analyzing');
+
     try {
+      setStep('compress');
       const base64Image = await fileToBase64(selectedImage);
       const fileType = selectedImage.type === 'image/png' ? 'png' : 'jpeg';
 
+      // 사용자 건강 정보 가져오기
       const healthProfile = await getUserHealthProfile(currentUser_id);
-
-      // 건강 프로필 기반 프롬프트 생성
       const userDescription = healthProfile
         ? `
-  대상자 정보:
-  - ${healthProfile.age}세 ${healthProfile.gender === 'female' ? '여성' : '남성'}
-  - ${
-    healthProfile.bmiStatus === 'overweight' || healthProfile.bmiStatus === 'obese'
-      ? '체중 관리가 필요한'
-      : '건강한'
-  } 체형
-  - 하루 필요 열량: ${healthProfile.tdee}kcal
-  - 권장 체중: ${healthProfile.recommendedWeight}kg (현재 ${healthProfile.currentWeight}kg)
-  - 활동량: ${healthProfile.activityLevel}
-  `
+대상자 정보:
+- ${healthProfile.age}세 ${healthProfile.gender === 'female' ? '여성' : '남성'}
+- ${
+            healthProfile.bmiStatus === 'overweight' || healthProfile.bmiStatus === 'obese'
+              ? '체중 관리가 필요한'
+              : '건강한'
+          } 체형
+- 하루 필요 열량: ${healthProfile.tdee}kcal
+- 권장 체중: ${healthProfile.recommendedWeight}kg (현재 ${healthProfile.currentWeight}kg)
+- 활동량: ${healthProfile.activityLevel}`
         : `
-  대상자 정보:
-  - 일반적인 성인
-  - 건강한 식단 관리 필요
-  `;
+대상자 정보:
+- 일반적인 성인
+- 건강한 식단 관리 필요`;
 
+      setStep('analyzing');
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -200,33 +199,59 @@ const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
           model: 'gpt-4o-mini',
           messages: [
             {
+              role: 'system',
+              content: `당신은 음식 영양 분석 전문가입니다.
+              - 분석 대상:
+                * 모든 섭취 가능한 음식과 음료
+                * 포장된 식품/음료 제품
+                * 물을 포함한 모든 음료
+                * 영양소가 있거나 없더라도 인간이 섭취할 수 있는 모든 것
+              
+              - 영양소 분석 지침:
+                * 물의 경우도 영양소 0으로 기록하되 분석 대상에 포함
+                * 포장 제품의 경우 영양성분표 기준으로 분석
+                * 액체류도 100ml 기준으로 영양소 분석 진행
+              
+              - isFood 판단 기준:
+                * true: 모든 음식, 음료, 포장식품을 포함
+                * false: 섭취 불가능한 물체나 비식품만 해당`,
+            },
+            {
               role: 'user',
               content: [
                 {
                   type: 'text',
-                  text: `당신은 영양 전문가입니다. 사진에서 보이는 메뉴들을 분석하고 다음 조건에 맞는 메뉴를 하나만 추천해주세요:
-  
-  ${userDescription}
-  
-  필수 요구사항:
-  1. 반드시 사진에 있는 메뉴들 중에서만 선택할 것
-  2. 사진에 없는 메뉴는 절대 추천하지 말 것
-  3. 오직 한 개의 메뉴만 추천할 것
-  4. 선택한 메뉴에 대해 다음 정보를 반드시 포함할 것:
-     - 대상자의 건강 상태와 필요 영양소를 고려한 추천 이유
-     - 1인분 기준의 정확한 영양성분 (칼로리, 단백질, 지방, 탄수화물)
-  
-  다음의 정확한 JSON 형식으로 응답해주세요:
-  {
-    "foodName": "선택한 메뉴 이름",
-    "healthTip": "개인별 맞춤 영양 조언",
-    "nutrition": {
-      "calories": 1인분 기준 숫자로만(kcal),
-      "protein": 1인분 기준 숫자로만(g),
-      "fat": 1인분 기준 숫자로만(g),
-      "carbs": 1인분 기준 숫자로만(g)
+                  text: `이 음식 사진을 자세히 분석해주세요:
+
+${userDescription}
+
+필수 요구사항:
+1. 반드시 사진에 있는 메뉴들 중에서만 선택할 것
+2. 각 음식의 실제 양(g/ml)을 추정할 것
+3. 재료별 영양정보를 상세히 분석할 것
+4. 선택한 메뉴에 대해 다음 정보를 포함할 것:
+   - 대상자의 건강 상태와 필요 영양소를 고려한 추천 이유
+   - 재료별 정확한 양과 영양성분
+
+다음 형식의 JSON으로 응답해주세요:
+{
+  "isFood": true,
+  "foodName": "선택한 메뉴 이름",
+  "healthTip": "개인별 맞춤 영양 조언",
+  "ingredients": [
+    {
+      "name": "재료명",
+      "amount": number,
+      "unit": "g 또는 ml",
+      "nutritionPer100g": {
+        "calories": number,
+        "protein": number,
+        "fat": number,
+        "carbs": number
+      }
     }
-  }`,
+  ]
+}`,
                 },
                 {
                   type: 'image_url',
@@ -237,20 +262,16 @@ const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
               ],
             },
           ],
-          max_tokens: 1000,
+          max_tokens: 800,
+          temperature: 0.3,
           response_format: { type: 'json_object' },
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('API request failed');
-      }
-
       const data = await response.json();
-      console.log('API Response:', data);
       const parsedData = JSON.parse(data.choices[0].message.content);
       const processedData = processApiResponse(parsedData);
-      setAnalysis(processedData); // 여기에 setAnalysis 추가
+      setAnalysis(processedData);
       setStep('complete');
     } catch (error) {
       console.error('Error:', error);

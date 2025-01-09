@@ -25,6 +25,17 @@ import { completedFoodDatabase, ingredientDatabase } from '../food-description/f
 import { useAnalysisEligibility } from '../hooks/useAnalysisEligibility';
 import AdDialog from '../components/shared/ui/AdDialog';
 import { Button } from '@/components/ui/button';
+import {
+  ApiResponse,
+  calculateTotalNutrition,
+  findExactMatchFood,
+  FoodAnalysis,
+  Ingredient,
+  NutritionData,
+  NutritionPer100g,
+  roundNutritionValues,
+  validateAndCorrectAnalysis,
+} from '@/utils/food-analysis';
 
 // 타입 정의
 type AnalysisStep =
@@ -35,302 +46,6 @@ type AnalysisStep =
   | 'analyzing'
   | 'calculate'
   | 'complete';
-
-interface NutritionPer100g {
-  calories: number;
-  protein: number;
-  fat: number;
-  carbs: number;
-}
-
-interface ApiResponse {
-  isFood: boolean;
-  foodName: string;
-  description?: string;
-  ingredients: Array<{
-    name: string;
-    amount: number;
-    unit: string;
-    nutritionPer100g: {
-      calories: number;
-      protein: number;
-      fat: number;
-      carbs: number;
-    };
-  }>;
-}
-
-export interface NutritionData {
-  foodName: string;
-  ingredients: Array<{
-    name: string;
-    amount: string;
-    originalAmount?: {
-      value: number;
-      unit: string;
-    };
-  }>;
-  nutrition: {
-    calories: number;
-    protein: number;
-    fat: number;
-    carbs: number;
-  };
-}
-
-interface Ingredient {
-  name: string;
-  amount: number;
-  unit: string;
-  nutritionPer100g: {
-    calories: number;
-    protein: number;
-    fat: number;
-    carbs: number;
-  };
-}
-
-interface FoodAnalysis {
-  isFood: boolean;
-  foodName: string;
-  description?: string; // optional로 변경
-  ingredients: Ingredient[];
-}
-
-// 유사도 비교함수
-const getLevenshteinDistance = (str1: string, str2: string): number => {
-  const matrix = Array(str1.length + 1)
-    .fill(null)
-    .map(() => Array(str2.length + 1).fill(null));
-
-  for (let i = 0; i <= str1.length; i++) matrix[i][0] = i;
-  for (let j = 0; j <= str2.length; j++) matrix[0][j] = j;
-
-  for (let i = 1; i <= str1.length; i++) {
-    for (let j = 1; j <= str2.length; j++) {
-      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
-      matrix[i][j] = Math.min(
-        matrix[i - 1][j] + 1,
-        matrix[i][j - 1] + 1,
-        matrix[i - 1][j - 1] + cost
-      );
-    }
-  }
-
-  return matrix[str1.length][str2.length];
-};
-
-const isSimilarName = (name1: string, name2: string, threshold = 0.7): boolean => {
-  const distance = getLevenshteinDistance(name1, name2);
-  const maxLength = Math.max(name1.length, name2.length);
-  const similarity = 1 - distance / maxLength;
-  return similarity >= threshold;
-};
-
-//완벽매치함수
-const isExactMatch = (name1: string, name2: string): boolean => {
-  return name1 === name2;
-};
-
-const findExactMatchFood = (foodName: string) => {
-  return completedFoodDatabase.find((food) => food.name === foodName);
-};
-
-// 기존 correctIngredient 함수를 findMatchingIngredient 함수 추가하고 수정
-const findMatchingIngredient = (name: string) => {
-  console.log('--- 재료 매칭 시작 ---');
-  console.log('찾을 재료명:', name);
-
-  // 1. 완성품 DB에서 정확히 찾기
-  const exactCompletedMatch = completedFoodDatabase.find((food) => food.name === name);
-  console.log('완성품 DB 정확 매칭 결과:', exactCompletedMatch);
-
-  if (exactCompletedMatch) {
-    console.log('완성품 DB에서 정확한 매칭 성공');
-    return {
-      type: 'completed',
-      data: exactCompletedMatch,
-    };
-  }
-
-  // 2. 재료 DB에서 정확히 찾기
-  const exactIngredientMatch = ingredientDatabase.find((ing) => ing.name === name);
-  console.log('재료 DB 정확 매칭 결과:', exactIngredientMatch);
-
-  if (exactIngredientMatch) {
-    console.log('재료 DB에서 정확한 매칭 성공');
-    return {
-      type: 'ingredient',
-      data: exactIngredientMatch,
-    };
-  }
-
-  // 3. 완성품 DB에서 유사 매칭
-  const similarCompleted = completedFoodDatabase.find((food) => isSimilarName(food.name, name));
-  console.log('완성품 DB 유사 매칭 결과:', similarCompleted);
-
-  if (similarCompleted) {
-    console.log('완성품 DB에서 유사 매칭 성공');
-    return {
-      type: 'completed',
-      data: similarCompleted,
-    };
-  }
-
-  // 4. 재료 DB에서 유사 매칭
-  const similarIngredient = ingredientDatabase.find((ing) => isSimilarName(ing.name, name));
-  console.log('재료 DB 유사 매칭 결과:', similarIngredient);
-
-  if (similarIngredient) {
-    console.log('재료 DB에서 유사 매칭 성공');
-    return {
-      type: 'ingredient',
-      data: similarIngredient,
-    };
-  }
-
-  console.log('!!! 매칭 실패 !!!');
-  return null;
-};
-
-const correctIngredient = (ingredient: Ingredient): Ingredient => {
-  console.log('보정 전 재료:', ingredient);
-
-  const matchedItem = findMatchingIngredient(ingredient.name);
-  console.log('매칭된 결과:', matchedItem);
-
-  if (!matchedItem) {
-    console.log('매칭 실패, 원본 데이터 사용:', ingredient);
-    return ingredient;
-  }
-
-  // DB에서 찾은 영양정보를 100g/100ml 기준으로 변환
-  const nutrition = {
-    calories: (matchedItem.data.nutrition.calories * 100) / matchedItem.data.unitWeight,
-    protein: (matchedItem.data.nutrition.protein * 100) / matchedItem.data.unitWeight,
-    fat: (matchedItem.data.nutrition.fat * 100) / matchedItem.data.unitWeight,
-    carbs: (matchedItem.data.nutrition.carbs * 100) / matchedItem.data.unitWeight,
-  };
-
-  console.log('변환된 100g/100ml 당 영양소:', nutrition);
-
-  const result = {
-    ...ingredient,
-    nutritionPer100g: nutrition,
-  };
-  console.log('최종 보정된 재료:', result);
-  return result;
-};
-// 전체요리매칭함수
-const validateAndCorrectAnalysis = (analysis: FoodAnalysis): FoodAnalysis => {
-  if (findExactMatchFood(analysis.foodName)) {
-    return analysis;
-  }
-  console.log('분석 시작 데이터:', analysis);
-
-  // 1. 정확한 매칭 시도
-  const exactMatchedFood = completedFoodDatabase.find((food) =>
-    isExactMatch(food.name, analysis.foodName)
-  );
-
-  // 정확히 일치하는 경우, 데이터베이스 값을 그대로 사용
-  if (exactMatchedFood) {
-    console.log('정확히 일치하는 요리 발견:', exactMatchedFood);
-    return {
-      ...analysis, // 기존 정보 유지
-      ingredients: analysis.ingredients.map((ing) => ({
-        ...ing, // 원래 재료명과 양은 유지
-        nutritionPer100g: {
-          // 영양정보만 데이터베이스 값으로 수정
-          calories: (exactMatchedFood.nutrition.calories / exactMatchedFood.unitWeight) * 100,
-          protein: (exactMatchedFood.nutrition.protein / exactMatchedFood.unitWeight) * 100,
-          fat: (exactMatchedFood.nutrition.fat / exactMatchedFood.unitWeight) * 100,
-          carbs: (exactMatchedFood.nutrition.carbs / exactMatchedFood.unitWeight) * 100,
-        },
-      })),
-    };
-  }
-
-  // 2. 유사 매칭 및 재료 기반 분석 (기존 로직)
-  const matchedFood = completedFoodDatabase.find((food) =>
-    isSimilarName(food.name, analysis.foodName)
-  );
-
-  const correctedIngredients = analysis.ingredients.map(correctIngredient);
-  console.log('보정된 재료들:', correctedIngredients);
-
-  if (matchedFood) {
-    const totalWeight = correctedIngredients.reduce((sum, ing) => sum + ing.amount, 0);
-    console.log('전체 중량:', totalWeight);
-
-    const ratio = totalWeight / matchedFood.unitWeight;
-    console.log('중량 비율:', ratio);
-
-    const gptTotal = calculateTotalNutrition(correctedIngredients);
-    console.log('GPT 계산 총 영양소:', gptTotal);
-
-    const dbTotal = {
-      calories: matchedFood.nutrition.calories * ratio,
-      protein: matchedFood.nutrition.protein * ratio,
-      fat: matchedFood.nutrition.fat * ratio,
-      carbs: matchedFood.nutrition.carbs * ratio,
-    };
-    console.log('DB 기반 총 영양소:', dbTotal);
-
-    const threshold = 0.3;
-    const difference = Math.abs(gptTotal.calories - dbTotal.calories) / dbTotal.calories;
-    console.log('차이 비율:', difference);
-
-    if (difference > threshold) {
-      const result = {
-        ...analysis,
-        ingredients: correctedIngredients.map((ing) => ({
-          ...ing,
-          nutritionPer100g: {
-            calories: (dbTotal.calories / totalWeight) * 100,
-            protein: (dbTotal.protein / totalWeight) * 100,
-            fat: (dbTotal.fat / totalWeight) * 100,
-            carbs: (dbTotal.carbs / totalWeight) * 100,
-          },
-        })),
-      };
-      console.log('DB 값 우선 적용 결과:', result);
-      return result;
-    }
-  }
-
-  const result = {
-    ...analysis,
-    ingredients: correctedIngredients,
-  };
-  console.log('최종 보정 결과:', result);
-  return result;
-};
-
-// 유틸리티 함수
-const calculateTotalNutrition = (ingredients: ApiResponse['ingredients']): NutritionPer100g => {
-  return ingredients.reduce(
-    (total, ingredient) => {
-      const ratio = ingredient.amount / 100;
-
-      return {
-        calories: total.calories + ingredient.nutritionPer100g.calories * ratio,
-        protein: total.protein + ingredient.nutritionPer100g.protein * ratio,
-        fat: total.fat + ingredient.nutritionPer100g.fat * ratio,
-        carbs: total.carbs + ingredient.nutritionPer100g.carbs * ratio,
-      };
-    },
-    { calories: 0, protein: 0, fat: 0, carbs: 0 }
-  );
-};
-const roundNutritionValues = (nutrition: NutritionPer100g): NutritionPer100g => {
-  return {
-    calories: Math.round(nutrition.calories),
-    protein: parseFloat(nutrition.protein.toFixed(1)),
-    fat: parseFloat(nutrition.fat.toFixed(1)),
-    carbs: parseFloat(nutrition.carbs.toFixed(1)),
-  };
-};
 
 // 메인 컴포넌트
 const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
@@ -448,7 +163,7 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     console.log('API 응답 데이터:', apiData);
 
     // 정확한 매칭 확인
-    const exactMatch = findExactMatchFood(apiData.foodName);
+    const exactMatch = findExactMatchFood(apiData.foodName, completedFoodDatabase);
 
     // ingredients 형식 변환 (항상 OpenAI 결과 사용)
     const processedIngredients = apiData.ingredients.map((ingredient) => ({
@@ -616,7 +331,7 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       }
 
       // 분석 결과 보정
-      const correctedResult = validateAndCorrectAnalysis(result);
+      const correctedResult = validateAndCorrectAnalysis(result, completedFoodDatabase);
 
       const processedData = processApiResponse(correctedResult);
       setOriginalAnalysis(processedData);
