@@ -23,24 +23,44 @@ const OnboardingScreen = ({ defaultSlide }: { defaultSlide: number }) => {
 
   const slides: Slide[] = [
     {
-      title: '칼로리 계산 너무 쉬워요',
-      subtitle: '그냥 사진만 찍으시면 저희가 알려드릴게요',
+      title: '찍기만 하면 끝!',
+      subtitle: '음식 사진만 찍어도 우리가 다 알려줄게요',
       icon: <Camera className="w-8 h-8" />,
-      image: '/start/start-1.png',
+      image: '/start/start-1.jpg',
     },
     {
-      title: 'AI를 통한 분석',
-      subtitle: '여러분이 드시는\n식사의 칼로리와 영양소를 분석해드릴게요',
+      title: '오늘도 인증 완료!',
+      subtitle: '찍을수록 성장하는 나의 건강 스토리',
       icon: <ChartBar className="w-8 h-8" />,
-      image: '/start/start-2.png',
+      image: '/start/start-2.jpg',
     },
     {
-      title: '이제 시작해요',
-      subtitle: '오늘이 여러분이 꿈꾸던 핏을 시작하기\n가장 좋은 날이에요',
+      title: '건강한 변화의 시작',
+      subtitle: '오늘 먹은 식사 찍으러 가볼까요?',
       icon: <Sparkles className="w-8 h-8" />,
-      image: '/start/start-3.png',
+      image: '/start/start-3.jpg',
     },
   ];
+  // const slides: Slide[] = [
+  //   {
+  //     title: '칼로리 계산 너무 쉬워요',
+  //     subtitle: '그냥 사진만 찍으시면 저희가 알려드릴게요',
+  //     icon: <Camera className="w-8 h-8" />,
+  //     image: '/start/start-1.png',
+  //   },
+  //   {
+  //     title: 'AI를 통한 분석',
+  //     subtitle: '여러분이 드시는\n식사의 칼로리와 영양소를 분석해드릴게요',
+  //     icon: <ChartBar className="w-8 h-8" />,
+  //     image: '/start/start-2.png',
+  //   },
+  //   {
+  //     title: '이제 시작해요',
+  //     subtitle: '오늘이 여러분이 꿈꾸던 핏을 시작하기\n가장 좋은 날이에요',
+  //     icon: <Sparkles className="w-8 h-8" />,
+  //     image: '/start/start-3.png',
+  //   },
+  // ];
 
   const handleNext = () => {
     if (currentSlide < slides.length - 1) {
@@ -49,7 +69,7 @@ const OnboardingScreen = ({ defaultSlide }: { defaultSlide: number }) => {
   };
 
   return (
-    <div className="min-h-screen min-w-screen flex flex-col bg-gray-900">
+    <div className="min-h-screen min-w-screen flex flex-col ">
       {/* Image Section - Fixed at top */}
       <div className="w-full aspect-square">
         <AnimatePresence mode="wait">
@@ -70,7 +90,7 @@ const OnboardingScreen = ({ defaultSlide }: { defaultSlide: number }) => {
       </div>
 
       {/* Content Section - Flexible space */}
-      <div className="flex-1 flex flex-col px-6 py-8 rounded-t-3xl bg-white">
+      <div className="flex-1 flex flex-col px-6 py-8 rounded-t-3xl bg-white ">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}

@@ -195,55 +195,41 @@ export const FoodLogCard = ({
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="space-y-4 min-h-28">
         {displayLogs.map((log) => (
-          <div key={log.id} className="rounded-lg shadow-sm bg-white">
-            {/* 이미지 영역 */}
-            <div className="relative w-full aspect-square">
+          <div key={log.id} className="flex items-center gap-4 rounded-lg shadow-sm h-full">
+            {/* 이미지 부분 */}
+            <div className="relative min-h-28 aspect-square rounded-lg overflow-hidden">
               {log.image_url ? (
                 <Image
                   src={log.image_url}
                   alt={log.food_name}
                   fill
                   sizes="100vw"
-                  className="rounded-lg object-cover"
+                  style={{ objectFit: 'cover' }}
                 />
               ) : (
-                <div className="w-full h-full bg-gray-200 rounded-t-lg flex items-center justify-center p-4">
+                <div className="w-full h-full bg-gray-200 flex items-center justify-center p-2">
                   <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
                     <UtensilsCrossed size={48} color="#9ca3af" />
                   </div>
                 </div>
               )}
-              {/* 헬스스코어 */}
-              <div className="absolute bottom-2 right-2 bg-white/80 rounded-lg p-2">
-                <div className="flex items-center gap-1 tracking-tighter text-sm">
-                  <div className="text-orange-500 flex items-center">
-                    <ChefHat size={20} />
-                    <span>:</span>
-                  </div>
-                  <p className={`font-bold text-lg text-orange-500`}>
-                    {calculateHealthScore(log, dailyCalorieGoal)}
-                    <span className="text-xs text-gray-600">/10</span>
-                  </p>
-                </div>
-              </div>
             </div>
 
-            {/* 정보 영역 */}
-            <div className="pt-4">
-              {/* 음식 이름과 시간 */}
+            {/* 음식 정보 부분 */}
+            <div className="min-h-28 flex-1 flex flex-col  ">
+              {/* 기존 정보 표시 부분 */}
               <div className="grid grid-cols-4 items-end tracking-tighter">
-                <p className="col-span-3 text-xl font-bold text-gray-900 line-clamp-1">
+                <p className="col-span-3 text-base font-bold text-gray-900 line-clamp-1">
                   {log.food_name}
                 </p>
-                <p className="col-span-1 text-sm text-gray-400 text-end">
+                <p className="col-span-1 text-sm  text-gray-400 text-end">
                   {formatTime(log.logged_at)}
                 </p>
               </div>
-
-              {/* 영양 정보 */}
-              <div className="mt-2">
+              {/* <hr className="mt-2" /> */}
+              <div className="flex flex-col mt-1">
                 <div className="flex items-center tracking-tighter">
                   <Flame size={16} color="#4b5563" />
                   <div className="flex items-center gap-[2px]">
@@ -251,21 +237,17 @@ export const FoodLogCard = ({
                     <span className="text-gray-600 text-xs">kcal</span>
                   </div>
                 </div>
-                <div className="flex justify-between items-center tracking-tighter text-sm mt-2">
-                  <div className="flex  items-center tracking-tighter">
+                <div className="flex justify-between items-center tracking-tighter text-sm ">
+                  <div className="flex items-center tracking-tighter">
                     <Beef size={16} color="#4b5563" />
                     <div className="flex items-center gap-[2px]">
-                      <p className="text-gray-600 text-sm font-bold">
+                      <p className="text-gray-600 font-bold text-sm">
                         {roundToInteger(log.protein)}
                       </p>
                       <span className="text-gray-600 text-xs">g</span>
                     </div>
-                    {/* <div className="flex">
-                      <Beef size={16} color="#4b5563" />
-                      <p className="text-gray-600 text-xs">단백질</p>
-                    </div> */}
                   </div>
-                  <div className="flex items-center tracking-tighter">
+                  <div className="flex items-center tracking-tighter ">
                     <Droplet size={16} color="#4b5563" />
                     <div className="flex items-center gap-[2px]">
                       <p className="text-gray-600 font-bold text-sm">{roundToInteger(log.fat)}</p>
@@ -282,9 +264,23 @@ export const FoodLogCard = ({
                 </div>
               </div>
 
-              {/* 수정 버튼 */}
-              {showEditButton && (
-                <div className="mt-2">
+              {/* 버튼 그룹 */}
+              <div className="w-full mt-1 flex justify-between items-center gap-2">
+                <div className="flex items-center gap-1 tracking-tighter text-sm">
+                  <div className="text-gray-600 flex items-center ">
+                    <ChefHat size={20} /> <span>:</span>
+                  </div>
+                  <p
+                    className={`font-bold text-lg ${getScoreColor(
+                      calculateHealthScore(log, dailyCalorieGoal) // 하드코딩된 2000 대신 prop 사용
+                    )}`}
+                  >
+                    {calculateHealthScore(log, dailyCalorieGoal)}
+                    <span className="text-xs text-gray-600"> /10</span>
+                  </p>
+                </div>
+                {/* 수정 버튼 */}
+                {showEditButton && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <div
@@ -380,7 +376,7 @@ export const FoodLogCard = ({
                         {/* 삭제 확인을 위한 중첩 AlertDialog */}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button className="bg-gray-400 h-10 px-6 rounded-md text-white">
+                            <Button className="bg-gray-400 h-10 p-6 rounded-md text-white">
                               삭제하기
                             </Button>
                           </AlertDialogTrigger>
@@ -395,9 +391,10 @@ export const FoodLogCard = ({
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>돌아가기</AlertDialogCancel>
+
                               <Button
                                 onClick={() => handleDelete(log.id)}
-                                className="bg-red-500 px-4 hover:bg-red-600"
+                                className="bg-red-500 p-4 hover:bg-red-600"
                               >
                                 삭제하기
                               </Button>
@@ -405,21 +402,19 @@ export const FoodLogCard = ({
                           </AlertDialogContent>
                         </AlertDialog>
 
-                        <Button onClick={() => handleUpdate(log.id)} className="bg-gray-800 px-6">
+                        <Button onClick={() => handleUpdate(log.id)} className="bg-gray-800 p-6">
                           수정하기
                         </Button>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         ))}
-        {displayLogs.length === 0 && (
-          <div className="col-span-2 text-center py-8 text-gray-500">
-            오늘 기록된 음식이 없습니다
-          </div>
+        {foodLogs.length === 0 && (
+          <div className="text-center py-8 text-gray-500">오늘 기록된 음식이 없습니다</div>
         )}
       </div>
     </Card>
