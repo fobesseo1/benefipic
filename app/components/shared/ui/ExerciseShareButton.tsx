@@ -89,7 +89,7 @@ const ExerciseShareButton = ({ log }: ExerciseShareButtonProps) => {
       >
         <div
           ref={exerciseCardRef}
-          className="w-[300px] h-[300px] bg-white p-4 flex flex-col relative"
+          className="w-[480px] h-[480px] bg-white p-4 flex flex-col relative"
         >
           {/* 정사각형 아이콘 영역 */}
           <div className="w-full aspect-square bg-gray-200 rounded-lg flex items-center justify-center">
@@ -97,7 +97,7 @@ const ExerciseShareButton = ({ log }: ExerciseShareButtonProps) => {
               {IconComponent ? (
                 <IconComponent className="w-1/2 h-1/2 text-gray-400" />
               ) : (
-                <span className="text-4xl font-semibold text-gray-400">
+                <span className="text-8xl font-semibold text-gray-400">
                   {log.exercise_name[0].toUpperCase()}
                 </span>
               )}
@@ -106,10 +106,14 @@ const ExerciseShareButton = ({ log }: ExerciseShareButtonProps) => {
 
           {/* 하단 텍스트 영역 */}
           <div className="absolute bottom-6 left-6 flex flex-col items-start justify-center">
-            <h3 className="text-xl font-bold text-gray-800">{log.exercise_name}</h3>
-            <div className=" ">
-              <p className="text-gray-600 font-medium">운동 시간: {log.duration_minutes}분</p>
-              <p className="text-gray-600 font-medium">소모 칼로리: {log.calories_burned}kcal</p>
+            <h3 className="text-4xl font-bold text-gray-800">{log.exercise_name}</h3>
+            <div className="mt-2 tracking-tighter">
+              <p className="text-gray-600 text-2xl font-medium">
+                운동 시간: {log.duration_minutes}분
+              </p>
+              <p className="text-gray-600 text-2xl font-medium">
+                소모 칼로리: {log.calories_burned}kcal
+              </p>
             </div>
           </div>
         </div>

@@ -14,6 +14,7 @@ import {
   EraserIcon,
   Flame,
   Pencil,
+  Share,
   UtensilsCrossed,
   Wheat,
 } from 'lucide-react';
@@ -30,6 +31,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import FoodShareButton from './FoodShareButton';
 
 export interface FoodLogCardProps {
   foodLogs: FoodLog[];
@@ -180,6 +182,8 @@ export const FoodLogCard = ({
     return 'text-red-500';
   };
 
+  const abcdef = '간짜장간짜장탕수';
+
   return (
     <Card className={`p-4 ${className}`}>
       {/* 기존 헤더 부분 */}
@@ -212,7 +216,10 @@ export const FoodLogCard = ({
               ) : (
                 <div className="w-full h-full bg-gray-200 rounded-t-lg flex items-center justify-center p-4">
                   <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
-                    <UtensilsCrossed size={48} color="#9ca3af" />
+                    <p className="text-center font-semibold line-clamp-1 text-4xl">
+                      {log.food_name.slice(0, 6)}
+                    </p>
+                    {/* <UtensilsCrossed size={96} color="#9ca3af" /> */}
                   </div>
                 </div>
               )}
@@ -286,21 +293,51 @@ export const FoodLogCard = ({
               </div>
 
               {/* 수정 버튼 */}
-              {showEditButton && (
-                <div className="mt-2">
+              {/* 버튼 영역 */}
+              <div className="w-full mt-3 grid grid-cols-3 gap-2">
+                {/* 삭제 버튼 */}
+                {showDeleteButton ? (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <div className="flex justify-end items-center mt-4">
-                        <div
-                          onClick={() => handleEdit(log)}
-                          className="w-1/2 p-3 border-[1px] border-gray-200 flex justify-center items-center gap-1 cursor-pointer rounded-full hover:bg-gray-600 group"
+                      <div className="py-1 px-1 bg-gray-50 flex justify-center items-center cursor-pointer rounded-lg hover:bg-gray-600 group shadow-md gap-1">
+                        <Eraser size={16} className="text-gray-400 group-hover:text-white" />
+                        <p className="text-sm text-gray-400 group-hover:text-white">삭제</p>
+                      </div>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>음식 기록 삭제</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {log.food_name}을(를) 삭제하시겠습니까?
+                          <br />
+                          삭제된 기록은 복구할 수 없습니다.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>돌아가기</AlertDialogCancel>
+                        <Button
+                          onClick={() => handleDelete(log.id)}
+                          className="bg-red-500 px-4 hover:bg-red-600"
                         >
-                          <Pencil size={16} className="text-gray-400 group-hover:text-white" />
-                          <p className="text-sm text-gray-400 group-hover:text-white">수정</p>
-                          <p className="text-sm text-gray-400 group-hover:text-white"> / </p>
-                          <EraserIcon size={16} className="text-gray-400 group-hover:text-white" />
-                          <p className="text-sm text-gray-400 group-hover:text-white">삭제</p>
-                        </div>
+                          삭제하기
+                        </Button>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                ) : (
+                  <div />
+                )}
+
+                {/* 수정 버튼 */}
+                {showEditButton ? (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <div
+                        onClick={() => handleEdit(log)}
+                        className="py-1 px-1 bg-gray-50 flex justify-center items-center cursor-pointer rounded-lg hover:bg-gray-600 group shadow-md gap-1"
+                      >
+                        <Pencil size={16} className="text-gray-400 group-hover:text-white" />
+                        <p className=" text-sm text-gray-400 group-hover:text-white">수정</p>
                       </div>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
@@ -382,45 +419,22 @@ export const FoodLogCard = ({
                         </div>
                       </div>
 
-                      <AlertDialogFooter className="flex gap-2">
+                      <AlertDialogFooter>
                         <AlertDialogCancel>닫기</AlertDialogCancel>
-
-                        {/* 삭제 확인을 위한 중첩 AlertDialog */}
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button className="bg-gray-400 h-10 px-6 rounded-md text-white">
-                              삭제하기
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>음식 기록 삭제</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                {log.food_name}을(를) 삭제하시겠습니까?
-                                <br />
-                                삭제된 기록은 복구할 수 없습니다.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>돌아가기</AlertDialogCancel>
-                              <Button
-                                onClick={() => handleDelete(log.id)}
-                                className="bg-red-500 px-4 hover:bg-red-600"
-                              >
-                                삭제하기
-                              </Button>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-
                         <Button onClick={() => handleUpdate(log.id)} className="bg-gray-800 px-6">
                           수정하기
                         </Button>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                </div>
-              )}
+                ) : (
+                  <div />
+                )}
+
+                {/* 공유 버튼 */}
+
+                <FoodShareButton log={log} />
+              </div>
             </div>
           </div>
         ))}
