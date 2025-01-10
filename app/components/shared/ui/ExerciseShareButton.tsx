@@ -16,15 +16,12 @@ const ExerciseShareButton = ({ log }: ExerciseShareButtonProps) => {
   const exerciseCardRef = useRef<HTMLDivElement>(null);
 
   const handleShare = async (event: React.MouseEvent) => {
-    // 이벤트 전파 중단
     event.stopPropagation();
     if (!exerciseCardRef.current) return;
 
     try {
-      // 먼저 공유할 텍스트 준비
       const shareText = `운동: ${log.exercise_name}\n운동 시간: ${log.duration_minutes}분\n소모 칼로리: ${log.calories_burned}kcal`;
 
-      // 이미지 생성
       const dataUrl = await domtoimage.toPng(exerciseCardRef.current, {
         quality: 1.0,
         bgcolor: '#fff',
@@ -34,7 +31,6 @@ const ExerciseShareButton = ({ log }: ExerciseShareButtonProps) => {
       });
 
       if (navigator.share) {
-        // 모바일 환경에서는 공유 API 사용
         try {
           await navigator.share({
             title: '오늘의 운동 기록',
@@ -46,7 +42,6 @@ const ExerciseShareButton = ({ log }: ExerciseShareButtonProps) => {
             ],
           });
         } catch (shareError) {
-          // 파일 공유가 실패하면 텍스트만 공유
           console.log('Falling back to text-only share');
           await navigator.share({
             title: '오늘의 운동 기록',
@@ -54,7 +49,6 @@ const ExerciseShareButton = ({ log }: ExerciseShareButtonProps) => {
           });
         }
       } else {
-        // 데스크톱 환경에서는 클립보드에 복사
         await navigator.clipboard.writeText(shareText);
         alert('텍스트가 클립보드에 복사되었습니다!');
       }
@@ -82,7 +76,7 @@ const ExerciseShareButton = ({ log }: ExerciseShareButtonProps) => {
 
   return (
     <>
-      {/* 이미지로 변환될 운동 카드 - position fixed로 변경 */}
+      {/* 이미지로 변환될 운동 카드 */}
       <div
         style={{
           position: 'fixed',
@@ -93,22 +87,30 @@ const ExerciseShareButton = ({ log }: ExerciseShareButtonProps) => {
           pointerEvents: 'none',
         }}
       >
-        <div ref={exerciseCardRef} className="w-[300px] bg-white p-4">
-          <div className="relative min-h-28 aspect-square rounded-lg overflow-hidden flex items-center justify-center bg-gray-200">
-            <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center">
+        <div
+          ref={exerciseCardRef}
+          className="w-[300px] h-[300px] bg-white p-4 flex flex-col relative"
+        >
+          {/* 정사각형 아이콘 영역 */}
+          <div className="w-full aspect-square bg-gray-200 rounded-lg flex items-center justify-center">
+            <div className="w-1/2 h-1/2 rounded-full bg-white flex items-center justify-center">
               {IconComponent ? (
-                <IconComponent className="w-12 h-12 text-gray-400" />
+                <IconComponent className="w-1/2 h-1/2 text-gray-400" />
               ) : (
-                <span className="text-3xl font-semibold text-gray-400">
+                <span className="text-4xl font-semibold text-gray-400">
                   {log.exercise_name[0].toUpperCase()}
                 </span>
               )}
             </div>
           </div>
-          <div className="mt-4">
-            <h3 className="font-bold text-lg">{log.exercise_name}</h3>
-            <p className="text-gray-600">운동 시간: {log.duration_minutes}분</p>
-            <p className="text-gray-600">소모 칼로리: {log.calories_burned}kcal</p>
+
+          {/* 하단 텍스트 영역 */}
+          <div className="absolute bottom-6 left-6 flex flex-col items-start justify-center">
+            <h3 className="text-xl font-bold text-gray-800">{log.exercise_name}</h3>
+            <div className=" ">
+              <p className="text-gray-600 font-medium">운동 시간: {log.duration_minutes}분</p>
+              <p className="text-gray-600 font-medium">소모 칼로리: {log.calories_burned}kcal</p>
+            </div>
           </div>
         </div>
       </div>
