@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { compressImage, fileToBase64 } from '@/utils/image';
 import NutritionCard from '../components/shared/ui/NutritionCard';
-import NavigationButtonSection from '../components/shared/ui/NavigationButtonSection';
 import Link from 'next/link';
 import { useAnalysisEligibility } from '../hooks/useAnalysisEligibility';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
@@ -19,6 +18,7 @@ import {
   validateAndCorrectAnalysis,
 } from '@/utils/food-analysis';
 import { completedFoodDatabase } from '../food-description/foodDatabase';
+import NavigationButtonSectionMenu from './../components/shared/ui/NavigationButtonSectionMenu';
 
 type AnalysisStep =
   | 'initial'
@@ -389,7 +389,7 @@ ${userDescription}
           </div>
         </div>
       ) : (
-        <NavigationButtonSection
+        <NavigationButtonSectionMenu
           step={step}
           setStep={setStep}
           setSelectedImage={setSelectedImage}

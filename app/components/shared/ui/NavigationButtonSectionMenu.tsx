@@ -16,7 +16,6 @@ interface NavigationButtonSectionProps {
     | 'initial'
     | 'camera'
     | 'image-selected'
-    | 'filter-selection' // 여기에 추가
     | 'compress'
     | 'analyzing'
     | 'calculate'
@@ -26,7 +25,6 @@ interface NavigationButtonSectionProps {
       | 'initial'
       | 'camera'
       | 'image-selected'
-      | 'filter-selection' // 여기에도 추가
       | 'compress'
       | 'analyzing'
       | 'calculate'
@@ -123,22 +121,7 @@ export default function NavigationButtonSectionMenu({
               사진 촬영하기
             </button>
           ) : step === 'image-selected' ? (
-            <div className="flex flex-col gap-4 pt-8 pb-48">
-              <button
-                onClick={() => setStep('filter-selection')}
-                className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
-              >
-                다음으로
-              </button>
-              <button
-                onClick={resetAnalyzer}
-                className="w-full bg-gray-200 text-gray-600 rounded-xl py-4 text-lg font-medium"
-              >
-                돌아가기
-              </button>
-            </div>
-          ) : step === 'filter-selection' ? (
-            <div className="flex flex-col gap-4 pt-8 pb-48">
+            <div className="flex flex-col gap-4  pt-8 pb-48">
               <button
                 onClick={onAnalyze}
                 className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
@@ -146,7 +129,7 @@ export default function NavigationButtonSectionMenu({
                 분석하기
               </button>
               <button
-                onClick={() => setStep('image-selected')}
+                onClick={resetAnalyzer}
                 className="w-full bg-gray-200 text-gray-600 rounded-xl py-4 text-lg font-medium"
               >
                 돌아가기

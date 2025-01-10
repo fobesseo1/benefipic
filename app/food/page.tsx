@@ -1,5 +1,6 @@
 import { getUser } from '@/lib/supabse/server';
 import FoodAnalyzer from './FoodAnalyzer';
+import FoodAnalyzerNoFilter from './FoodAnalyzerNoFilter';
 
 export default async function FoodPage() {
   const currentUser = await getUser();
@@ -7,6 +8,7 @@ export default async function FoodPage() {
   return (
     <div>
       <FoodAnalyzer currentUser_id={currentUser_id} />
+      {/* <FoodAnalyzerNoFilter currentUser_id={currentUser_id} /> */}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { compressImage, fileToBase64 } from '@/utils/image';
 import NutritionCard from '../components/shared/ui/NutritionCard';
-import NavigationButtonSection from '../components/shared/ui/NavigationButtonSection';
+import NavigationButtonSectionMenu from '../components/shared/ui/NavigationButtonSectionMenu';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
 import { useRouter } from 'next/navigation';
 import {
@@ -36,21 +36,19 @@ import {
   roundNutritionValues,
   validateAndCorrectAnalysis,
 } from '@/utils/food-analysis';
-import FoodImageFilter from '../components/shared/ui/FoodImageFilter';
 
 // 타입 정의
 type AnalysisStep =
   | 'initial'
   | 'camera'
   | 'image-selected'
-  | 'filter-selection'
   | 'compress'
   | 'analyzing'
   | 'calculate'
   | 'complete';
 
 // 메인 컴포넌트
-const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
+const FoodAnalyzerNoFilter = ({ currentUser_id }: { currentUser_id: string }) => {
   const [step, setStep] = useState<AnalysisStep>('initial');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -69,52 +67,10 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   });
   const [showAdDialog, setShowAdDialog] = useState(false);
   const { checkEligibility } = useAnalysisEligibility(currentUser_id);
-  const initialFilters = {
-    brightness: 100,
-    contrast: 100,
-    saturation: 100,
-    warmth: 100,
-  };
-  const [currentFilters, setCurrentFilters] = useState(initialFilters);
 
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const supabase = createSupabaseBrowserClient();
-
-  const applyFilters = async () => {
-    if (!selectedImage) return;
-
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = imageUrl;
-
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-
-      if (!ctx) return;
-
-      ctx.filter = `
-        brightness(${currentFilters.brightness}%)
-        contrast(${currentFilters.contrast}%)
-        saturate(${currentFilters.saturation}%)
-      `;
-      ctx.drawImage(img, 0, 0);
-
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const filteredFile = new File([blob], 'filtered-food-image.jpg', {
-            type: 'image/jpeg',
-          });
-          setSelectedImage(filteredFile);
-          setImageUrl(URL.createObjectURL(filteredFile));
-          analyzeImage();
-        }
-      }, 'image/jpeg');
-    };
-  };
 
   const handleAdComplete = async () => {
     const supabase = createSupabaseBrowserClient();
@@ -454,12 +410,7 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
             exit={{ x: -160, opacity: 0 }}
             className="w-full aspect-square"
           >
-            {step === 'filter-selection' ? (
-              <FoodImageFilter
-                imageUrl={imageUrl}
-                onPreviewChange={setCurrentFilters} // currentFilters prop 제거
-              />
-            ) : step === 'camera' ? (
+            {step === 'camera' ? (
               <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
             ) : imageUrl ? (
               <img src={imageUrl} alt="Selected food" className="w-full h-full object-cover" />
@@ -500,7 +451,8 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
                   <AnalysisProgress currentStep={step} />
                   <p className="mt-8 text-gray-500">
                     {step === 'compress' && '이미지를 최적화하고 있어요...'}
-                    {step === 'analyzing' && '음식을 분석하고 있어요...음식 종류가 많으면 시간이 더 걸려요^^'}
+                    {step === 'analyzing' &&
+                      '음식을 분석하고 있어요...음식 종류가 많으면 시간이 더 걸려요^^'}
                     {step === 'calculate' && '영양소를 계산하고 있어요...'}
                   </p>
                 </div>
@@ -609,12 +561,12 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       </div>
 
       {/* Navigation Section */}
-      <NavigationButtonSection
+      <NavigationButtonSectionMenu
         step={step}
         setStep={setStep}
         setSelectedImage={setSelectedImage}
         setImageUrl={setImageUrl}
-        onAnalyze={applyFilters}
+        onAnalyze={analyzeImage}
         stream={stream}
         setStream={setStream}
         videoRef={videoRef}
@@ -655,4 +607,4 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   );
 };
 
-export default FoodAnalyzer;
+export default FoodAnalyzerNoFilter;
