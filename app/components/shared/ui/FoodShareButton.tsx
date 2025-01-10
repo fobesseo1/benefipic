@@ -4,6 +4,7 @@ import React, { useRef } from 'react';
 import { Share, Share2, UtensilsCrossed } from 'lucide-react';
 import domtoimage from 'dom-to-image';
 import { FoodLog } from '@/app/types/types';
+import { toPng } from 'html-to-image';
 
 interface FoodShareButtonProps {
   log: FoodLog;
@@ -19,13 +20,7 @@ const FoodShareButton = ({ log }: FoodShareButtonProps) => {
     try {
       const shareText = `음식: ${log.food_name}\n칼로리: ${log.calories}kcal\n단백질: ${log.protein}g\n지방: ${log.fat}g\n탄수화물: ${log.carbs}g`;
 
-      const dataUrl = await domtoimage.toPng(foodCardRef.current, {
-        quality: 1.0,
-        bgcolor: '#fff',
-        style: {
-          transform: 'none',
-        },
-      });
+      const dataUrl = await toPng(foodCardRef.current, { backgroundColor: '#fff' });
 
       if (navigator.share) {
         try {
@@ -101,9 +96,9 @@ const FoodShareButton = ({ log }: FoodShareButtonProps) => {
 
           {/* 하단 텍스트 영역 11111*/}
           <div className="absolute bottom-4 left-4 flex flex-col items-start justify-center">
-            <p className=" text-sm font-bold text-white line-clamp-1 bg-gray-800/90 px-2 py-1 inline-block">
+            {/* <p className=" text-sm font-bold text-white line-clamp-1 bg-gray-800/90 px-2 py-1 inline-block">
               from.BenefiPic
-            </p>
+            </p> */}
             <p className="mb-1 text-lg font-bold text-white line-clamp-1 bg-gray-800/90 px-2 py-1 inline-block">
               {formatLogDate(log.logged_at)}
             </p>
@@ -116,7 +111,7 @@ const FoodShareButton = ({ log }: FoodShareButtonProps) => {
               </p>
               <p className="-mt-2 text-sm text-white bg-gray-800/90 px-2 py-1 inline-block">
                 단백질: {Math.round(log.protein)}g, 지방: {Math.round(log.fat)}g, 탄수화물:
-                {Math.round(log.carbs)}g ＠＠
+                {Math.round(log.carbs)}g / from.BenefiPic
               </p>
             </div>
           </div>
