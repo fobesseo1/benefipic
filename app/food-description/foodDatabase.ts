@@ -848,13 +848,13 @@ export const ingredientDatabase: FoodItem[] = [
   {
     id: 'curry',
     name: '카레',
-    unit: 'T',
-    unitWeight: 15,
+    unit: '인분',
+    unitWeight: 200,
     nutrition: {
-      calories: 48.75,
-      protein: 2.1,
-      fat: 2.1,
-      carbs: 8.7,
+      calories: 215,
+      protein: 10.1,
+      fat: 8.1,
+      carbs: 26,
     },
   },
   {

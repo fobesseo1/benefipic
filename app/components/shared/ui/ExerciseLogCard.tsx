@@ -20,6 +20,7 @@ import { FaWalking, FaRunning, FaSwimmer } from 'react-icons/fa';
 import { GrYoga } from 'react-icons/gr';
 import { Bike, Dumbbell, Plus, Mountain } from 'lucide-react';
 import Link from 'next/link';
+import ExerciseShareButton from './ExerciseShareButton';
 
 export interface ExerciseLogCardProps {
   exerciseLogs: ExerciseLog[];
@@ -205,13 +206,15 @@ export const ExerciseLogCard = ({
                   </div>
                 </div>
 
-                <div className="w-full mt-3 flex justify-end items-center gap-2">
+                <div className="w-full mt-3 grid grid-cols-3 gap-2">
+                  {showEditButton && <ExerciseShareButton log={log} />}
+
                   {showEditButton && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <div
                           onClick={() => handleEdit(log)}
-                          className="py-1 px-3 bg-gray-50 flex justify-center items-center gap-1 cursor-pointer rounded-lg hover:bg-gray-600 group"
+                          className="py-1 px-1 bg-gray-50 flex justify-center items-center cursor-pointer rounded-lg hover:bg-gray-600 group"
                         >
                           <Pencil size={16} className="text-gray-400 group-hover:text-white" />
                           <p className="text-sm text-gray-400 group-hover:text-white">수정</p>
@@ -284,7 +287,7 @@ export const ExerciseLogCard = ({
                   {showDeleteButton && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <div className="py-1 px-3 bg-gray-50 flex justify-center items-center gap-1 cursor-pointer rounded-lg hover:bg-gray-600 group">
+                        <div className="py-1 px-1 bg-gray-50 flex justify-center items-center  cursor-pointer rounded-lg hover:bg-gray-600 group">
                           <Eraser size={16} className="text-gray-400 group-hover:text-white" />
                           <p className="text-sm text-gray-400 group-hover:text-white">삭제</p>
                         </div>
