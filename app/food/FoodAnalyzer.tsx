@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import AnalysisProgress from './Analysis Progress';
+import AnalysisProgress from './AnalysisProgress';
 import FoodDetectionAlert from './FoodDetectionAlert';
 import { completedFoodDatabase, ingredientDatabase } from '../food-description/foodDatabase';
 import { useAnalysisEligibility } from '../hooks/useAnalysisEligibility';
