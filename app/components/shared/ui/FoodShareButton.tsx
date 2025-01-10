@@ -103,11 +103,11 @@ const FoodShareButton = ({ log }: FoodShareButtonProps) => {
 
           {/* 하단 텍스트 영역 */}
           <div className="absolute bottom-4 left-4 flex flex-col items-start justify-center">
-            <p className="mb-1 text-sm font-bold text-white line-clamp-1 bg-gray-800/90 px-2 py-1 inline-block">
+            <p className=" text-sm font-bold text-white line-clamp-1 bg-gray-800/90 px-2 py-1 inline-block">
               from.BenefiPic
             </p>
             <p className="mb-1 text-lg font-bold text-white line-clamp-1 bg-gray-800/90 px-2 py-1 inline-block">
-              {formatLogDate(log.logged_at)} from. benefiPic
+              {formatLogDate(log.logged_at)}
             </p>
             <h3 className="text-2xl font-bold text-white line-clamp-1 bg-gray-800/90 px-2 py-1 inline-block">
               {log.food_name}
