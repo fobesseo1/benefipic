@@ -78,23 +78,21 @@ const FoodShareButton = ({ log }: FoodShareButtonProps) => {
       >
         <div ref={foodCardRef} className="w-[480px] h-[480px] bg-white p-4 flex flex-col relative">
           {/* 정사각형 이미지/아이콘 영역 */}
-          <div className="w-full aspect-square">
+          <div className="w-full aspect-square bg-white">
             {log.image_url ? (
-              <div className="relative w-full h-full">
-                {/* Next.js Image 컴포넌트 대신 일반 img 태그 사용 */}
+              <div className="w-full h-full relative">
                 <img
                   src={log.image_url}
                   alt={log.food_name}
-                  className="w-full h-full rounded-lg object-cover"
+                  className="w-full h-full absolute inset-0 rounded-lg object-cover"
+                  style={{ aspectRatio: '1/1' }}
                 />
               </div>
             ) : (
               <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
                 <div className="w-full h-full flex items-center justify-center p-4">
                   <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
-                    <p className="text-center font-semibold line-clamp-1 text-6xl">
-                      {log.food_name.slice(0, 6)}
-                    </p>
+                    <UtensilsCrossed size={96} color="#9ca3af" />
                   </div>
                 </div>
               </div>
