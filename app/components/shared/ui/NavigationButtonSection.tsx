@@ -126,9 +126,10 @@ export default function NavigationButtonSectionMenu({
             <div className="flex flex-col gap-4 pt-8 pb-48">
               <button
                 onClick={() => setStep('filter-selection')}
-                className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
+                className="w-full bg-black text-white rounded-xl py-2 text-lg font-medium flex flex-col items-center justify-center"
               >
-                다음으로
+                <p>다음으로</p>
+                <p className="text-xs tracking-tighter">(음식과 어울리는 이미지 필터 선택하기)</p>
               </button>
               <button
                 onClick={resetAnalyzer}

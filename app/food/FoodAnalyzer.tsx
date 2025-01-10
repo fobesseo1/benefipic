@@ -496,11 +496,13 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
               className="flex-1 flex flex-col"
             >
               {(step === 'compress' || step === 'analyzing' || step === 'calculate') && (
-                <div className="flex flex-col items-center justify-center h-full">
+                <div className="flex flex-col items-center justify-center h-full tracking-tighter">
                   <AnalysisProgress currentStep={step} />
-                  <p className="mt-8 text-gray-500">
+                  <p className="mt-8 text-gray-500 whitespace-pre-line">
                     {step === 'compress' && '이미지를 최적화하고 있어요...'}
-                    {step === 'analyzing' && '음식을 분석하고 있어요...음식 종류가 많으면 시간이 더 걸려요^^'}
+                    {step === 'analyzing' &&
+                      `사진을 자세히 살펴보고 있어요\n조금만 기다려주시면 곧 분석이 완료돼요🔍
+                      \n다양한 음식 또는 다른 물건들이 있다면\n조금더 시간이 필요해요^^`}
                     {step === 'calculate' && '영양소를 계산하고 있어요...'}
                   </p>
                 </div>

@@ -69,7 +69,7 @@ const AnalysisProgress: React.FC<AnalysisProgressProps> = ({ currentStep }) => {
     if (currentStep === 'analyzing') {
       messageInterval = setInterval(() => {
         setMessageIndex((prev) => (prev + 1) % analyzingMessages.length);
-      }, 800);
+      }, 1500);
 
       longProcessTimer = setTimeout(() => {
         setShowLongProcessMessage(true);
@@ -115,9 +115,9 @@ const AnalysisProgress: React.FC<AnalysisProgressProps> = ({ currentStep }) => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="text-sm text-gray-500 mt-2 text-center"
+                  className="text-sm text-gray-500 mt-2 text-center whitespace-pre-line"
                 >
-                  음식이 많이 보여서 조금 더 걸릴 수 있어요...
+                  <p>{`음식이나 주변 물건들이 많이 보여\n시간이 좀 더 필요해요😂`}</p>
                 </motion.p>
               )}
             </AnimatePresence>
