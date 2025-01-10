@@ -106,13 +106,14 @@ export default function WeightTracker() {
         console.log('Current browser time:', now);
 
         // 2. 날짜 배열 생성 (KST 기준)
+        // 수정된 날짜 배열 생성 코드
         const dates = Array.from({ length: 7 }, (_, i) => {
-          const today = new Date(); // 현재 시각 (1월 8일)
-          console.log('Today:', today);
+          const today = new Date();
           const d = new Date(today);
-          console.log('d:', d);
           d.setDate(today.getDate() - (6 - i));
-          return d.toISOString().split('T')[0];
+          // 표시용 날짜만 KST로 변환
+          const kstDate = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+          return kstDate.toISOString().split('T')[0];
         });
 
         console.log('Generated dates:', dates);
@@ -265,7 +266,7 @@ export default function WeightTracker() {
                   {weightTrend.direction === 'up' ? '증가' : '감소'}
                   <p>
                     {weightTrend.direction === 'up' ? (
-                      <MoveUpRight className="h-6 w-6 text-red-600 font-bold" />
+                      <MoveUpRight className="h-6 w-6 text-rose-600 font-bold" />
                     ) : (
                       <MoveDownRight className="h-6 w-6 text-blue-600 font-bold" />
                     )}
@@ -274,7 +275,7 @@ export default function WeightTracker() {
               )}
             </div>
 
-            <p className="text-red-600">
+            <p className="text-rose-600">
               <span className="text-2xl font-bold">{targetWeight}</span>
               kg <span className="text-gray-400">(★=목표체중)</span>
             </p>
@@ -298,7 +299,6 @@ export default function WeightTracker() {
                   height={50}
                   tickFormatter={(value) => {
                     const date = new Date(value);
-                    date.setHours(date.getHours() + 9);
                     return `${date.getMonth() + 1}/${date.getDate()}`;
                   }}
                   interval={0}
@@ -325,7 +325,7 @@ export default function WeightTracker() {
                       value: `★`,
                       style: {
                         fontSize: '16px',
-                        fill: '#dc2626',
+                        fill: '#e11d48',
                         letterSpacing: '-0.1em',
                         zIndex: 50,
                         transform: 'translateX(-4px)',
@@ -338,17 +338,57 @@ export default function WeightTracker() {
                   dataKey="weight"
                   stroke="hsl(var(--primary))"
                   strokeWidth={2}
-                  dot={{ fill: 'hsl(var(--primary))' }}
+                  dot={(props: any) => {
+                    if (!props) return <circle cx={0} cy={0} r={4} fill="hsl(var(--primary))" />;
+
+                    const today = new Date();
+                    const kstToday = new Date(today.getTime() + 9 * 60 * 60 * 1000)
+                      .toISOString()
+                      .split('T')[0];
+                    const isToday = props.payload?.date === kstToday;
+
+                    return (
+                      <circle
+                        cx={props.cx}
+                        cy={props.cy}
+                        r={4}
+                        fill={isToday ? 'rgb(225 29 72)' : 'hsl(var(--primary))'}
+                      />
+                    );
+                  }}
                   activeDot={{ r: 6 }}
                 >
                   <LabelList
+                    dataKey="weight"
                     position="top"
                     offset={12}
-                    formatter={(value: number) => Number(value.toFixed(1))}
-                    style={{
-                      fontSize: '16px',
-                      letterSpacing: '-0.05em',
-                      fontWeight: 'bold',
+                    content={({ x, y, value, payload }: any) => {
+                      // value에서 인덱스 찾기
+                      const valueIndex = chartData.findIndex((item) => item.weight === value);
+                      // 인덱스로 해당 날짜 찾기
+                      const currentDate = chartData[valueIndex]?.date;
+
+                      const today = new Date();
+                      const kstToday = new Date(today.getTime() + 9 * 60 * 60 * 1000)
+                        .toISOString()
+                        .split('T')[0];
+
+                      const isToday = currentDate === kstToday;
+
+                      return (
+                        <text
+                          x={x}
+                          y={y}
+                          dy={-12}
+                          textAnchor="middle"
+                          fill={isToday ? 'rgb(225 29 72)' : 'black'}
+                          fontSize={isToday ? '16px' : '12px'}
+                          fontWeight={isToday ? 'bold' : 'normal'}
+                          letterSpacing="-0.05em"
+                        >
+                          {value.toFixed(1)}
+                        </text>
+                      );
                     }}
                   />
                 </Line>
