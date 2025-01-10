@@ -114,8 +114,8 @@ const FoodShareButton = ({ log }: FoodShareButtonProps) => {
                 칼로리: {log.calories}kcal
               </p>
               <p className="-mt-2 text-sm text-white bg-gray-800/90 px-2 py-1 inline-block">
-                탄수화물:{Math.round(log.carbs)}g, 단백질: {Math.round(log.protein)}g, 지방:{' '}
-                {Math.round(log.fat)}g
+                단백질: {Math.round(log.protein)}g, 지방: {Math.round(log.fat)}g, 탄수화물:
+                {Math.round(log.carbs)}g from.benefiPic
               </p>
             </div>
           </div>
