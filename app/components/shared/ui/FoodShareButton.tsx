@@ -102,19 +102,19 @@ const FoodShareButton = ({ log }: FoodShareButtonProps) => {
           </div>
 
           {/* 하단 텍스트 영역 */}
-          <div className="absolute bottom-6 left-6 flex flex-col items-start justify-center">
-            <p className="mb-1 text-xl font-bold text-white line-clamp-1 bg-gray-800 p-1">
+          <div className="absolute bottom-4 left-4 flex flex-col items-start justify-center">
+            <p className="mb-1 text-lg font-bold text-white line-clamp-1 bg-gray-800/90 px-2 py-1 inline-block">
               {formatLogDate(log.logged_at)}
             </p>
-            <h3 className="text-3xl font-bold text-white line-clamp-1 bg-gray-800 p-1">
+            <h3 className="text-2xl font-bold text-white line-clamp-1 bg-gray-800/90 px-2 py-1 inline-block">
               {log.food_name}
             </h3>
-            <div className="mt-2 tracking-tighter">
-              <p className=" text-xl text-white line-clamp-1 bg-gray-800 px-1">
+            <div className="mt-2 tracking-tighter flex flex-col ">
+              <p className="text-lg text-white line-clamp-1 bg-gray-800/90 px-2 py-1 inline-block">
                 칼로리: {log.calories}kcal
               </p>
-              <p className="text-lg text-white  bg-gray-800 px-1">
-                단백질: {Math.round(log.protein)}g | 지방: {Math.round(log.fat)}g | 탄수화물:
+              <p className="-mt-2 text-sm text-white bg-gray-800/90 px-2 py-1 inline-block">
+                단백질: {Math.round(log.protein)}g • 지방: {Math.round(log.fat)}g • 탄수화물:{' '}
                 {Math.round(log.carbs)}g
               </p>
             </div>
