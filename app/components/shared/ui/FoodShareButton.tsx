@@ -78,23 +78,21 @@ const FoodShareButton = ({ log }: FoodShareButtonProps) => {
       >
         <div ref={foodCardRef} className="w-[480px] h-[480px] bg-white p-4 flex flex-col relative">
           {/* 정사각형 이미지/아이콘 영역 */}
-          <div className="w-full aspect-square">
+          <div className="w-full aspect-square bg-white">
             {log.image_url ? (
-              <div className="relative w-full h-full">
-                {/* Next.js Image 컴포넌트 대신 일반 img 태그 사용 */}
+              <div className="w-full h-full relative">
                 <img
                   src={log.image_url}
                   alt={log.food_name}
-                  className="w-full h-full rounded-lg object-cover"
+                  className="w-full h-full absolute inset-0 rounded-lg object-cover"
+                  style={{ aspectRatio: '1/1' }}
                 />
               </div>
             ) : (
               <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
                 <div className="w-full h-full flex items-center justify-center p-4">
                   <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
-                    <p className="text-center font-semibold line-clamp-1 text-6xl">
-                      {log.food_name.slice(0, 6)}
-                    </p>
+                    <UtensilsCrossed size={96} color="#9ca3af" />
                   </div>
                 </div>
               </div>
@@ -103,24 +101,20 @@ const FoodShareButton = ({ log }: FoodShareButtonProps) => {
 
           {/* 하단 텍스트 영역 */}
           <div className="absolute bottom-4 left-4 flex flex-col items-start justify-center">
-            <p className=" text-sm font-bold text-white line-clamp-1 bg-gray-800/90 px-2 py-1 inline-block">
-              from.BenefiPic
-            </p>
-            <p className="mb-1 text-lg font-bold text-white line-clamp-1 bg-gray-800/90 px-2 py-1 inline-block">
+            <p className="mb-1 text-lg font-bold text-white line-clamp-1 bg-gray-800/90 px-2 py-1 ">
               {formatLogDate(log.logged_at)}
             </p>
-            <h3 className="text-2xl font-bold text-white line-clamp-1 bg-gray-800/90 px-2 py-1 inline-block">
+            <h3 className="text-2xl font-bold text-white line-clamp-1 bg-gray-800/90 px-2 py-1 ">
               {log.food_name}
             </h3>
-            <div className="mt-2 tracking-tighter flex flex-col ">
-              <p className="text-lg text-white line-clamp-1 bg-gray-800/90 px-2 py-1 inline-block">
-                칼로리: {log.calories}kcal
-              </p>
-              <p className="-mt-2 text-sm text-white bg-gray-800/90 px-2 py-1 inline-block">
-                단백질: {Math.round(log.protein)}g, 지방: {Math.round(log.fat)}g, 탄수화물:
-                {Math.round(log.carbs)}g ＠＠
-              </p>
-            </div>
+
+            <p className="text-lg text-white line-clamp-1 bg-gray-800/90 px-2 py-1 ">
+              칼로리: {log.calories}kcal
+            </p>
+            <p className="-mt-2 text-sm text-white bg-gray-800/90 px-2 py-1 ">
+              단백질: {Math.round(log.protein)}g, 지방: {Math.round(log.fat)}g, 탄수화물:
+              {Math.round(log.carbs)}g / from.BenefiPic
+            </p>
           </div>
         </div>
       </div>
