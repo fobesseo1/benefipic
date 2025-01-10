@@ -33,7 +33,7 @@ export default function CircleButtonWithAlert() {
           }}
           onClick={() => setIsOpen(true)}
         >
-          <Menu className="w-8 h-8 text-white" />
+          <Menu className="w-7 h-7 text-white" />
         </div>
       </AlertDialogTrigger>
       <AlertDialogContent className="sm:max-w-md ">
