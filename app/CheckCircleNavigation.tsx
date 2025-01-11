@@ -2,7 +2,7 @@
 import { usePathname } from 'next/navigation';
 import CircleButtonWithAlert from './components/shared/CircleButtonWithAlert';
 import Link from 'next/link';
-import { House } from 'lucide-react';
+import { Camera, House } from 'lucide-react';
 
 export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
   const pathname = usePathname();
@@ -14,6 +14,19 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
   return (
     <div className="lg:max-w-lg w-full fixed left-1/2 -translate-x-1/2 bottom-0 pointer-events-none">
       <div className="relative w-full">
+        <div className="absolute bottom-44 right-4 z-50 pointer-events-auto">
+          <Link href="/food">
+            <div
+              className="bg-rose-600 w-16 h-16 flex items-center justify-center rounded-full cursor-pointer shadow-xl"
+              style={{
+                boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.6)',
+              }}
+            >
+              <Camera className="w-7 h-7 text-white" />
+            </div>
+          </Link>
+        </div>
+        <div className="absolute bottom-[168px] right-4 z-50 w-8 h-[2px] bg-gray-400 pointer-events-auto mr-4 shadow-lg"></div>
         <div className="absolute bottom-24 right-4 z-50 pointer-events-auto">
           <CircleButtonWithAlert />
         </div>

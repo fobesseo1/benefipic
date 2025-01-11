@@ -6,6 +6,7 @@ import {
   Dumbbell,
   Gauge,
   Goal,
+  House,
   Menu,
   PersonStanding,
   Plus,
@@ -27,7 +28,7 @@ export default function CircleButtonWithAlert() {
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
         <div
-          className="bg-gray-600 w-16 h-16 flex items-center justify-center rounded-full cursor-pointer shadow-xl"
+          className="bg-gray-400 w-16 h-16 flex items-center justify-center rounded-full cursor-pointer shadow-xl"
           style={{
             boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.6)', // 더 진한 검은색 그림자, spread 반경 증가
           }}
@@ -125,8 +126,9 @@ export default function CircleButtonWithAlert() {
         </div>
 
         <Link href="/main" onClick={() => setIsOpen(false)} className="w-full col-span-1 ">
-          <Button className="w-full my-6 p-6 bg-gray-100 " variant={'outline'}>
-            홈으로
+          <Button className="w-full my-6 p-6 bg-gray-200 text-gray-600 " variant={'outline'}>
+            <House className="w-8 h-8 " />
+            <p>홈으로</p>
           </Button>
         </Link>
 
