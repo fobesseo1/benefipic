@@ -20,7 +20,7 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
         <div className="absolute bottom-6 right-4 z-50 pointer-events-auto">
           <Link href="/main">
             <div
-              className="bg-gray-400 w-12 h-12 flex items-center justify-center rounded-full cursor-pointer shadow-xl"
+              className="bg-gray-400 w-16 h-16 flex items-center justify-center rounded-full cursor-pointer shadow-xl"
               style={{
                 boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.6)',
               }}

@@ -27,7 +27,7 @@ export default function CircleButtonWithAlert() {
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
         <div
-          className="bg-gray-600 w-12 h-12 flex items-center justify-center rounded-full cursor-pointer shadow-xl"
+          className="bg-gray-600 w-16 h-16 flex items-center justify-center rounded-full cursor-pointer shadow-xl"
           style={{
             boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.6)', // 더 진한 검은색 그림자, spread 반경 증가
           }}
