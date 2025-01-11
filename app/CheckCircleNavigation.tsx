@@ -14,7 +14,7 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
   return (
     <div className="lg:max-w-lg w-full fixed left-1/2 -translate-x-1/2 bottom-0 pointer-events-none">
       <div className="relative w-full">
-        <div className="absolute bottom-20 right-4 z-50 pointer-events-auto">
+        <div className="absolute bottom-24 right-4 z-50 pointer-events-auto">
           <CircleButtonWithAlert />
         </div>
         <div className="absolute bottom-6 right-4 z-50 pointer-events-auto">
