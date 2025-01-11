@@ -1,18 +1,18 @@
 import { Suspense } from 'react';
 import FoodComponent from './FoodComponent';
 import { getUser } from '@/lib/supabse/server';
-import { redirect } from 'next/navigation';
+import NoLoginUserAlert from '../components/shared/ui/NoLoginUserAlert';
 
 export default async function FoodAllPage() {
   const currentUser = await getUser();
-  const user_id = currentUser?.id;
+  const currentUser_id = currentUser?.id;
 
   if (!currentUser) {
-    redirect('/auth');
+    return <NoLoginUserAlert />;
   }
   return (
     <Suspense fallback={<div>Loading food logs...</div>}>
-      <FoodComponent user_id={user_id} />
+      <FoodComponent user_id={currentUser_id} />
     </Suspense>
   );
 }

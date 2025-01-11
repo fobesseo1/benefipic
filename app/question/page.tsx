@@ -3,6 +3,7 @@
 import React from 'react';
 import QuestionSlidePage from './QuestionForm';
 import { getUser } from '@/lib/supabse/server';
+import NoLoginUserAlert from '../components/shared/ui/NoLoginUserAlert';
 
 export default async function QuestionPage({
   searchParams,
@@ -11,7 +12,11 @@ export default async function QuestionPage({
 }) {
   const currentUser = await getUser();
   const currentUser_id = currentUser?.id;
-  console.log('question-user', currentUser_id);
+
+  if (!currentUser) {
+    return <NoLoginUserAlert />;
+  }
+
   const slide = typeof searchParams.slide === 'string' ? parseInt(searchParams.slide) : 0;
 
   return (

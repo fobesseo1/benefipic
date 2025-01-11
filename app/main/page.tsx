@@ -3,13 +3,14 @@ import { Suspense } from 'react';
 import MainComponent from './MainComponent';
 import { getUser, createSupabaseServerClient } from '@/lib/supabse/server';
 import { redirect } from 'next/navigation';
+import NoLoginUserAlert from '../components/shared/ui/NoLoginUserAlert';
 
 export default async function MainPage() {
   const currentUser = await getUser();
-  const user_id = currentUser?.id;
+  const currentUser_id = currentUser?.id;
 
   if (!currentUser) {
-    redirect('/auth');
+    return <NoLoginUserAlert />;
   }
 
   // Supabase 서버 클라이언트 생성
@@ -19,7 +20,7 @@ export default async function MainPage() {
   const { data: healthRecord, error: healthError } = await supabase
     .from('health_records')
     .select('*')
-    .eq('user_id', user_id)
+    .eq('user_id', currentUser_id)
     .single();
 
   if (healthError || !healthRecord) {
@@ -30,7 +31,7 @@ export default async function MainPage() {
   const { data: fitnessGoal, error: fitnessError } = await supabase
     .from('fitness_goals')
     .select('*')
-    .eq('user_id', user_id)
+    .eq('user_id', currentUser_id)
     .eq('status', 'active')
     .single();
 
@@ -40,7 +41,7 @@ export default async function MainPage() {
 
   return (
     <Suspense>
-      <MainComponent user_id={user_id} />
+      <MainComponent user_id={currentUser_id} />
     </Suspense>
   );
 }

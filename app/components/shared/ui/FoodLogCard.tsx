@@ -14,6 +14,7 @@ import {
   EraserIcon,
   Flame,
   Pencil,
+  Plus,
   Share,
   UtensilsCrossed,
   Wheat,
@@ -90,7 +91,6 @@ export const FoodLogCard = ({
   };
 
   const cardRef = useRef<HTMLDivElement>(null);
-  const displayLogs = maxItems ? foodLogs.slice(0, maxItems) : foodLogs;
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -174,15 +174,9 @@ export const FoodLogCard = ({
     return Math.min(10, score);
   };
 
-  // 점수에 따른 색상 반환 함수
-  const getScoreColor = (score: number) => {
-    if (score >= 9) return 'text-gray-800';
-    if (score >= 7) return 'text-gray-600';
-    if (score >= 5) return 'text-gray-400';
-    return 'text-red-500';
-  };
-
-  const abcdef = '간짜장간짜장탕수';
+  // 아이템수 지정된 경우 화면이동 버튼 관련 함수
+  const displayLogs = maxItems ? foodLogs.slice(0, maxItems) : foodLogs;
+  const showPlusButton = maxItems === 3 && displayLogs.length === 3 && foodLogs.length > 3;
 
   return (
     <Card className={`p-4 ${className}`}>
@@ -438,6 +432,19 @@ export const FoodLogCard = ({
             </div>
           </div>
         ))}
+
+        {/* 아이템수 제한시 하단 버튼 */}
+        {showPlusButton && (
+          <div className="w-full h-12 rounded-lg flex items-center justify-center cursor-pointer ">
+            <Link href="/food-all" className="flex items-center gap-2">
+              <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-600">
+                <Plus size={24} className="text-gray-100" />
+              </div>
+              <p className="text-gray-600  font-medium">더보기</p>
+            </Link>
+          </div>
+        )}
+
         {displayLogs.length === 0 && (
           <div className="col-span-2 text-center py-8 text-gray-500">
             오늘 기록된 음식이 없습니다

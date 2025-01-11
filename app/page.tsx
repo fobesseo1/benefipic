@@ -28,7 +28,7 @@ async function HealthRecordCheck({ userId }: { userId: string }) {
 
   // 리다이렉션이 발생하기 전에 로딩 UI 반환
   return (
-    <div className="w-screen h-screen flex items-center justify-center">
+    <div className="w-full h-[100vh] flex items-center justify-center">
       <div className="text-center">
         <h2 className="text-xl font-semibold mb-2">건강 기록 확인 완료</h2>
         <p className="text-gray-500">페이지 이동 중...</p>
@@ -39,7 +39,7 @@ async function HealthRecordCheck({ userId }: { userId: string }) {
 
 function CheckingUser() {
   return (
-    <div className="w-screen h-screen flex items-center justify-center">
+    <div className="w-full h-[100vh] flex items-center justify-center">
       <div className="text-center">
         <h2 className="text-xl font-semibold mb-2">사용자 확인 중</h2>
         <p className="text-gray-500">로그인 상태를 확인하고 있습니다...</p>
@@ -50,7 +50,7 @@ function CheckingUser() {
 
 function CheckingHealthRecord() {
   return (
-    <div className="w-screen h-screen flex items-center justify-center">
+    <div className="w-full h-[100vh] flex items-center justify-center">
       <div className="text-center">
         <h2 className="text-xl font-semibold mb-2">건강 기록 확인 중</h2>
         <p className="text-gray-500">사용자의 건강 기록을 확인하고 있습니다...</p>

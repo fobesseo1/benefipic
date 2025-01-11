@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
-import { useUserStore } from '../store/userStore';
 import { CartesianGrid, Line, LineChart, XAxis, YAxis, LabelList, ReferenceLine } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, TrendingDown, MoveUpRight, MoveDownRight, LoaderCircle } from 'lucide-react';
+import { MoveUpRight, MoveDownRight } from 'lucide-react';
 import MainLoading from '../Mainloading';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -45,7 +44,7 @@ function useResizeObserver(element: HTMLElement | null) {
   return size;
 }
 
-export default function WeightTracker() {
+export default function WeightTracker({ currentUser_id }: { currentUser_id: string }) {
   const supabase = createSupabaseBrowserClient();
   const [weight, setWeight] = useState<string>('');
   const [lastRecord, setLastRecord] = useState<WeightRecord | null>(null);
@@ -59,31 +58,27 @@ export default function WeightTracker() {
   }>({ direction: 'stable', percentage: 0 });
   const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
   const containerWidth = useResizeObserver(containerRef)?.width ?? 500;
-  const currentUser = useUserStore();
   const router = useRouter();
 
   const fetchWeightRecords = useCallback(async () => {
-    if (!currentUser.currentUser?.id) return;
+    if (!currentUser_id) return;
 
     try {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 6);
       startDate.setHours(0, 0, 0, 0);
 
-      console.log('Query startDate:', startDate.toISOString()); // 쿼리 시작 날짜 확인
-
-      // 체중 기록과 목표 체중을 동시에 가져오기
       const [weightResponse, goalResponse] = await Promise.all([
         supabase
           .from('weight_tracking')
           .select('weight, created_at')
-          .eq('user_id', currentUser.currentUser.id)
+          .eq('user_id', currentUser_id)
           .gte('created_at', startDate.toISOString())
           .order('created_at'),
         supabase
           .from('fitness_goals')
           .select('target_weight')
-          .eq('user_id', currentUser.currentUser.id)
+          .eq('user_id', currentUser_id)
           .eq('status', 'active')
           .single(),
       ]);
@@ -91,34 +86,19 @@ export default function WeightTracker() {
       if (weightResponse.error) throw weightResponse.error;
       const data = weightResponse.data;
 
-      console.log('Fetched data:', data); // 가져온 데이터 확인
-
       if (goalResponse.data) {
         setTargetWeight(goalResponse.data.target_weight);
       }
 
       if (data) {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        const date = now.getDate();
-
-        console.log('Current browser time:', now);
-
-        // 2. 날짜 배열 생성 (KST 기준)
-        // 수정된 날짜 배열 생성 코드
         const dates = Array.from({ length: 7 }, (_, i) => {
           const today = new Date();
           const d = new Date(today);
           d.setDate(today.getDate() - (6 - i));
-          // 표시용 날짜만 KST로 변환
           const kstDate = new Date(d.getTime() + 9 * 60 * 60 * 1000);
           return kstDate.toISOString().split('T')[0];
         });
 
-        console.log('Generated dates:', dates);
-
-        // 2. 모든 기록을 KST로 변환하고 날짜별로 그룹화
         const groupedByDate = data.reduce((acc: { [key: string]: WeightRecord[] }, record) => {
           const kstDate = new Date(new Date(record.created_at).getTime() + 9 * 60 * 60 * 1000);
           const dateStr = kstDate.toISOString().split('T')[0];
@@ -127,19 +107,9 @@ export default function WeightTracker() {
             acc[dateStr] = [];
           }
           acc[dateStr].push(record);
-
-          console.log('Record KST conversion:', {
-            originalDate: record.created_at,
-            convertedDate: dateStr,
-            weight: record.weight,
-          }); // 각 기록의 변환 결과 확인
-
           return acc;
         }, {});
 
-        console.log('Grouped data:', groupedByDate); // 그룹화된 데이터 확인
-
-        // 3. 각 날짜별로 가장 최신 기록 선택하여 차트 데이터 생성
         const processedData = dates.map((date) => {
           if (groupedByDate[date]) {
             const latestRecord = groupedByDate[date].reduce((latest, current) =>
@@ -185,11 +155,8 @@ export default function WeightTracker() {
           };
         });
 
-        console.log('Final processed data:', processedData); // 최종 처리된 데이터 확인
-
         setChartData(processedData);
 
-        // 4. 추세 계산을 위한 처리
         if (processedData.length >= 2) {
           const firstWeight = processedData[0].weight;
           const lastWeight = processedData[processedData.length - 1].weight;
@@ -201,7 +168,6 @@ export default function WeightTracker() {
           });
         }
 
-        // 5. 마지막 기록 설정
         const lastDate = dates[dates.length - 1];
         if (groupedByDate[lastDate]) {
           const latestRecord = groupedByDate[lastDate].reduce((latest, current) =>
@@ -221,16 +187,16 @@ export default function WeightTracker() {
     } catch (error) {
       console.error('Error fetching records:', error);
     }
-  }, [currentUser.currentUser?.id, supabase]);
+  }, [currentUser_id, supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!weight || !currentUser.currentUser?.id) return;
+    if (!weight || !currentUser_id) return;
 
     setIsLoading(true);
     try {
       const { error } = await supabase.from('weight_tracking').upsert({
-        user_id: currentUser.currentUser.id,
+        user_id: currentUser_id,
         weight: parseFloat(weight),
       });
 
@@ -363,9 +329,7 @@ export default function WeightTracker() {
                     position="top"
                     offset={12}
                     content={({ x, y, value, payload }: any) => {
-                      // value에서 인덱스 찾기
                       const valueIndex = chartData.findIndex((item) => item.weight === value);
-                      // 인덱스로 해당 날짜 찾기
                       const currentDate = chartData[valueIndex]?.date;
 
                       const today = new Date();

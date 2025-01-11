@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from '@/lib/supabse/server';
 import { redirect } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
+import NoLoginUserAlert from '../components/shared/ui/NoLoginUserAlert';
 
 const slides = [
   {
@@ -23,8 +24,8 @@ export default async function HealthCalculatorPage() {
   const currentUser = await getUser();
   const currentUser_id = currentUser?.id;
 
-  if (!currentUser_id) {
-    redirect('/auth');
+  if (!currentUser) {
+    return <NoLoginUserAlert />;
   }
 
   const supabase = createSupabaseServerClient();

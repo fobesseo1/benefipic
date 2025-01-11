@@ -44,45 +44,47 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased relative mx-auto max-w-lg`}
-      >
-        {/* {shouldShowNav && (
-          <div className="w-full h-12 absolute top-0 z-50 flex px-6 items-center justify-between">
-            <ChevronLeft color="#9CA3AF" size={32} />
-            <Menu color="#9CA3AF" size={32} />
-          </div>
-        )} */}
-
-        {/* <div className="w-full px-6  h-12 flex items-end ">
-          <h2>{currentUser?.username}님 반가워요!</h2>
-        </div> */}
-
-        {children}
-
-        <StoreInitializer currentUser={currentUser} />
-        <MysticSymbolsEffect />
-        <CheckCircleNavigation currentUser={currentUser} />
-
-        {/* {shouldShowNav && (
-          <div className="fixed bottom-20 right-6 z-50 ml-auto w-fit flex items-center justify-center">
-            <CircleButtonWithAlert />
-          </div>
-        )}
-        {shouldShowNav && (
-          <div className="fixed bottom-6 right-6 z-50 ml-auto w-fit flex items-center justify-center">
-            <Link href="/main">
-              <div
-                className="bg-gray-400 w-12 h-12 flex items-center justify-center rounded-full cursor-pointer shadow-xl"
-                style={{
-                  boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.6)', // 더 진한 검은색 그림자, spread 반경 증가
-                }}
-              >
-                <House className="w-7 h-7 text-white" />
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <div className="mx-auto relative lg:shadow-[0_0_15px_rgba(0,0,0,0.1)] lg:max-w-lg">
+          <div className="relative min-h-screen w-full lg:max-w-lg mx-auto bg-white">
+            {/* {shouldShowNav && (
+              <div className="w-full h-12 absolute top-0 z-50 flex px-6 items-center justify-between">
+                <ChevronLeft color="#9CA3AF" size={32} />
+                <Menu color="#9CA3AF" size={32} />
               </div>
-            </Link>
+            )} */}
+
+            {/* <div className="w-full px-6  h-12 flex items-end ">
+              <h2>{currentUser?.username}님 반가워요!</h2>
+            </div> */}
+
+            {children}
+
+            <StoreInitializer currentUser={currentUser} />
+            <MysticSymbolsEffect />
+            <CheckCircleNavigation currentUser={currentUser} />
+
+            {/* {shouldShowNav && (
+              <div className="fixed bottom-20 right-6 z-50 ml-auto w-fit flex items-center justify-center">
+                <CircleButtonWithAlert />
+              </div>
+            )} */}
+            {/* {shouldShowNav && (
+              <div className="fixed bottom-6 right-6 z-50 ml-auto w-fit flex items-center justify-center">
+                <Link href="/main">
+                  <div
+                    className="bg-gray-400 w-12 h-12 flex items-center justify-center rounded-full cursor-pointer shadow-xl"
+                    style={{
+                      boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.6)', // 더 진한 검은색 그림자, spread 반경 증가
+                    }}
+                  >
+                    <House className="w-7 h-7 text-white" />
+                  </div>
+                </Link>
+              </div>
+            )} */}
           </div>
-        )} */}
+        </div>
       </body>
     </html>
   );

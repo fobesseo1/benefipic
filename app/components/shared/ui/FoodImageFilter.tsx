@@ -87,41 +87,41 @@ const FoodImageFilter: React.FC<FoodImageFilterProps> = ({ imageUrl, onPreviewCh
       />
       <div className="w-full  absolute bottom-6 p-4">
         <Select value={filterType} onValueChange={handlePresetChange}>
-          <SelectTrigger className="z-50 bg-gray-100/60 backdrop-blur-sm text-gray-900 font-semibold border-2 border-black">
+          <SelectTrigger className="z-50 bg-gray-100/60 backdrop-blur-sm text-gray-900 font-semibold border-2 border-black py-6">
             <SelectValue placeholder="필터 선택" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">
+            <SelectItem value="none" className="py-2">
               원본<span className="text-xs tracking-tighter"> (사진 그대로)</span>
             </SelectItem>
-            <SelectItem value="default">
+            <SelectItem value="default" className="py-2">
               음식 맛있게<span className="text-xs tracking-tighter"> (기본필터)</span>
             </SelectItem>
-            <SelectItem value="grilled">
+            <SelectItem value="grilled" className="py-2">
               육즙 팡팡<span className="text-xs tracking-tighter"> (구이,바베큐)</span>
             </SelectItem>
-            <SelectItem value="fresh">
+            <SelectItem value="fresh" className="py-2">
               신선한 채소<span className="text-xs tracking-tighter"> (채소,과일,샐러드)</span>
             </SelectItem>
-            <SelectItem value="dessert">
+            <SelectItem value="dessert" className="py-2">
               달콤 디저트<span className="text-xs tracking-tighter"> (디저트류)</span>
             </SelectItem>
-            <SelectItem value="soup">
+            <SelectItem value="soup" className="py-2">
               깊은 국물<span className="text-xs tracking-tighter"> (탕/국)</span>
             </SelectItem>
-            <SelectItem value="fried">
+            <SelectItem value="fried" className="py-2">
               바삭바삭<span className="text-xs tracking-tighter"> (튀김 요리)</span>
             </SelectItem>
-            <SelectItem value="seafood">
+            <SelectItem value="seafood" className="py-2">
               신선한 해산물<span className="text-xs tracking-tighter"> (회/생선)</span>
             </SelectItem>
-            <SelectItem value="tteok">
+            <SelectItem value="tteok" className="py-2">
               쫄깃쫄깃<span className="text-xs tracking-tighter"> (떡볶이/분식)</span>
             </SelectItem>
-            <SelectItem value="hotpot">
+            <SelectItem value="hotpot" className="py-2">
               얼큰한맛<span className="text-xs tracking-tighter"> (매콤 요리)</span>
             </SelectItem>
-            <SelectItem value="noodle">
+            <SelectItem value="noodle" className="py-2">
               탱글면발<span className="text-xs tracking-tighter"> (면 요리)</span>
             </SelectItem>
           </SelectContent>
