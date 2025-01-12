@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 import MysticSymbolsEffect from './Layout-component/BubbleEffect/MysticSymbolsEffect';
@@ -19,6 +19,14 @@ const geistMono = localFont({
   weight: '100 900',
 });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#FF82B2',
+};
+
 export const metadata: Metadata = {
   title: 'Benefipic - 찍으면 끝나는 식단관리',
   description: '찍는 순간 시작되는 내 몸의 변화',
@@ -34,13 +42,6 @@ export const metadata: Metadata = {
   applicationName: 'benefipic',
   formatDetection: {
     telephone: false,
-  },
-  themeColor: '#FF82B2',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
   },
   other: {
     'mobile-web-app-capable': 'yes',
@@ -74,7 +75,7 @@ export default async function RootLayout({
             <StoreInitializer currentUser={currentUser} />
             <MysticSymbolsEffect />
             <CheckCircleNavigation currentUser={currentUser} />
-            <InstallPWA />
+            {/* <InstallPWA /> */}
           </div>
         </div>
       </body>

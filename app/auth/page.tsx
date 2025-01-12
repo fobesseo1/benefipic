@@ -50,7 +50,7 @@ export default async function AuthPage() {
         <div className="flex justify-center">
           <div className="relative w-48 h-12 sm:w-56 sm:h-14">
             <Image
-              src="/logo-benefipic.svg"
+              src="/logo-benefipic.png"
               alt="Benefipic-logo"
               fill
               className="object-contain"
