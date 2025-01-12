@@ -89,7 +89,7 @@ export default async function AuthPage() {
         </Card>
 
         {/* 로그아웃 버튼 */}
-        <div className="flex justify-center">
+        <div className="flex justify-start ">
           <SignOut />
         </div>
       </div>

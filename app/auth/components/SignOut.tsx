@@ -18,9 +18,9 @@ export default function SignOut() {
   };
 
   return (
-    <div className="w-full flex justify-end -mt-4 mb-12">
+    <div className="w-full flex justify-start ">
       <Button variant="outline" className="w-1/3" onClick={handleLogout}>
-        <LogOut size={24} className="text-gray-600" />
+        <LogOut size={24} className="text-gray-600 " />
         &nbsp;로그아웃
       </Button>
     </div>
