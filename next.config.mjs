@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+import withPWA from 'next-pwa'
+
 const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['timezone'],
@@ -8,9 +10,9 @@ const nextConfig = {
   },
   images: {
     domains: [
-      'lh3.googleusercontent.com', // Google 프로필 이미지
-      'avatars.githubusercontent.com', // GitHub 프로필 이미지 (필요한 경우)
-      'platform-lookaside.fbsbx.com', // Facebook 프로필 이미지 (필요한 경우)
+      'lh3.googleusercontent.com',
+      'avatars.githubusercontent.com',
+      'platform-lookaside.fbsbx.com',
     ],
     remotePatterns: [
       {
@@ -23,4 +25,12 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+const withPWAConfig = withPWA({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development',
+  buildExcludes: [/middleware-manifest\.json$/],
+})
+
+export default withPWAConfig(nextConfig);
