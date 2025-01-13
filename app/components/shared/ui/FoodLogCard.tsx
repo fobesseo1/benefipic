@@ -38,8 +38,8 @@ export interface FoodLogCardProps {
   foodLogs: FoodLog[];
   dailyCalorieGoal: number;
   className?: string;
-  onDelete?: (id: string) => Promise<void>; // optional로 변경
-  onUpdate?: (id: string, updatedData: Partial<FoodLog>) => Promise<void>; // optional로 변경
+  onDelete?: (id: string) => Promise<void>;
+  onUpdate?: (id: string, updatedData: Partial<FoodLog>) => Promise<void>;
   onDeleteSuccess?: () => Promise<void>;
   onUpdateSuccess?: () => Promise<void>;
   maxItems?: number;

@@ -87,11 +87,12 @@ export default function ExerciseComponent({ user_id }: { user_id: string }) {
     }
   };
 
-  const handleExerciseUpdate = async (id: string, updatedData: Partial<FoodLog>) => {
+  const handleExerciseUpdate = async (id: string, updatedData: Partial<ExerciseLog>) => {
     try {
       const { error } = await supabase.from('exercise_logs').update(updatedData).eq('id', id);
 
       if (error) throw error;
+
       setExerciseLogs((prevLogs) =>
         prevLogs.map((log) => (log.id === id ? { ...log, ...updatedData } : log))
       );
@@ -126,7 +127,6 @@ export default function ExerciseComponent({ user_id }: { user_id: string }) {
               onUpdateSuccess={async () => {
                 await fetchExerciseLogs(selectedDate);
               }}
-              maxItems={3}
               selectedDate={selectedDate}
             />
           </Suspense>

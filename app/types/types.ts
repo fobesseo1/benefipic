@@ -42,9 +42,11 @@ export interface ExerciseLog {
   user_id: string;
   logged_at: string;
   exercise_name: string;
+  image_url?: string; // Optional field
   duration_minutes: number;
   calories_per_hour: number;
   calories_burned: number;
+  created_at?: string;
 }
 
 export type DailyStatusResponse = {

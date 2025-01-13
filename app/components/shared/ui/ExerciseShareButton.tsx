@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { Share } from 'lucide-react';
-import domtoimage from 'dom-to-image';
+import { Share2, UtensilsCrossed } from 'lucide-react';
+import { ExerciseLog } from '@/app/types/types';
+import { toPng } from 'html-to-image';
 import { FaWalking, FaRunning, FaSwimmer } from 'react-icons/fa';
 import { GrYoga } from 'react-icons/gr';
 import { Bike, Dumbbell, Mountain, Plus } from 'lucide-react';
-import { ExerciseLog } from '@/app/types/types';
 
 interface ExerciseShareButtonProps {
   log: ExerciseLog;
@@ -22,13 +22,7 @@ const ExerciseShareButton = ({ log }: ExerciseShareButtonProps) => {
     try {
       const shareText = `운동: ${log.exercise_name}\n운동 시간: ${log.duration_minutes}분\n소모 칼로리: ${log.calories_burned}kcal`;
 
-      const dataUrl = await domtoimage.toPng(exerciseCardRef.current, {
-        quality: 1.0,
-        bgcolor: '#fff',
-        style: {
-          transform: 'none',
-        },
-      });
+      const dataUrl = await toPng(exerciseCardRef.current, { backgroundColor: '#fff' });
 
       if (navigator.share) {
         try {
@@ -58,6 +52,14 @@ const ExerciseShareButton = ({ log }: ExerciseShareButtonProps) => {
     }
   };
 
+  const formatLogDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}.${month}.${day}`;
+  };
+
   const getExerciseIcon = (exerciseName: string) => {
     const iconMap = {
       걷기: FaWalking,
@@ -69,7 +71,7 @@ const ExerciseShareButton = ({ log }: ExerciseShareButtonProps) => {
       등산: Mountain,
       직접입력: Plus,
     };
-    return iconMap[exerciseName as keyof typeof iconMap] || null;
+    return iconMap[exerciseName as keyof typeof iconMap];
   };
 
   const IconComponent = getExerciseIcon(log.exercise_name);
@@ -91,28 +93,48 @@ const ExerciseShareButton = ({ log }: ExerciseShareButtonProps) => {
           ref={exerciseCardRef}
           className="w-[480px] h-[480px] bg-white p-4 flex flex-col relative"
         >
-          {/* 정사각형 아이콘 영역 */}
-          <div className="w-full aspect-square bg-gray-200 rounded-lg flex items-center justify-center">
-            <div className="w-1/2 h-1/2 rounded-full bg-white flex items-center justify-center">
-              {IconComponent ? (
-                <IconComponent className="w-1/2 h-1/2 text-gray-400" />
-              ) : (
-                <span className="text-8xl font-semibold text-gray-400">
-                  {log.exercise_name[0].toUpperCase()}
-                </span>
-              )}
-            </div>
+          {/* 정사각형 이미지/아이콘 영역 */}
+          <div className="w-full aspect-square bg-white">
+            {log.image_url ? (
+              <div className="w-full h-full relative">
+                <img
+                  src={log.image_url}
+                  alt={log.exercise_name}
+                  className="w-full h-full absolute inset-0 rounded-lg object-cover"
+                  style={{ aspectRatio: '1/1' }}
+                />
+              </div>
+            ) : (
+              <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
+                <div className="w-full h-full flex items-center justify-center p-4">
+                  <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
+                    {IconComponent ? (
+                      <IconComponent className="w-1/2 h-1/2 text-gray-400" />
+                    ) : (
+                      <span className="text-8xl font-semibold text-gray-400">
+                        {log.exercise_name[0].toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 하단 텍스트 영역 */}
-          <div className="absolute bottom-6 left-6 flex flex-col items-start justify-center">
-            <h3 className="text-4xl font-bold text-gray-800">{log.exercise_name}</h3>
-            <div className="mt-2 tracking-tighter">
-              <p className="text-gray-600 text-2xl font-medium">
-                운동 시간: {log.duration_minutes}분
+          <div className="absolute bottom-4 left-4 flex flex-col items-start justify-center">
+            <p className="mb-1 text-lg font-bold text-white line-clamp-1 bg-gray-800/90 px-2 py-1 inline-block">
+              {formatLogDate(log.logged_at)}
+            </p>
+            <h3 className="text-2xl font-bold text-white line-clamp-1 bg-gray-800/90 px-2 py-1 inline-block">
+              {log.exercise_name}
+            </h3>
+            <div className="mt-2 tracking-tighter flex flex-col">
+              <p className="text-lg text-white line-clamp-1 bg-gray-800/90 px-2 py-1 inline-block">
+                운동시간: {log.duration_minutes}분
               </p>
-              <p className="text-gray-600 text-2xl font-medium">
-                소모 칼로리: {log.calories_burned}kcal
+              <p className="-mt-2 text-sm text-white bg-gray-800/90 px-2 py-1 inline-block">
+                소모 칼로리: {log.calories_burned}kcal / from.BenefiPic
               </p>
             </div>
           </div>
@@ -120,14 +142,13 @@ const ExerciseShareButton = ({ log }: ExerciseShareButtonProps) => {
       </div>
 
       {/* 공유 버튼 */}
-      <button
-        type="button"
+      <div
         onClick={handleShare}
-        className="py-1 px-1 bg-gray-50 flex justify-center items-center cursor-pointer rounded-lg hover:bg-gray-600 group"
+        className="py-1 px-1 bg-gray-50 flex justify-center items-center cursor-pointer rounded-lg hover:bg-gray-600 group shadow-md gap-1"
       >
-        <Share size={16} className="text-gray-400 group-hover:text-white" />
+        <Share2 size={16} className="text-gray-400 group-hover:text-white" />
         <p className="text-sm text-gray-400 group-hover:text-white">공유</p>
-      </button>
+      </div>
     </>
   );
 };
