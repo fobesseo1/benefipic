@@ -25,6 +25,7 @@ import FoodImageFilter from '../components/shared/ui/FoodImageFilter';
 import AnalysisProgressExercise from './AnalysisProgrseeExercise';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import NavigationButtonSectionExercise from '../components/shared/ui/NavigationButtonSectionExercise';
+import ExerciseImageFilter from '../components/shared/ui/ExerciseImageFilter';
 
 // 타입 정의
 type AnalysisStep =
@@ -418,7 +419,7 @@ const ExerciseAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
             className="w-full aspect-square"
           >
             {step === 'filter-selection' ? (
-              <FoodImageFilter imageUrl={imageUrl} onPreviewChange={setCurrentFilters} />
+              <ExerciseImageFilter imageUrl={imageUrl} onPreviewChange={setCurrentFilters} />
             ) : step === 'camera' ? (
               <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
             ) : imageUrl ? (

@@ -250,7 +250,7 @@ export const ExerciseLogCard = ({
                     {showDeleteButton ? (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <div className="py-1 px-1 bg-gray-50 flex justify-center items-center cursor-pointer rounded-lg hover:bg-gray-600 group shadow-md gap-1">
+                          <div className="py-2 px-1 bg-gray-50 flex justify-center items-center cursor-pointer rounded-lg hover:bg-gray-600 group shadow-md gap-1">
                             <Eraser size={16} className="text-gray-400 group-hover:text-white" />
                             <p className="text-sm text-gray-400 group-hover:text-white">삭제</p>
                           </div>
@@ -288,7 +288,7 @@ export const ExerciseLogCard = ({
                           setCustomExerciseName(log.exercise_name);
                           setCustomCaloriesPerHour(log.calories_per_hour);
                         }}
-                        className="py-1 px-1 bg-gray-50 flex justify-center items-center cursor-pointer rounded-lg hover:bg-gray-600 group shadow-md gap-1"
+                        className="py-2 px-1 bg-gray-50 flex justify-center items-center cursor-pointer rounded-lg hover:bg-gray-600 group shadow-md gap-1"
                       >
                         <Pencil size={16} className="text-gray-400 group-hover:text-white" />
                         <p className="text-sm text-gray-400 group-hover:text-white">수정</p>

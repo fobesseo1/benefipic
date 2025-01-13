@@ -29,24 +29,6 @@ const FoodImageFilter: React.FC<FoodImageFilterProps> = ({ imageUrl, onPreviewCh
     warmth: 100,
   });
 
-  // const presets = {
-  //   none: { brightness: 100, contrast: 100, saturation: 100, warmth: 100 },
-  //   default: { brightness: 105, contrast: 110, saturation: 110, warmth: 110 },
-  //   grilled: { brightness: 95, contrast: 140, saturation: 110, warmth: 120 },
-  //   fresh: { brightness: 110, contrast: 115, saturation: 120, warmth: 100 },
-  //   dessert: { brightness: 110, contrast: 105, saturation: 115, warmth: 105 },
-  //   soup: { brightness: 105, contrast: 120, saturation: 105, warmth: 100 },
-  // };
-
-  // const presets = {
-  //   none: { brightness: 100, contrast: 100, saturation: 100, warmth: 100 },
-  //   default: { brightness: 115, contrast: 120, saturation: 125, warmth: 115 },
-  //   grilled: { brightness: 90, contrast: 150, saturation: 130, warmth: 130 },
-  //   fresh: { brightness: 120, contrast: 125, saturation: 140, warmth: 95 },
-  //   dessert: { brightness: 125, contrast: 115, saturation: 135, warmth: 110 },
-  //   soup: { brightness: 110, contrast: 135, saturation: 115, warmth: 105 },
-  // };
-
   const presets = {
     none: { brightness: 100, contrast: 100, saturation: 100, warmth: 100 },
     default: { brightness: 110, contrast: 115, saturation: 115, warmth: 110 },

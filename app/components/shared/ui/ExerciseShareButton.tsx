@@ -144,10 +144,10 @@ const ExerciseShareButton = ({ log }: ExerciseShareButtonProps) => {
       {/* 공유 버튼 */}
       <div
         onClick={handleShare}
-        className="py-1 px-1 bg-gray-50 flex justify-center items-center cursor-pointer rounded-lg hover:bg-gray-600 group shadow-md gap-1"
+        className="py-2 px-1 bg-gray-100 flex justify-center items-center cursor-pointer rounded-lg hover:bg-gray-600 group shadow-md gap-1"
       >
-        <Share2 size={16} className="text-gray-400 group-hover:text-white" />
-        <p className="text-sm text-gray-400 group-hover:text-white">공유</p>
+        <Share2 size={16} className="text-gray-600 group-hover:text-white" />
+        <p className="text-sm text-gray-600 group-hover:text-white">공유</p>
       </div>
     </>
   );
