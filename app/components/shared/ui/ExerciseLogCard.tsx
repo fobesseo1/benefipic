@@ -235,7 +235,7 @@ export const ExerciseLogCard = ({
                         <span className="text-rose-600 text-xs"> kcal</span>
                       </p>
                     </div>
-                    <div className="flex items-center tracking-tighter gap-[2px] border-t-[1px] border-gray-200">
+                    <div className="flex items-center tracking-tighter gap-[2px] border-y-[1px] border-gray-200">
                       <Timer size={16} className="text-gray-600" />
                       <p className="text-gray-600 text-2xl font-bold">
                         {log.duration_minutes}
