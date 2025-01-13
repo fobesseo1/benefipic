@@ -24,7 +24,11 @@ import ExerciseShareButton from './ExerciseShareButton';
 import { FaWalking, FaRunning, FaSwimmer } from 'react-icons/fa';
 import { GrYoga } from 'react-icons/gr';
 import { Bike, Dumbbell, Plus, Mountain } from 'lucide-react';
-import { exerciseDatabase } from '@/app/exercise-description/exerciseDatabase';
+import {
+  exerciseDatabase,
+  findIconByExerciseName,
+  getExerciseIcon,
+} from '@/app/exercise-description/exerciseDatabase';
 
 export interface ExerciseLogCardProps {
   exerciseLogs: ExerciseLog[];
@@ -49,19 +53,6 @@ interface EditableExercise {
 }
 
 // 아이콘 매핑 함수
-const getExerciseIcon = (exerciseName: string) => {
-  const iconMap = {
-    걷기: FaWalking,
-    달리기: FaRunning,
-    수영: FaSwimmer,
-    요가: GrYoga,
-    자전거: Bike,
-    웨이트: Dumbbell,
-    등산: Mountain,
-    직접입력: Plus,
-  };
-  return iconMap[exerciseName as keyof typeof iconMap];
-};
 
 const calculateCalories = (caloriesPerHour: number, durationMinutes: number) => {
   return Math.round((caloriesPerHour * durationMinutes) / 60);
@@ -185,7 +176,7 @@ export const ExerciseLogCard = ({
 
         <div className="grid grid-cols-1 gap-8">
           {displayLogs.map((log) => {
-            const IconComponent = getExerciseIcon(log.exercise_name);
+            const IconComponent = getExerciseIcon(findIconByExerciseName(log.exercise_name));
 
             return (
               <div key={log.id} className="rounded-lg bg-white">
@@ -200,10 +191,10 @@ export const ExerciseLogCard = ({
                       className="rounded-lg object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gray-200 rounded-t-lg flex items-center justify-center p-4">
+                    <div className="w-full h-full bg-gradient-to-r from-gray-100 via-gray-200 to-gray-300 rounded-t-lg flex items-center justify-center p-4">
                       <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
                         {IconComponent ? (
-                          <IconComponent className="w-24 h-24 text-gray-400" />
+                          <IconComponent className="w-36 h-36 text-gray-600" />
                         ) : (
                           <p className="text-center font-semibold text-4xl text-gray-400">
                             {log.exercise_name.slice(0, 6)}

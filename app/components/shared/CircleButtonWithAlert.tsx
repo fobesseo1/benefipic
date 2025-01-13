@@ -62,13 +62,13 @@ export default function CircleButtonWithAlert() {
               <Link href="/food" onClick={() => setIsOpen(false)}>
                 <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
                   <Camera className="w-8 h-8 text-gray-900 " strokeWidth={1} />
-                  <p className="text-sm text-gray-900 font-bold">음식 사진입력</p>
+                  <p className="text-sm text-gray-900 font-bold">사진입력</p>
                 </div>
               </Link>
               <Link href="/food-description" onClick={() => setIsOpen(false)}>
                 <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
                   <SquarePen className="w-8 h-8 text-gray-900 " strokeWidth={1} />
-                  <p className="text-sm text-gray-900 font-bold">음식 직접입력</p>
+                  <p className="text-sm text-gray-900 font-bold">직접입력</p>
                 </div>
               </Link>
               <Link href="/menu" onClick={() => setIsOpen(false)}>
@@ -93,13 +93,13 @@ export default function CircleButtonWithAlert() {
               <Link href="/exercise" onClick={() => setIsOpen(false)}>
                 <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
                   <Camera className="w-8 h-8 text-gray-900 " strokeWidth={1} />
-                  <p className="text-sm text-gray-900 font-bold">운동 사진입력</p>
+                  <p className="text-sm text-gray-900 font-bold">사진입력</p>
                 </div>
               </Link>
               <Link href="/exercise-description" onClick={() => setIsOpen(false)}>
                 <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
                   <SquarePen className="w-8 h-8 text-gray-900 " strokeWidth={1} />
-                  <p className="text-sm text-gray-900 font-bold">운동 직접입력</p>
+                  <p className="text-sm text-gray-900 font-bold">직접입력</p>
                 </div>
               </Link>
             </div>
