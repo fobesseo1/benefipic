@@ -1,18 +1,19 @@
-import { getUser } from '@/lib/supabse/server';
-import NoLoginUserAlert from '../components/shared/ui/NoLoginUserAlert';
-import ExerciseAnalyzer from './ExerciseAnalyzer';
+// app/exercise/page.tsx
 
-export default async function FoodPage() {
+import { getUser } from '@/lib/supabse/server';
+import ExerciseDescription from './ExerciseDescription';
+import NoLoginUserAlert from '../components/shared/ui/NoLoginUserAlert';
+
+export default async function ExercisePage() {
   const currentUser = await getUser();
   const currentUser_id = currentUser?.id;
 
   if (!currentUser) {
     return <NoLoginUserAlert />;
   }
-
   return (
     <div>
-      <ExerciseAnalyzer currentUser_id={currentUser_id} />
+      <ExerciseDescription currentUser_id={currentUser_id} />
     </div>
   );
 }

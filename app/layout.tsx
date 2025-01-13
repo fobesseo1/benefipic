@@ -32,6 +32,8 @@ export const metadata: Metadata = {
   description: '찍는 순간 시작되는 내 몸의 변화',
   manifest: '/manifest.json',
   icons: {
+    icon: '/icons/icon-192x192.png',
+    shortcut: '/icons/icon-192x192.png',
     apple: '/icons/icon-192x192.png',
   },
   appleWebApp: {
@@ -64,6 +66,8 @@ export default async function RootLayout({
   return (
     <html lang="ko">
       <head>
+        <link rel="icon" href="/icons/icon-192x192.png" />
+        <link rel="shortcut icon" href="/icons/icon-192x192.png" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />

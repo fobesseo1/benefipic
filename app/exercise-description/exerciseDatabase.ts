@@ -1,4 +1,4 @@
-// app/exercise/exerciseDatabase.ts
+// app/exercise-description/exerciseDatabase.ts
 
 import { FaWalking, FaRunning, FaSwimmer } from 'react-icons/fa';
 import { GrYoga } from 'react-icons/gr';

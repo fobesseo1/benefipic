@@ -42,7 +42,7 @@ interface NavigationButtonSectionProps {
   videoRef: React.RefObject<HTMLVideoElement>;
 }
 
-export default function NavigationButtonSectionFood({
+export default function NavigationButtonSectionExercise({
   step,
   setStep,
   setSelectedImage,
@@ -129,7 +129,7 @@ export default function NavigationButtonSectionFood({
                 className="w-full bg-black text-white rounded-xl py-2 text-lg font-medium flex flex-col items-center justify-center"
               >
                 <p>다음으로</p>
-                <p className="text-xs tracking-tighter">(음식과 어울리는 이미지 필터 선택하기)</p>
+                <p className="text-xs tracking-tighter">(운동과 어울리는 이미지 필터 선택하기)</p>
               </button>
               <button
                 onClick={resetAnalyzer}

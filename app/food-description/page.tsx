@@ -1,7 +1,7 @@
 //app/food-description/page.tsx
 
 import NoLoginUserAlert from '../components/shared/ui/NoLoginUserAlert';
-import FoodDescription from './Description';
+import FoodDescription from './FoodDescription';
 import { getUser } from '@/lib/supabse/server';
 
 export default async function FoodDescriptionPage() {
