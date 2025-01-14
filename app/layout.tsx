@@ -8,6 +8,7 @@ import { headers } from 'next/headers';
 import { CheckCircleNavigation } from './CheckCircleNavigation';
 import { InstallPWA } from '@/components/InstallPWA';
 import AnalyticsTracker from './components/analyticsTracker/AnalyticsTracker';
+import MobileDetector from './MobileDetector';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -74,16 +75,16 @@ export default async function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <div className="mx-auto relative lg:shadow-[0_0_15px_rgba(0,0,0,0.1)] lg:max-w-lg">
-          <div className="relative min-h-screen w-full lg:max-w-lg mx-auto bg-white flex flex-col">
-            {children}
-            <StoreInitializer currentUser={currentUser} />
-            <MysticSymbolsEffect />
-            <CheckCircleNavigation currentUser={currentUser} />
-            {/* <InstallPWA /> */}
-            {/* <p className="text-gray-400 text-center text-sm">문의/제안 : benefiboard@gmail.com</p> */}
+        <MobileDetector>
+          <div className="min-h-screen w-full bg-white">
+            <div className="relative min-h-screen w-full flex flex-col">
+              {children}
+              <StoreInitializer currentUser={currentUser} />
+              <MysticSymbolsEffect />
+              {shouldShowNav && <CheckCircleNavigation currentUser={currentUser} />}
+            </div>
           </div>
-        </div>
+        </MobileDetector>
         <AnalyticsTracker currentUser={currentUser} />
       </body>
     </html>
