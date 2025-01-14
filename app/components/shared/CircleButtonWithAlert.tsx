@@ -138,6 +138,8 @@ export default function CircleButtonWithAlert() {
           </Button>
         </Link>
 
+        <p className="text-gray-400 text-center text-sm">문의/제안 : benefiboard@gmail.com</p>
+
         {/* <div className="grid grid-cols-2 gap-2">
           <Link href="/food" onClick={() => setIsOpen(false)}>
             <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">

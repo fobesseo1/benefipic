@@ -8,6 +8,7 @@ import Link from 'next/link';
 interface Slide {
   title: string;
   subtitle: string;
+  bulletPoints: string[];
   icon: React.ReactNode;
   image: string;
 }
@@ -24,25 +25,29 @@ const OnboardingScreen = ({ defaultSlide }: { defaultSlide: number }) => {
   const slides: Slide[] = [
     {
       title: '찍기만 하면 끝!',
-      subtitle: '음식 사진만 찍어도 우리가 다 알려줄게요',
-      icon: <Camera className="w-8 h-8" />,
+      subtitle: `사진 한 장으로 완성되는\n오늘의 식단 기록`,
+      bulletPoints: ['칼로리는 AI가 척척', '특별해지는 일상의 한 끼'],
+      icon: <Camera className="w-9 h-9" />,
       image: '/start/start-1.jpg',
     },
     {
-      title: '찍기만 하면 끝!',
-      subtitle: '운동 사진만 찍어도 우리가 다 알려줄게요',
-      icon: <Camera className="w-8 h-8" />,
+      title: '운동도 찍으면 끝!',
+      subtitle: `셀카 한 장으로 자동 기록되는\n오늘의 운동`,
+      bulletPoints: ['스타일리시한 운동 기록은 덤', '정확한 운동량까지 자동 계산'],
+      icon: <Camera className="w-9 h-9" />,
       image: '/start/start-2.jpg',
     },
     {
-      title: '오늘도 인증 완료!',
-      subtitle: '찍을수록 성장하는 나의 건강 스토리',
+      title: `기록이 쌓일수록\n빛나는 나`,
+      subtitle: '특별한 순간이 되는 일상의 기록들',
+      bulletPoints: ['건강해지는 나의 모습', '매일매일 성장하는 기록'],
       icon: <ChartBar className="w-8 h-8" />,
       image: '/start/start-3.jpg',
     },
     {
-      title: '건강한 변화의 시작',
-      subtitle: '오늘 식사와 운동 사진 찍으러 가볼까요?',
+      title: `더 간편하게,\n더 스타일리시하게`,
+      subtitle: '건강한 일상이 특별해지는 순간',
+      bulletPoints: ['AI가 계산하고 분석하는 동안', '당신은 찍기만 하세요'],
       icon: <Sparkles className="w-8 h-8" />,
       image: '/start/start-4.jpg',
     },
@@ -55,8 +60,8 @@ const OnboardingScreen = ({ defaultSlide }: { defaultSlide: number }) => {
   };
 
   return (
-    <div className="min-h-screen min-w-screen flex flex-col ">
-      {/* Image Section - Fixed at top */}
+    <div className="min-h-screen min-w-screen flex flex-col">
+      {/* Image Section */}
       <div className="w-full aspect-square">
         <AnimatePresence mode="wait">
           <motion.div
@@ -75,36 +80,57 @@ const OnboardingScreen = ({ defaultSlide }: { defaultSlide: number }) => {
         </AnimatePresence>
       </div>
 
-      {/* Content Section - Flexible space */}
-      <div className="flex-1 flex flex-col px-6 py-8 rounded-t-3xl bg-white">
+      {/* Content Section */}
+      <div className="flex-1 flex flex-col px-6 pt-8 pb-4 rounded-t-3xl bg-white">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
             initial={{ x: 300, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -300, opacity: 0 }}
-            className="flex-1 flex flex-col"
+            className="flex-1 flex flex-col space-y-4"
           >
-            {/* Icon and Title in one line */}
-            <div className="flex flex-col justify-center gap-4 mb-4">
-              <div className="flex items-center gap-2">
-                {slides[currentSlide].icon}
-                <h2 className="text-2xl font-semibold text-gray-900">
-                  {slides[currentSlide].title}
-                </h2>
-              </div>
+            {/* Title & Subtitle */}
+            <div className="space-y-2 tracking-tighter">
+              <h1 className="text-3xl font-bold text-gray-900 whitespace-pre-line border-b-[1px] border-gray-900 pb-2">
+                {slides[currentSlide].title.split('\n').map((line, index, array) => (
+                  <React.Fragment key={index}>
+                    {line}
+                    {index === array.length - 1 && (
+                      <span className="inline-flex items-center align-middle pb-1 ml-2 text-gray-600">
+                        {slides[currentSlide].icon}
+                      </span>
+                    )}
+                    {index !== array.length - 1 && <br />}
+                  </React.Fragment>
+                ))}
+              </h1>
+              <h2 className="text-lg font-medium text-gray-700 whitespace-pre-line border-b-[1px] border-gray-200 pb-2">
+                {slides[currentSlide].subtitle}
+              </h2>
             </div>
 
-            {/* Subtitle with line breaks */}
-            <p className="text-gray-600 leading-relaxed whitespace-pre-line">
-              {slides[currentSlide].subtitle}
-            </p>
+            {/* Bullet Points */}
+            <div className="space-y-1">
+              {slides[currentSlide].bulletPoints.map((point, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ x: 20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: index * 0.15 }}
+                  className="flex items-center space-x-3"
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                  <span className="text-base text-gray-600">{point}</span>
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* Navigation Section - Fixed at bottom */}
-      <div className="px-6 pb-8 space-y-4 ">
+      {/* Navigation Section */}
+      <div className="px-6 pb-8 space-y-4 bg-white">
         {/* Progress Dots */}
         <div className="flex justify-center space-x-2 mb-4">
           {slides.map((_, index) => (

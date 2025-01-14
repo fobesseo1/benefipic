@@ -2,7 +2,18 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, Sparkle, Moon, Heart, Flower } from 'lucide-react';
+import {
+  Star,
+  Sparkle,
+  Moon,
+  Heart,
+  Flower,
+  Camera,
+  Utensils,
+  Salad,
+  Dumbbell,
+  Brain,
+} from 'lucide-react';
 
 interface BubbleState {
   id: number;
@@ -18,12 +29,19 @@ const MysticSymbolsEffect = () => {
 
   // 심볼 컴포넌트 배열
   const symbols = [
-    (props: any) => <Star {...props} />,
-    (props: any) => <Sparkle {...props} />,
-    (props: any) => <Moon {...props} />,
-    (props: any) => <Heart {...props} />,
-    (props: any) => <Flower {...props} />,
+    (props: any) => <Camera {...props} />,
+    (props: any) => <Salad {...props} />,
+    (props: any) => <Dumbbell {...props} />,
+    (props: any) => <Utensils {...props} />,
+    (props: any) => <Brain {...props} />,
   ];
+  // const symbols = [
+  //   (props: any) => <Star {...props} />,
+  //   (props: any) => <Sparkle {...props} />,
+  //   (props: any) => <Moon {...props} />,
+  //   (props: any) => <Heart {...props} />,
+  //   (props: any) => <Flower {...props} />,
+  // ];
 
   // 심볼 색상 배열
   const symbolColors = [
