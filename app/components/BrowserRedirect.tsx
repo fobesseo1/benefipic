@@ -5,35 +5,31 @@ import { LoaderCircle } from 'lucide-react';
 
 export default function BrowserRedirect() {
   const [showMessage, setShowMessage] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // 모바일 기기 체크
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    const mobile = /mobile|iphone|ipad|android/.test(userAgent);
-    setIsMobile(mobile);
+    const userAgent = navigator.userAgent.toLowerCase();
+    const urlParams = new URLSearchParams(window.location.search);
+    const isRedirected = urlParams.get('external');
 
-    // 모바일 기기일 때만 리다이렉트 로직 실행
-    if (mobile) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const isRedirected = urlParams.get('external');
+    // 인앱 브라우저 체크
+    const isInstagramApp = userAgent.includes('instagram');
+    const isThreadsApp = userAgent.includes('threads');
 
-      if (document.referrer && !isRedirected) {
-        setShowMessage(true);
+    // 인앱 브라우저이고 아직 리다이렉트되지 않은 경우에만
+    if ((isInstagramApp || isThreadsApp) && !isRedirected) {
+      setShowMessage(true);
 
-        if (/android/i.test(navigator.userAgent)) {
-          window.location.href = `intent:benefipic.vercel.app${window.location.pathname}#Intent;scheme=https;package=com.android.chrome;end`;
-        } else if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
-          window.location.href = `googlechrome://benefipic.vercel.app${window.location.pathname}`;
-        } else {
-          window.location.href = `https://benefipic.vercel.app${window.location.pathname}`;
-        }
+      if (/android/i.test(navigator.userAgent)) {
+        window.location.href = `intent:benefipic.vercel.app${window.location.pathname}#Intent;scheme=https;package=com.android.chrome;end`;
+      } else if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+        window.location.href = `googlechrome://benefipic.vercel.app${window.location.pathname}`;
+      } else {
+        window.location.href = `https://benefipic.vercel.app${window.location.pathname}`;
       }
     }
   }, []);
 
-  // 모바일이 아니거나 메시지를 보여줄 필요가 없으면 아무것도 렌더링하지 않음
-  if (!isMobile || !showMessage) return null;
+  if (!showMessage) return null;
 
   return (
     <div className="fixed inset-0 bg-white z-[9999] flex items-center justify-center p-5 text-center">
@@ -47,14 +43,9 @@ export default function BrowserRedirect() {
           전체 기능 이용을 위해
           <br />
           Chrome 또는 Safari에서 열어야 합니다.
-          <br />이 창은 닫으셔도 됩니다.
+          <br />
+          잠시만 기다려주세요.
         </p>
-        <button
-          onClick={() => window.close()}
-          className="px-8 py-4 bg-black text-white rounded text-base"
-        >
-          창 닫기
-        </button>
       </div>
     </div>
   );
