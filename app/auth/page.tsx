@@ -1,5 +1,4 @@
-//app>auth>page.tsx
-
+// app/auth/page.tsx
 import React from 'react';
 import Image from 'next/image';
 import { AuthForm } from './components/AuthForm';
@@ -8,13 +7,14 @@ import { Sparkles } from 'lucide-react';
 import { getUser } from '@/lib/supabse/server';
 import { Card, CardContent } from '@/components/ui/card';
 import { CurrentUserType } from '../types/types';
+import { UserRedirect } from './UserRedirect';
 
 const AvatarImage = ({ user }: { user: CurrentUserType }) => {
   if (user.avatar_url) {
     return (
       <div
         className="w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden 
-        ring-4 ring-brand-100 ring-offset-2"
+         ring-4 ring-brand-100 ring-offset-2"
       >
         <Image
           src={user.avatar_url}
@@ -30,8 +30,8 @@ const AvatarImage = ({ user }: { user: CurrentUserType }) => {
     return (
       <div
         className="w-32 h-32 sm:w-40 sm:h-40 rounded-full 
-        bg-gradient-to-br from-brand-100 to-pastel-100 
-        flex items-center justify-center
+         bg-gradient-to-br from-brand-100 to-pastel-100 
+         flex items-center justify-center
         ring-4 ring-brand-100 ring-offset-2"
       >
         <Sparkles className="w-16 h-16 text-brand-400" />
@@ -65,12 +65,7 @@ export default async function AuthPage() {
             {currentUser ? (
               <div className="flex flex-col items-center gap-6">
                 <AvatarImage user={currentUser} />
-                <div className="space-y-2 text-center">
-                  <h2 className="text-xl font-bold text-gradient-brand">
-                    {currentUser.username}님 안녕하세요
-                  </h2>
-                  <p className="text-sm text-gray-500">오늘도 특별한 하루 되세요</p>
-                </div>
+                <UserRedirect user={currentUser} />
               </div>
             ) : (
               <>
@@ -89,7 +84,7 @@ export default async function AuthPage() {
         </Card>
 
         {/* 로그아웃 버튼 */}
-        <div className="flex justify-start ">
+        <div className="flex justify-start">
           <SignOut />
         </div>
       </div>
