@@ -12,10 +12,21 @@ export default function GoogleButton() {
   );
 
   const loginWithGoogle = useCallback(async () => {
+    // Instagram/Threads 내장 브라우저 체크
+    const isInAppBrowser = /Instagram|Threads/.test(navigator.userAgent);
+
+    if (isInAppBrowser) {
+      // 외부 브라우저에서 인증 페이지 열기
+      window.location.href = `${location.origin}/auth`;
+      return;
+    }
+
+    // 일반 브라우저에서는 기존 로직대로 진행
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${location.origin}/auth/callback`,
+        skipBrowserRedirect: false, // 브라우저 리다이렉트 허용
       },
     });
   }, [supabase.auth]);
