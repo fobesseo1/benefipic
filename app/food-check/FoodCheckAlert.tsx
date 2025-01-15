@@ -14,6 +14,7 @@ import { X } from 'lucide-react';
 interface FoodCheckAlertProps {
   isOpen: boolean;
   onClose: () => void;
+  setStep: (step: 'complete') => void;
   healthCheck: {
     score: number;
     message: string;
@@ -39,6 +40,7 @@ interface FoodCheckAlertProps {
 const FoodCheckAlert: React.FC<FoodCheckAlertProps> = ({
   isOpen,
   onClose,
+  setStep,
   healthCheck,
   onSaveToFoodLogs,
   onSaveToCheckLogs,
@@ -49,8 +51,13 @@ const FoodCheckAlert: React.FC<FoodCheckAlertProps> = ({
     return 'text-red-600';
   };
 
+  const handleClose = () => {
+    onClose();
+    setStep('complete');
+  };
+
   return (
-    <AlertDialog open={isOpen} onOpenChange={onClose}>
+    <AlertDialog open={isOpen} onOpenChange={handleClose}>
       <AlertDialogContent>
         {/* 닫기 버튼 추가 */}
         <div className="flex justify-end">

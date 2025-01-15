@@ -110,32 +110,62 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   };
 
   // FoodCheckAnalyzer.tsx 상단에 추가
-  const calculateHealthScore = (nutrition: {
-    calories: number;
-    protein: number;
-    fat: number;
-    carbs: number;
+  const calculateHealthScore = (food: {
+    foodName: string;
+    nutrition: {
+      calories: number;
+      protein: number;
+      fat: number;
+      carbs: number;
+    };
   }) => {
-    let score = 5; // 기본 점수를 5점으로 시작
+    let score = 5;
 
-    // 1. 칼로리 점수 (최대 2점 / 최소 -2점)
-    const caloriesPerServing = nutrition.calories;
+    const caloriesPerServing = food.nutrition.calories;
     if (caloriesPerServing < 300) score += 2;
     else if (caloriesPerServing < 500) score += 1;
-    else if (caloriesPerServing > 1200) score -= 2; // 1200칼로리 초과 시 -2점
-    else if (caloriesPerServing > 800) score -= 1; // 800~1200칼로리는 -1점
+    else if (caloriesPerServing > 1200) score -= 2;
+    else if (caloriesPerServing > 800) score -= 1;
 
-    // 2. 단백질 점수 (최대 2점)
-    const proteinRatio = (nutrition.protein * 4) / nutrition.calories;
+    const proteinRatio = (food.nutrition.protein * 4) / food.nutrition.calories;
     if (proteinRatio > 0.3) score += 2;
     else if (proteinRatio > 0.2) score += 1;
 
-    // 3. 지방 점수 (최대 1점)
-    const fatRatio = (nutrition.fat * 9) / nutrition.calories;
+    const fatRatio = (food.nutrition.fat * 9) / food.nutrition.calories;
     if (fatRatio < 0.3) score += 1;
-    else if (fatRatio > 0.4) score -= 1; // 고지방 페널티
+    else if (fatRatio > 0.4) score -= 1;
 
-    return Math.min(Math.max(1, score), 10); // 최소 1점, 최대 10점
+    // 음식 이름 기반 페널티
+    const foodName = food.foodName.toLowerCase();
+
+    // 음료수 페널티
+    if (
+      foodName.includes('콜라') ||
+      foodName.includes('펩시') ||
+      foodName.includes('사이다') ||
+      foodName.includes('주스') ||
+      foodName.includes('음료')
+    ) {
+      score -= 2;
+    }
+
+    // 디저트/간식 페널티
+    if (
+      foodName.includes('케이크') ||
+      foodName.includes('아이스크림') ||
+      foodName.includes('과자') ||
+      foodName.includes('빵') ||
+      foodName.includes('쿠키')
+    ) {
+      score -= 1;
+    }
+
+    // 패스트푸드 페널티
+    if (foodName.includes('피자') || foodName.includes('버거') || foodName.includes('치킨')) {
+      score -= 1;
+    }
+
+    return Math.min(Math.max(1, score), 10);
   };
 
   const applyFilters = async () => {
@@ -437,7 +467,10 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       setAnalysis(processedData);
 
       // 건강 점수 계산
-      const healthScore = calculateHealthScore(processedData.nutrition);
+      const healthScore = calculateHealthScore({
+        foodName: processedData.foodName,
+        nutrition: processedData.nutrition,
+      });
 
       if (healthScore <= 7) {
         setStep('health-check');
@@ -505,7 +538,7 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       }
 
       setShowHealthAlert(true);
-      setStep('complete');
+      //setStep('complete');
     } catch (error) {
       console.error('Error:', error);
       setAnalysis(null);
@@ -659,7 +692,10 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
               exit={{ x: -300, opacity: 0 }}
               className="flex-1 flex flex-col"
             >
-              {(step === 'compress' || step === 'analyzing' || step === 'calculate') && (
+              {(step === 'compress' ||
+                step === 'analyzing' ||
+                step === 'calculate' ||
+                step === 'health-check') && (
                 <div className="flex flex-col items-center justify-center h-full tracking-tighter">
                   <AnalysisProgress currentStep={step} />
                   <p className="mt-8 text-gray-500 whitespace-pre-line">
@@ -793,6 +829,7 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
         <FoodCheckAlert
           isOpen={showHealthAlert}
           onClose={() => setShowHealthAlert(false)}
+          setStep={setStep}
           healthCheck={healthCheckResult}
           onSaveToFoodLogs={saveFoodLog}
           onSaveToCheckLogs={saveCheckLog}

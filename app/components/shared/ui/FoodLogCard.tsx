@@ -166,6 +166,35 @@ export const FoodLogCard = ({
     if (fatRatio < 0.3) score += 1;
     else if (fatRatio > 0.4) score -= 1; // 고지방 페널티
 
+    // 4. 특정 음식 카테고리 페널티
+    const foodName = foodLog.food_name.toLowerCase();
+
+    // 음료수 페널티
+    if (
+      foodName.includes('콜라') ||
+      foodName.includes('사이다') ||
+      foodName.includes('주스') ||
+      foodName.includes('음료')
+    ) {
+      score -= 2; // 음료수는 2점 감점
+    }
+
+    // 디저트/간식 페널티
+    if (
+      foodName.includes('케이크') ||
+      foodName.includes('아이스크림') ||
+      foodName.includes('과자') ||
+      foodName.includes('빵') ||
+      foodName.includes('쿠키')
+    ) {
+      score -= 1; // 디저트는 1점 감점
+    }
+
+    // 패스트푸드 페널티
+    if (foodName.includes('피자') || foodName.includes('버거') || foodName.includes('치킨')) {
+      score -= 1; // 패스트푸드는 1점 감점
+    }
+
     return Math.min(Math.max(1, score), 10); // 최소 1점, 최대 10점
   };
   // 아이템수 지정된 경우 화면이동 버튼 관련 함수
