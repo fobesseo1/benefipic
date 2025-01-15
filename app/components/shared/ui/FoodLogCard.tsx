@@ -147,33 +147,27 @@ export const FoodLogCard = ({
 
   // 점수 계산 함수 추가
   const calculateHealthScore = (foodLog: FoodLog, dailyCalorieGoal: number) => {
-    let score = 6; // 기본 점수
+    let score = 5; // 기본 점수를 5점으로 시작
 
-    // 1. 칼로리 밀도 점수 (최대 2점)
-    // 칼로리가 낮으면서 단백질이 높은 음식 보상
-    const caloriePerProteinRatio = foodLog.calories / (foodLog.protein + 1); // +1은 0 나누기 방지
-    if (caloriePerProteinRatio < 15) {
-      // 복어회, 닭가슴살 같은 고단백 저칼로리 음식
-      score += 2;
-    } else if (caloriePerProteinRatio < 25) {
-      score += 1;
-    }
+    // 1. 칼로리 점수 (최대 2점 / 최소 -2점)
+    const caloriesPerServing = foodLog.calories;
+    if (caloriesPerServing < 300) score += 2;
+    else if (caloriesPerServing < 500) score += 1;
+    else if (caloriesPerServing > 1200) score -= 2; // 1200칼로리 초과 시 -2점
+    else if (caloriesPerServing > 800) score -= 1; // 800~1200칼로리는 -1점
 
-    // 2. 영양소 균형 점수 (최대 2점)
-    // 단백질 비중이 높고 지방이 적절한 음식 보상
+    // 2. 단백질 점수 (최대 2점)
     const proteinRatio = (foodLog.protein * 4) / foodLog.calories;
+    if (proteinRatio > 0.3) score += 2;
+    else if (proteinRatio > 0.2) score += 1;
+
+    // 3. 지방 점수 (최대 1점)
     const fatRatio = (foodLog.fat * 9) / foodLog.calories;
+    if (fatRatio < 0.3) score += 1;
+    else if (fatRatio > 0.4) score -= 1; // 고지방 페널티
 
-    if (proteinRatio > 0.3 && fatRatio < 0.3) {
-      // 복어회, 연어회 같은 건강한 단백질 음식
-      score += 2;
-    } else if (proteinRatio > 0.2 && fatRatio < 0.35) {
-      score += 1;
-    }
-
-    return Math.min(10, score);
+    return Math.min(Math.max(1, score), 10); // 최소 1점, 최대 10점
   };
-
   // 아이템수 지정된 경우 화면이동 버튼 관련 함수
   const displayLogs = maxItems ? foodLogs.slice(0, maxItems) : foodLogs;
   const showPlusButton = maxItems === 3 && displayLogs.length === 3 && foodLogs.length > 3;

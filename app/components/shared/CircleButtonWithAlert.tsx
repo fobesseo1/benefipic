@@ -71,6 +71,12 @@ export default function CircleButtonWithAlert() {
                   <p className="text-sm text-gray-900 font-bold">직접입력</p>
                 </div>
               </Link>
+              <Link href="/food-check" onClick={() => setIsOpen(false)}>
+                <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
+                  <Camera className="w-8 h-8 text-gray-900 " strokeWidth={1} />
+                  <p className="text-sm text-gray-900 font-bold tracking-tighter whitespace-pre-line">{`먹을까?\n말까?`}</p>
+                </div>
+              </Link>
               <Link href="/menu" onClick={() => setIsOpen(false)}>
                 <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
                   <SquareMenu className="w-8 h-8 text-gray-900 " strokeWidth={1} />

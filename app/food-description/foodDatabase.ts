@@ -1,3 +1,5 @@
+//app/food-description/foodDatabase.ts
+
 export interface Nutrition {
   calories: number;
   protein: number;

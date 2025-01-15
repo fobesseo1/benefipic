@@ -20,6 +20,7 @@ interface NavigationButtonSectionProps {
     | 'compress'
     | 'analyzing'
     | 'calculate'
+    | 'health-check'
     | 'complete';
   setStep: (
     step:
@@ -30,6 +31,7 @@ interface NavigationButtonSectionProps {
       | 'compress'
       | 'analyzing'
       | 'calculate'
+      | 'health-check'
       | 'complete'
   ) => void;
   setSelectedImage: (file: File | null) => void;

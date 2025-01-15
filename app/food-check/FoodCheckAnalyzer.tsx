@@ -19,8 +19,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import AnalysisProgress from './AnalysisProgress';
-import FoodDetectionAlert from './FoodDetectionAlert';
 import { completedFoodDatabase, ingredientDatabase } from '../food-description/foodDatabase';
 import { useAnalysisEligibility } from '../hooks/useAnalysisEligibility';
 import AdDialog from '../components/shared/ui/AdDialog';
@@ -37,6 +35,9 @@ import {
   validateAndCorrectAnalysis,
 } from '@/utils/food-analysis';
 import FoodImageFilter from '../components/shared/ui/FoodImageFilter';
+import AnalysisProgress from './AnalysisProgress';
+import FoodDetectionAlert from '../food/FoodDetectionAlert';
+import FoodCheckAlert from './FoodCheckAlert';
 
 // 타입 정의
 type AnalysisStep =
@@ -51,7 +52,7 @@ type AnalysisStep =
   | 'complete';
 
 // 메인 컴포넌트
-const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
+const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   const [step, setStep] = useState<AnalysisStep>('initial');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -64,6 +65,7 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   const [editMode, setEditMode] = useState({
     foodName: false,
   });
+  const [showHealthAlert, setShowHealthAlert] = useState(false);
   const [notFoodAlert, setNotFoodAlert] = useState({
     isOpen: false,
     detectedContent: '',
@@ -77,10 +79,64 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     warmth: 100,
   };
   const [currentFilters, setCurrentFilters] = useState(initialFilters);
+  const [healthCheckResult, setHealthCheckResult] = useState<{
+    score: number;
+    message: string;
+    currentFood: {
+      foodName: string;
+      nutrition: {
+        calories: number;
+        protein: number;
+        fat: number;
+        carbs: number;
+      };
+    };
+    alternatives?: {
+      name: string;
+      reason: string;
+      benefits: string;
+    }[];
+  } | null>(null);
 
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const supabase = createSupabaseBrowserClient();
+
+  const getHealthMessage = (score: number) => {
+    if (score >= 9) return '아주 훌륭한 선택이에요!';
+    if (score >= 8) return '괜찮은 선택이에요!';
+    if (score >= 7) return '나쁘지 않지만, 다른 선택도...';
+    return '다시 한번 생각해보시겠어요?';
+  };
+
+  // FoodCheckAnalyzer.tsx 상단에 추가
+  const calculateHealthScore = (nutrition: {
+    calories: number;
+    protein: number;
+    fat: number;
+    carbs: number;
+  }) => {
+    let score = 5; // 기본 점수를 5점으로 시작
+
+    // 1. 칼로리 점수 (최대 2점 / 최소 -2점)
+    const caloriesPerServing = nutrition.calories;
+    if (caloriesPerServing < 300) score += 2;
+    else if (caloriesPerServing < 500) score += 1;
+    else if (caloriesPerServing > 1200) score -= 2; // 1200칼로리 초과 시 -2점
+    else if (caloriesPerServing > 800) score -= 1; // 800~1200칼로리는 -1점
+
+    // 2. 단백질 점수 (최대 2점)
+    const proteinRatio = (nutrition.protein * 4) / nutrition.calories;
+    if (proteinRatio > 0.3) score += 2;
+    else if (proteinRatio > 0.2) score += 1;
+
+    // 3. 지방 점수 (최대 1점)
+    const fatRatio = (nutrition.fat * 9) / nutrition.calories;
+    if (fatRatio < 0.3) score += 1;
+    else if (fatRatio > 0.4) score -= 1; // 고지방 페널티
+
+    return Math.min(Math.max(1, score), 10); // 최소 1점, 최대 10점
+  };
 
   const applyFilters = async () => {
     if (!selectedImage) return;
@@ -364,7 +420,6 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
 
       const data = await response.json();
       const result = JSON.parse(data.choices[0].message.content) as ApiResponse;
-      console.log('분석 결과:', result);
 
       if (!result.isFood) {
         setNotFoodAlert({
@@ -377,10 +432,79 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
 
       // 분석 결과 보정
       const correctedResult = validateAndCorrectAnalysis(result, completedFoodDatabase);
-
       const processedData = processApiResponse(correctedResult);
       setOriginalAnalysis(processedData);
       setAnalysis(processedData);
+
+      // 건강 점수 계산
+      const healthScore = calculateHealthScore(processedData.nutrition);
+
+      if (healthScore <= 7) {
+        setStep('health-check');
+        // 대체 음식 추천 받기
+        const recommendationResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              {
+                role: 'system',
+                content: '영양 전문가로서 더 건강한 대체 음식을 추천해주세요.',
+              },
+              {
+                role: 'user',
+                content: `현재 음식: ${processedData.foodName}의 더 건강한 대체 음식을 추천해주세요.
+                  영양정보:
+                  - 칼로리: ${processedData.nutrition.calories}kcal
+                  - 단백질: ${processedData.nutrition.protein}g
+                  - 지방: ${processedData.nutrition.fat}g
+                  - 탄수화물: ${processedData.nutrition.carbs}g
+                  
+                  다음 JSON 형식으로 응답해주세요 음식은 최대2개만 추천해줘:
+                  {
+                    "recommendations": [
+                      {
+                        "name": "음식명",
+                        "reason": "추천 이유(한글 20자 내외)",
+                        "benefits": "건강상 이점(한글 20자 내외)"
+                      }
+                    ]
+                  }`,
+              },
+            ],
+            temperature: 0.3,
+            response_format: { type: 'json_object' },
+          }),
+        });
+
+        const alternativesData = await recommendationResponse.json();
+        const alternatives = JSON.parse(alternativesData.choices[0].message.content);
+
+        setHealthCheckResult({
+          score: healthScore,
+          message: getHealthMessage(healthScore),
+          currentFood: {
+            foodName: processedData.foodName,
+            nutrition: processedData.nutrition,
+          },
+          alternatives: alternatives.recommendations,
+        });
+      } else {
+        setHealthCheckResult({
+          score: healthScore,
+          message: getHealthMessage(healthScore),
+          currentFood: {
+            foodName: processedData.foodName,
+            nutrition: processedData.nutrition,
+          },
+        });
+      }
+
+      setShowHealthAlert(true);
       setStep('complete');
     } catch (error) {
       console.error('Error:', error);
@@ -405,12 +529,11 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
 
   const saveFoodLog = async () => {
     if (!selectedImage || !analysis) return;
-
     try {
       const fileExt = selectedImage.type.split('/')[1];
       const filePath = `${currentUser_id}/${Date.now()}.${fileExt}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('food-images')
         .upload(filePath, selectedImage);
 
@@ -432,12 +555,52 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       });
 
       if (insertError) throw insertError;
+      router.push('/main');
+    } catch (error) {
+      console.error('Error saving to food_logs:', error);
+    }
+  };
+
+  const saveCheckLog = async () => {
+    if (!selectedImage || !analysis) return;
+
+    try {
+      const fileExt = selectedImage.type.split('/')[1];
+      const filePath = `${currentUser_id}/${Date.now()}.${fileExt}`;
+
+      // 이미지 업로드
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('food-check-images')
+        .upload(filePath, selectedImage);
+
+      if (uploadError) throw uploadError;
+
+      // 공개 URL 가져오기
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('food-check-images').getPublicUrl(filePath);
+
+      // 로그 저장
+      const { error: insertError } = await supabase.from('food_check_logs').insert({
+        user_id: currentUser_id,
+        logged_at: new Date().toISOString(),
+        food_name: analysis.foodName,
+        image_url: publicUrl,
+        calories: analysis.nutrition.calories,
+        protein: analysis.nutrition.protein,
+        fat: analysis.nutrition.fat,
+        carbs: analysis.nutrition.carbs,
+      });
+
+      if (insertError) throw insertError;
 
       setError(null);
-      setShowResultAlert(true);
+      setShowHealthAlert(false); // 건강 체크 알럿 닫기
+      // setShowResultAlert(true); // 결과 알럿 표시
     } catch (error) {
-      console.error('Error saving food log:', error);
+      console.error('Error saving to food_check_logs:', error);
       setError('저장 중 오류가 발생했습니다.');
+      setShowHealthAlert(false);
       setShowResultAlert(true);
     }
   };
@@ -472,7 +635,7 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
                 <div className="absolute bottom-16 left-16 w-16 h-16 border-l-4 border-b-4 rounded-bl-3xl border-gray-300"></div>
                 <div className="absolute bottom-16 right-16 w-16 h-16 border-r-4 border-b-4 rounded-br-3xl border-gray-300"></div>
 
-                <span className="text-gray-500">음식 사진을 선택해주세요</span>
+                <span className="text-gray-500">고민되는 음식을 선택해주세요</span>
               </div>
             )}
           </motion.div>
@@ -625,6 +788,17 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
         resetAnalyzer={resetAnalyzer}
       />
 
+      {/* 건강 체크 Alert */}
+      {healthCheckResult && (
+        <FoodCheckAlert
+          isOpen={showHealthAlert}
+          onClose={() => setShowHealthAlert(false)}
+          healthCheck={healthCheckResult}
+          onSaveToFoodLogs={saveFoodLog}
+          onSaveToCheckLogs={saveCheckLog}
+        />
+      )}
+
       {/* 저장 결과 Alert */}
       <AlertDialog open={showResultAlert} onOpenChange={setShowResultAlert}>
         <AlertDialogContent>
@@ -658,4 +832,4 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   );
 };
 
-export default FoodAnalyzer;
+export default FoodCheckAnalyzer;

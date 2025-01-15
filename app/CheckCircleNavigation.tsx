@@ -3,7 +3,18 @@
 import { usePathname } from 'next/navigation';
 import CircleButtonWithAlert from './components/shared/CircleButtonWithAlert';
 import Link from 'next/link';
-import { Camera, House, X, Pizza, Dumbbell } from 'lucide-react';
+import {
+  Camera,
+  House,
+  X,
+  Pizza,
+  Dumbbell,
+  MenuSquare,
+  FileQuestion,
+  MailQuestion,
+  Salad,
+  ReceiptText,
+} from 'lucide-react';
 import { useState } from 'react';
 import {
   AlertDialog,
@@ -67,18 +78,40 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
             <Link href="/food">
               <button
                 onClick={() => setShowRouteDialog(false)}
-                className="w-full bg-white border-2 border-gray-200 rounded-xl p-4 flex items-center gap-4 hover:bg-gray-50"
+                className="w-full bg-white border-2 border-gray-200 rounded-xl p-2 flex items-center gap-4 hover:bg-gray-50"
               >
                 <div className="bg-gray-100 p-4 rounded-full">
-                  <Pizza className="h-8 w-8 text-gray-600" />
+                  <Salad className="h-8 w-8 text-gray-600" />
                 </div>
                 <span className="flex-1 text-left font-medium text-xl">음식 사진 입력</span>
+              </button>
+            </Link>
+            <Link href="/food-check">
+              <button
+                onClick={() => setShowRouteDialog(false)}
+                className="w-full bg-white border-2 border-gray-200 rounded-xl p-2 flex items-center gap-4 hover:bg-gray-50"
+              >
+                <div className="bg-gray-100 p-4 rounded-full">
+                  <FileQuestion className="h-8 w-8 text-gray-600" />
+                </div>
+                <span className="flex-1 text-left font-medium text-xl">먹을까? 말까?</span>
+              </button>
+            </Link>
+            <Link href="/menu">
+              <button
+                onClick={() => setShowRouteDialog(false)}
+                className="w-full bg-white border-2 border-gray-200 rounded-xl p-2 flex items-center gap-4 hover:bg-gray-50"
+              >
+                <div className="bg-gray-100 p-4 rounded-full">
+                  <ReceiptText className="h-8 w-8 text-gray-600" />
+                </div>
+                <span className="flex-1 text-left font-medium text-xl">메뉴추천</span>
               </button>
             </Link>
             <Link href="/exercise">
               <button
                 onClick={() => setShowRouteDialog(false)}
-                className="w-full bg-white border-2 border-gray-200 rounded-xl p-4 flex items-center gap-4 hover:bg-gray-50"
+                className="w-full bg-white border-2 border-gray-200 rounded-xl p-2 flex items-center gap-4 hover:bg-gray-50"
               >
                 <div className="bg-gray-100  p-4 rounded-full">
                   <Dumbbell className="h-8 w-8 text-gray-600" />
