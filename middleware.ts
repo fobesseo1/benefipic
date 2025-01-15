@@ -2,13 +2,27 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
 export async function middleware(request: NextRequest) {
-  // 인앱 브라우저 체크
-  const userAgent = request.headers.get('user-agent') || '';
-  const isInAppBrowser = userAgent.includes('i') || userAgent.includes('I');
+  // URL에서 리다이렉션 카운트 파라미터 확인
+  const redirectCount = Number(request.nextUrl.searchParams.get('rc')) || 0;
 
-  // auth 페이지에서 인앱 브라우저 감지된 경우
+  // 리다이렉션 횟수가 1회를 초과하면 더 이상 리다이렉트하지 않음
+  if (redirectCount > 1) {
+    return NextResponse.next();
+  }
+
+  const userAgent = request.headers.get('user-agent')?.toLowerCase() || '';
+
+  const isInAppBrowser =
+    userAgent.includes('instagram') ||
+    userAgent.includes('threads') ||
+    /instagram|threads|\.threads\.net/i.test(userAgent);
+
   if (request.nextUrl.pathname === '/auth' && isInAppBrowser) {
-    return NextResponse.redirect('https://benefipic.vercel.app/auth');
+    // 리다이렉트할 URL 생성
+    const redirectUrl = new URL('https://benefipic.vercel.app/auth');
+    redirectUrl.searchParams.set('rc', String(redirectCount + 1));
+
+    return NextResponse.redirect(redirectUrl);
   }
 
   // 기존 Supabase 인증 로직
@@ -52,7 +66,6 @@ export async function middleware(request: NextRequest) {
   return response;
 }
 
-// auth 페이지에만 적용
 export const config = {
   matcher: ['/auth'],
 };
