@@ -4,13 +4,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 export async function middleware(request: NextRequest) {
   // 인앱 브라우저 체크
   const userAgent = request.headers.get('user-agent') || '';
-  const isInAppBrowser =
-    userAgent.includes('Instagram') ||
-    userAgent.includes('threads') ||
-    userAgent.includes('t') ||
-    userAgent.includes('T') ||
-    userAgent.includes('I') ||
-    userAgent.includes('i');
+  const isInAppBrowser = userAgent.includes('instagram') || userAgent.includes('threads');
 
   // auth 페이지에서 인앱 브라우저 감지된 경우
   if (request.nextUrl.pathname === '/auth' && isInAppBrowser) {
