@@ -35,7 +35,7 @@ export default function BrowserRedirect() {
     <div className="fixed inset-0 bg-white z-[9999] flex items-center justify-center p-5 text-center">
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-center gap-2">
-          <LoaderCircle className="h-8 w-8 animate-spin" />
+          <LoaderCircle className="h-8 w-8 animate-pulse" />
           <p className="text-xl">Processing...</p>
         </div>
         <h2 className="mb-4 text-xl font-bold">Chrome 또는 Safari로 이동합니다</h2>
