@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import MainLoading from '../Mainloading';
+import { LoaderCircle } from 'lucide-react';
 
 export default function BrowserRedirect() {
   const [showMessage, setShowMessage] = useState(false);
@@ -30,40 +32,22 @@ export default function BrowserRedirect() {
   if (!showMessage) return null;
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'white',
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-        textAlign: 'center',
-      }}
-    >
-      <div>
-        <h2 style={{ marginBottom: '16px', fontSize: '20px', fontWeight: 'bold' }}>
-          외부 브라우저로 이동합니다
-        </h2>
-        <p style={{ marginBottom: '20px' }}>
-          전체 기능이용을 위해 외부 브라우저에서 열어야 합니다.
+    <div className="fixed inset-0 bg-white z-[9999] flex items-center justify-center p-5 text-center">
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-center gap-2">
+          <LoaderCircle className="h-8 w-8 animate-spin" />
+          <p className="text-xl">Processing...</p>
+        </div>
+        <h2 className="mb-4 text-xl font-bold">Chrome 또는 Safari로 이동합니다</h2>
+        <p className="mb-5">
+          전체 기능 이용을 위해
+          <br />
+          Chrome 또는 Safari에서 열어야 합니다.
           <br />이 창은 닫으셔도 됩니다.
         </p>
         <button
           onClick={() => window.close()}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#007AFF',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            fontSize: '16px',
-          }}
+          className="px-8 py-4 bg-black text-white rounded text-base"
         >
           창 닫기
         </button>
