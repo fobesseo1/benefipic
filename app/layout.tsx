@@ -9,6 +9,7 @@ import { CheckCircleNavigation } from './CheckCircleNavigation';
 import { InstallPWA } from '@/components/InstallPWA';
 import AnalyticsTracker from './components/analyticsTracker/AnalyticsTracker';
 import MobileDetector from './MobileDetector';
+import BrowserRedirect from './components/BrowserRedirect';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -86,6 +87,7 @@ export default async function RootLayout({
           </div>
         </MobileDetector>
         <AnalyticsTracker currentUser={currentUser} />
+        <BrowserRedirect />
       </body>
     </html>
   );

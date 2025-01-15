@@ -1,6 +1,6 @@
-'use client';
+//app>auth>page.tsx
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import { AuthForm } from './components/AuthForm';
 import SignOut from './components/SignOut';
@@ -8,7 +8,6 @@ import { Sparkles } from 'lucide-react';
 import { getUser } from '@/lib/supabse/server';
 import { Card, CardContent } from '@/components/ui/card';
 import { CurrentUserType } from '../types/types';
-import { useUserStore } from '../store/userStore';
 
 const AvatarImage = ({ user }: { user: CurrentUserType }) => {
   if (user.avatar_url) {
@@ -41,39 +40,8 @@ const AvatarImage = ({ user }: { user: CurrentUserType }) => {
   }
 };
 
-export default function AuthPage() {
-  // const [currentUser, setCurrentUser] = useState<CurrentUserType | null>(null);
-
-  const currentUser = useUserStore((state) => state.currentUser);
-
-  useEffect(() => {
-    // 인앱 브라우저 감지
-    const isInAppBrowser = /Instagram|Threads/.test(navigator.userAgent);
-
-    if (isInAppBrowser) {
-      const confirmRedirect = window.confirm(
-        '보안상의 이유로 외부 브라우저에서 로그인이 필요합니다. 외부 브라우저로 이동하시겠습니까?'
-      );
-
-      if (confirmRedirect) {
-        // 현재 URL을 외부 브라우저로 열기
-        window.location.href = 'https://benefipic.vercel.app/auth';
-      }
-    }
-  }, []);
-
-  // useEffect(() => {
-  //   const fetchUser = async () => {
-  //     try {
-  //       const user = await getUser();
-  //       setCurrentUser(user);
-  //     } catch (error) {
-  //       console.error('Error fetching user:', error);
-  //     }
-  //   };
-
-  //   fetchUser();
-  // }, []);
+export default async function AuthPage() {
+  const currentUser: CurrentUserType | null = await getUser();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
@@ -121,7 +89,7 @@ export default function AuthPage() {
         </Card>
 
         {/* 로그아웃 버튼 */}
-        <div className="flex justify-start">
+        <div className="flex justify-start ">
           <SignOut />
         </div>
       </div>
