@@ -9,57 +9,69 @@ export default function BrowserRedirect() {
     const urlParams = new URLSearchParams(window.location.search);
     const isRedirected = urlParams.get('external');
 
+    // referrer가 있고 리다이렉트되지 않은 경우에만
     if (document.referrer && !isRedirected) {
+      // 먼저 메시지 표시
       setShowMessage(true);
 
-      // 먼저 새 창 열기
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.set('external', 'true');
-
-      // 시스템 브라우저로 열기 시도
-      const opened = window.open(newUrl.toString(), '_system');
-
-      // 새 창이 성공적으로 열렸을 때만 현재 창 처리
-      if (opened) {
-        // 약간의 지연 후 현재 창 내용 변경
-        setTimeout(() => {
-          document.body.innerHTML = `
-            <div style="
-              position: fixed;
-              top: 0;
-              left: 0;
-              right: 0;
-              bottom: 0;
-              background: white;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              text-align: center;
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            ">
-              <div>
-                <h2 style="margin-bottom: 16px;">외부 브라우저로 이동했습니다</h2>
-                <p style="margin-bottom: 20px;">이 창은 닫으셔도 됩니다.</p>
-                <button 
-                  onclick="window.close()"
-                  style="
-                    padding: 10px 20px;
-                    background: #007AFF;
-                    color: white;
-                    border: none;
-                    border-radius: 5px;
-                    font-size: 16px;
-                  "
-                >
-                  창 닫기
-                </button>
-              </div>
-            </div>
-          `;
-        }, 1000);
+      // Android인 경우
+      if (/android/i.test(navigator.userAgent)) {
+        window.location.href = `intent:${window.location.href}#Intent;scheme=https;package=com.android.chrome;end`;
+      }
+      // iOS인 경우
+      else if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+        window.location.href = `googlechrome://${window.location.href.substring(8)}`;
+      }
+      // 기타 경우
+      else {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('external', 'true');
+        window.open(newUrl.toString(), '_system');
       }
     }
   }, []);
 
-  return null;
+  if (!showMessage) return null;
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'white',
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        textAlign: 'center',
+      }}
+    >
+      <div>
+        <h2 style={{ marginBottom: '16px', fontSize: '20px', fontWeight: 'bold' }}>
+          외부 브라우저로 이동합니다
+        </h2>
+        <p style={{ marginBottom: '20px' }}>
+          보안을 위해 외부 브라우저에서 열어야 합니다.
+          <br />이 창은 닫으셔도 됩니다.
+        </p>
+        <button
+          onClick={() => window.close()}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#007AFF',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            fontSize: '16px',
+          }}
+        >
+          창 닫기
+        </button>
+      </div>
+    </div>
+  );
 }
