@@ -2,21 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { LoaderCircle } from 'lucide-react';
+import InAppSpy from 'inapp-spy';
 
 export default function BrowserRedirect() {
   const [showMessage, setShowMessage] = useState(false);
 
   useEffect(() => {
-    const userAgent = navigator.userAgent.toLowerCase();
+    const { isInApp, appKey } = InAppSpy();
     const urlParams = new URLSearchParams(window.location.search);
     const isRedirected = urlParams.get('external');
 
-    // 인앱 브라우저 체크
-    const isInstagramApp = userAgent.includes('instagram');
-    const isThreadsApp = userAgent.includes('threads');
-
-    // 인앱 브라우저이고 아직 리다이렉트되지 않은 경우에만
-    if ((isInstagramApp || isThreadsApp) && !isRedirected) {
+    // instagram 또는 threads 인앱 브라우저인 경우에만
+    if ((appKey === 'instagram' || appKey === 'threads') && !isRedirected) {
       setShowMessage(true);
 
       if (/android/i.test(navigator.userAgent)) {
