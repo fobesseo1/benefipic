@@ -85,9 +85,9 @@ export default async function RootLayout({
               {shouldShowNav && <CheckCircleNavigation currentUser={currentUser} />}
             </div>
           </div>
+          <BrowserRedirect />
         </MobileDetector>
         <AnalyticsTracker currentUser={currentUser} />
-        <BrowserRedirect />
       </body>
     </html>
   );

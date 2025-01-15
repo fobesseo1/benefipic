@@ -1,35 +1,39 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import MainLoading from '../Mainloading';
 import { LoaderCircle } from 'lucide-react';
 
 export default function BrowserRedirect() {
   const [showMessage, setShowMessage] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const isRedirected = urlParams.get('external');
+    // 모바일 기기 체크
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const mobile = /mobile|iphone|ipad|android/.test(userAgent);
+    setIsMobile(mobile);
 
-    if (document.referrer && !isRedirected) {
-      setShowMessage(true);
+    // 모바일 기기일 때만 리다이렉트 로직 실행
+    if (mobile) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isRedirected = urlParams.get('external');
 
-      // Android인 경우
-      if (/android/i.test(navigator.userAgent)) {
-        window.location.href = `intent:benefipic.vercel.app${window.location.pathname}#Intent;scheme=https;package=com.android.chrome;end`;
-      }
-      // iOS인 경우
-      else if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
-        window.location.href = `googlechrome://benefipic.vercel.app${window.location.pathname}`;
-      }
-      // 기타 경우
-      else {
-        window.location.href = `https://benefipic.vercel.app${window.location.pathname}`;
+      if (document.referrer && !isRedirected) {
+        setShowMessage(true);
+
+        if (/android/i.test(navigator.userAgent)) {
+          window.location.href = `intent:benefipic.vercel.app${window.location.pathname}#Intent;scheme=https;package=com.android.chrome;end`;
+        } else if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+          window.location.href = `googlechrome://benefipic.vercel.app${window.location.pathname}`;
+        } else {
+          window.location.href = `https://benefipic.vercel.app${window.location.pathname}`;
+        }
       }
     }
   }, []);
 
-  if (!showMessage) return null;
+  // 모바일이 아니거나 메시지를 보여줄 필요가 없으면 아무것도 렌더링하지 않음
+  if (!isMobile || !showMessage) return null;
 
   return (
     <div className="fixed inset-0 bg-white z-[9999] flex items-center justify-center p-5 text-center">
