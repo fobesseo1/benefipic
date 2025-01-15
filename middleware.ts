@@ -2,27 +2,28 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
 export async function middleware(request: NextRequest) {
-  // URL에서 리다이렉션 카운트 파라미터 확인
-  const redirectCount = Number(request.nextUrl.searchParams.get('rc')) || 0;
+  // 이전 리다이렉트 여부 확인
+  const hasRedirected = request.cookies.get('redirected')?.value === 'true';
 
-  // 리다이렉션 횟수가 1회를 초과하면 더 이상 리다이렉트하지 않음
-  if (redirectCount > 1) {
-    return NextResponse.next();
-  }
+  if (!hasRedirected) {
+    const userAgent = request.headers.get('user-agent')?.toLowerCase() || '';
 
-  const userAgent = request.headers.get('user-agent')?.toLowerCase() || '';
+    // 인앱 브라우저 감지를 위한 조건 확장
+    const isInAppBrowser =
+      userAgent.includes('instagram') ||
+      userAgent.includes('i.') ||
+      userAgent.includes('t.') ||
+      userAgent.includes('threads');
 
-  const isInAppBrowser =
-    userAgent.includes('instagram') ||
-    userAgent.includes('threads') ||
-    /instagram|threads|\.threads\.net/i.test(userAgent);
-
-  if (request.nextUrl.pathname === '/auth' && isInAppBrowser) {
-    // 리다이렉트할 URL 생성
-    const redirectUrl = new URL('https://benefipic.vercel.app/auth');
-    redirectUrl.searchParams.set('rc', String(redirectCount + 1));
-
-    return NextResponse.redirect(redirectUrl);
+    if (request.nextUrl.pathname === '/auth' && isInAppBrowser) {
+      const response = NextResponse.redirect('https://benefipic.vercel.app/auth');
+      // 리다이렉트 발생 표시
+      response.cookies.set('redirected', 'true', {
+        maxAge: 60, // 1분 후 쿠키 만료
+        sameSite: 'strict',
+      });
+      return response;
+    }
   }
 
   // 기존 Supabase 인증 로직
