@@ -237,6 +237,16 @@ export const FoodLogCard = ({
       score -= 1;
     }
 
+    // 6. 국수,면 (-2점)
+    if (
+      foodName.includes('파스타') ||
+      foodName.includes('국수') ||
+      foodName.includes('면') ||
+      foodName.includes('스파게티')
+    ) {
+      score -= 2;
+    }
+
     // 7. 고칼로리/기름진 식사 (-2점)
     if (
       foodName.includes('돈까스') ||
