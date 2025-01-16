@@ -147,55 +147,186 @@ export const FoodLogCard = ({
 
   // 점수 계산 함수 추가
   const calculateHealthScore = (foodLog: FoodLog, dailyCalorieGoal: number) => {
-    let score = 5; // 기본 점수를 5점으로 시작
+    let score = 5; // 기본 점수
 
     // 1. 칼로리 점수 (최대 2점 / 최소 -2점)
     const caloriesPerServing = foodLog.calories;
     if (caloriesPerServing < 300) score += 2;
     else if (caloriesPerServing < 500) score += 1;
-    else if (caloriesPerServing > 1200) score -= 2; // 1200칼로리 초과 시 -2점
-    else if (caloriesPerServing > 800) score -= 1; // 800~1200칼로리는 -1점
+    else if (caloriesPerServing > 1200) score -= 2;
+    else if (caloriesPerServing > 800) score -= 1;
 
-    // 2. 단백질 점수 (최대 2점)
+    // 2. 영양소 비율 점수
     const proteinRatio = (foodLog.protein * 4) / foodLog.calories;
-    if (proteinRatio > 0.3) score += 2;
-    else if (proteinRatio > 0.2) score += 1;
-
-    // 3. 지방 점수 (최대 1점)
     const fatRatio = (foodLog.fat * 9) / foodLog.calories;
-    if (fatRatio < 0.3) score += 1;
-    else if (fatRatio > 0.4) score -= 1; // 고지방 페널티
+    const carbRatio = (foodLog.carbs * 4) / foodLog.calories;
 
-    // 4. 특정 음식 카테고리 페널티
+    // 단백질 점수 (최대 2점)
+    if (proteinRatio > 0.25) score += 2;
+    else if (proteinRatio > 0.15) score += 1;
+
+    // 탄수화물 점수 (최대 1점)
+    if (carbRatio >= 0.45 && carbRatio <= 0.65) score += 1;
+    else if (carbRatio > 0.75) score -= 1;
+
+    // 지방 점수 (최대 1점)
+    if (fatRatio < 0.35) score += 1;
+    else if (fatRatio > 0.5) score -= 1;
+
     const foodName = foodLog.food_name.toLowerCase();
 
-    // 음료수 페널티
+    // 3. 최상급 건강식품 (단백질 위주의 고영양 식품) (+3점)
     if (
-      foodName.includes('콜라') ||
-      foodName.includes('사이다') ||
-      foodName.includes('주스') ||
-      foodName.includes('음료')
+      foodName.includes('닭가슴살') ||
+      foodName.includes('연어') ||
+      foodName.includes('계란흰자') ||
+      (foodName.includes('샐러드') && (foodName.includes('닭고기') || foodName.includes('연어'))) ||
+      foodName.includes('단백질쉐이크') ||
+      foodName.includes('프로틴')
     ) {
-      score -= 2; // 음료수는 2점 감점
+      score += 3;
     }
 
-    // 디저트/간식 페널티
+    // 4. 건강한 식품 (+2점)
+    if (
+      foodName.includes('두부') ||
+      foodName.includes('계란') ||
+      (foodName.includes('샐러드') && !foodName.includes('드레싱')) ||
+      foodName.includes('현미') ||
+      foodName.includes('잡곡') ||
+      foodName.includes('오트밀') ||
+      foodName.includes('고구마') ||
+      foodName.includes('브로콜리') ||
+      foodName.includes('콩') ||
+      foodName.includes('견과류') ||
+      foodName.includes('그릭요거트')
+    ) {
+      score += 2;
+    }
+
+    // 5. 괜찮은 식품 (+1점)
+    if (
+      foodName.includes('김치') ||
+      foodName.includes('된장국') ||
+      foodName.includes('미역국') ||
+      foodName.includes('바나나') ||
+      foodName.includes('사과') ||
+      foodName.includes('배') ||
+      foodName.includes('귤') ||
+      foodName.includes('요거트') ||
+      foodName.includes('닭안심')
+    ) {
+      score += 1;
+    }
+
+    // 6. 일반 식사류 (-1점)
+    if (
+      foodName.includes('김치찌개') ||
+      foodName.includes('된장찌개') ||
+      foodName.includes('제육볶음') ||
+      foodName.includes('찜닭') ||
+      foodName.includes('비빔밥') ||
+      foodName.includes('불고기') ||
+      foodName.includes('순두부찌개') ||
+      foodName.includes('짜장면') ||
+      foodName.includes('짬뽕') ||
+      foodName.includes('볶음밥') ||
+      foodName.includes('김밥') ||
+      foodName.includes('덮밥')
+    ) {
+      score -= 1;
+    }
+
+    // 7. 고칼로리/기름진 식사 (-2점)
+    if (
+      foodName.includes('돈까스') ||
+      foodName.includes('탕수육') ||
+      foodName.includes('동까스') ||
+      foodName.includes('돈가스') ||
+      foodName.includes('깐풍기') ||
+      foodName.includes('튀김') ||
+      foodName.includes('마라탕') ||
+      foodName.includes('마라샹궈') ||
+      foodName.includes('부대찌개') ||
+      foodName.includes('라면') ||
+      foodName.includes('우동')
+    ) {
+      score -= 2;
+    }
+
+    // 8. 패스트푸드 (-3점)
+    if (
+      foodName.includes('피자') ||
+      foodName.includes('버거') ||
+      foodName.includes('후라이드치킨') ||
+      foodName.includes('양념치킨') ||
+      foodName.includes('치킨') ||
+      foodName.includes('맥도날드') ||
+      foodName.includes('롯데리아') ||
+      foodName.includes('버거킹') ||
+      foodName.includes('KFC') ||
+      foodName.includes('떡볶이')
+    ) {
+      score -= 3;
+    }
+
+    // 9. 디저트/간식류 (-2점)
     if (
       foodName.includes('케이크') ||
       foodName.includes('아이스크림') ||
       foodName.includes('과자') ||
+      foodName.includes('쿠키') ||
+      foodName.includes('초콜릿') ||
+      foodName.includes('사탕') ||
+      foodName.includes('젤리') ||
       foodName.includes('빵') ||
-      foodName.includes('쿠키')
+      foodName.includes('도넛') ||
+      foodName.includes('타르트') ||
+      foodName.includes('마카롱') ||
+      foodName.includes('와플')
     ) {
-      score -= 1; // 디저트는 1점 감점
+      score -= 2;
     }
 
-    // 패스트푸드 페널티
-    if (foodName.includes('피자') || foodName.includes('버거') || foodName.includes('치킨')) {
-      score -= 1; // 패스트푸드는 1점 감점
+    // 10. 음료류
+    // 매우 나쁜 음료 (-3점)
+    if (
+      foodName.includes('콜라') ||
+      foodName.includes('사이다') ||
+      foodName.includes('환타') ||
+      foodName.includes('밀크쉐이크') ||
+      foodName.includes('슬러시')
+    ) {
+      score -= 3;
+    }
+    // 나쁜 음료 (-2점)
+    else if (
+      foodName.includes('쥬스') ||
+      foodName.includes('주스') ||
+      (foodName.includes('스무디') && !foodName.includes('프로틴')) ||
+      foodName.includes('에이드') ||
+      foodName.includes('카페라떼') ||
+      foodName.includes('카푸치노')
+    ) {
+      score -= 2;
+    }
+    // 적당한 음료 (-1점)
+    else if (foodName.includes('커피') || foodName.includes('아메리카노')) {
+      score -= 1;
+    }
+    // 좋은 음료 (+1점)
+    else if (
+      foodName.includes('물') ||
+      foodName.includes('녹차') ||
+      foodName.includes('보리차') ||
+      foodName.includes('수박주스') ||
+      foodName.includes('토마토주스') ||
+      foodName.includes('식혜')
+    ) {
+      score += 1;
     }
 
-    return Math.min(Math.max(1, score), 10); // 최소 1점, 최대 10점
+    return Math.min(Math.max(1, score), 10);
   };
   // 아이템수 지정된 경우 화면이동 버튼 관련 함수
   const displayLogs = maxItems ? foodLogs.slice(0, maxItems) : foodLogs;

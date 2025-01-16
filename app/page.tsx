@@ -1,4 +1,5 @@
 //thisisstart-01161725
+//app/page.tsx
 
 import { createSupabaseServerClient, getUser } from '@/lib/supabse/server';
 import { redirect } from 'next/navigation';
