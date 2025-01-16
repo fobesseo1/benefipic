@@ -10,6 +10,7 @@ import { InstallPWA } from '@/components/InstallPWA';
 import AnalyticsTracker from './components/analyticsTracker/AnalyticsTracker';
 import MobileDetector from './MobileDetector';
 import BrowserRedirect from './components/BrowserRedirect';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -88,6 +89,7 @@ export default async function RootLayout({
           <BrowserRedirect />
         </MobileDetector>
         <AnalyticsTracker currentUser={currentUser} />
+        <SpeedInsights />
       </body>
     </html>
   );

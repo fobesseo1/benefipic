@@ -146,7 +146,7 @@ export const FoodLogCard = ({
   }
 
   // 점수 계산 함수 추가
-  const calculateHealthScore = (foodLog: FoodLog, dailyCalorieGoal: number) => {
+  const calculateHealthScore = (foodLog: FoodLog) => {
     let score = 5; // 기본 점수
 
     // 1. 칼로리 점수 (최대 2점 / 최소 -2점)
@@ -389,7 +389,7 @@ export const FoodLogCard = ({
                     <span>:</span>
                   </div>
                   <p className={`font-bold text-2xl text-rose-600`}>
-                    {calculateHealthScore(log, dailyCalorieGoal)}
+                    {calculateHealthScore(log)}
                     <span className="text-xs text-gray-600"> /10</span>
                   </p>
                 </div>
