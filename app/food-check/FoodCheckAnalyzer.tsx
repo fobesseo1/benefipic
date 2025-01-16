@@ -38,6 +38,7 @@ import FoodImageFilter from '../components/shared/ui/FoodImageFilter';
 import AnalysisProgress from './AnalysisProgress';
 import FoodDetectionAlert from '../food/FoodDetectionAlert';
 import FoodCheckAlert from './FoodCheckAlert';
+import NavigationButtonSectionFoodCheck from './../components/shared/ui/NavigationButtonSectionFoodCheck';
 
 // 타입 정의
 type AnalysisStep =
@@ -813,7 +814,7 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       </div>
 
       {/* Navigation Section */}
-      <NavigationButtonSection
+      <NavigationButtonSectionFoodCheck
         step={step}
         setStep={setStep}
         setSelectedImage={setSelectedImage}
