@@ -144,7 +144,9 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       foodName.includes('펩시') ||
       foodName.includes('사이다') ||
       foodName.includes('주스') ||
-      foodName.includes('음료')
+      foodName.includes('음료') ||
+      foodName.includes('커피') ||
+      foodName.includes('아메리카노')
     ) {
       score -= 2;
     }
@@ -490,7 +492,7 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
               },
               {
                 role: 'user',
-                content: `현재 음식: ${processedData.foodName}의 더 건강한 대체 음식을 추천해주세요.
+                content: `현재 음식: ${processedData.foodName}의 더 건강한 대체 음식을 추천해주세요 대체 음식은 한국에서 쉽게 구할수 있는 음식이었으면 좋겠어 그러나 이게 반드시 한식을 추천해달라는건 아님을 명심해.
                   영양정보:
                   - 칼로리: ${processedData.nutrition.calories}kcal
                   - 단백질: ${processedData.nutrition.protein}g
