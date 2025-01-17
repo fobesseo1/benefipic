@@ -50,7 +50,7 @@ export const compressImage = (file: File, quality: number = 0.7): Promise<File> 
         let height = img.height;
 
         // 최대 크기 제한
-        const maxDimension = 512;
+        const maxDimension = 1024;
         if (width > maxDimension || height > maxDimension) {
           if (width > height) {
             height = Math.round((height * maxDimension) / width);
