@@ -141,7 +141,7 @@ export class HealthCalculator {
         message: '추천 목표',
         messageGrid: {
           title: '체중 유지',
-          content1: 'Good',
+          content1: '아주 좋아요😍',
         },
         weightDiff,
       };
@@ -160,10 +160,14 @@ export class HealthCalculator {
         iconType: 'up',
         message: '추천 목표',
         messageGrid: {
-          title: `${recommendedDuration}주간`,
-          content1: `+${weightDiff}`,
-          content2: `kg`,
+          title: '체중 증량',
+          content1: '조금 찝시다😅',
         },
+        // messageGrid: {
+        //   title: `${recommendedDuration}주간`,
+        //   content1: `+${weightDiff}`,
+        //   content2: `kg`,
+        // },
         weightDiff,
       };
     }
@@ -199,10 +203,14 @@ export class HealthCalculator {
       iconType: 'down',
       message: '추천 목표',
       messageGrid: {
-        title: '12주간',
-        content1: `-${weightDiff}`,
-        content2: 'kg',
+        title: '체중 감량',
+        content1: '조금 뺍시다😅',
       },
+      // messageGrid: {
+      //   title: '12주간',
+      //   content1: `-${weightDiff}`,
+      //   content2: 'kg',
+      // },
       weightDiff,
     };
   }

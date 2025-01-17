@@ -25,6 +25,50 @@ export const InitialStageView: React.FC<InitialStageViewProps> = ({
     very_active: '매우 활발한 활동',
   };
 
+  // 목표 텍스트 생성 함수
+  const getGoalParts = (recommendedGoal: RecommendedGoal) => {
+    let duration = {
+      value: recommendedGoal.duration,
+      unit: '주간',
+    };
+
+    let change = {
+      prefix: '',
+      value: 0,
+      unit: 'kg',
+      type: '',
+    };
+
+    switch (recommendedGoal.recommendedGoal) {
+      case 'maintain':
+        change = {
+          prefix: '',
+          value: recommendedGoal.targetWeight,
+          unit: 'kg',
+          type: '유지',
+        };
+        break;
+      case 'gain':
+        change = {
+          prefix: '+',
+          value: recommendedGoal.weightDiff,
+          unit: 'kg',
+          type: '증량',
+        };
+        break;
+      case 'lose':
+        change = {
+          prefix: '-',
+          value: Math.abs(recommendedGoal.weightDiff),
+          unit: 'kg',
+          type: '감량',
+        };
+        break;
+    }
+
+    return { duration, change };
+  };
+
   return (
     <div className="space-y-6">
       {/* 권장 목표 표시 */}
@@ -37,13 +81,45 @@ export const InitialStageView: React.FC<InitialStageViewProps> = ({
 
           {/* 그리드 레이아웃의 메시지 */}
           <div className="flex flex-col items-center justify-center gap-2 px-2 py-12 bg-gray-50 rounded-xl">
-            <div className="flex flex-col">
-              <p className="font-medium text-gray-600">{recommendedGoal.messageGrid.title}</p>
-              <div className="text-8xl gap-2 flex items-end">
-                <p className="tracking-tighter">{recommendedGoal.messageGrid.content1}</p>
-                {recommendedGoal.messageGrid.content2 && (
-                  <p className="text-4xl">{recommendedGoal.messageGrid.content2}</p>
-                )}
+            <div className="flex flex-col gap-4">
+              <div className="flex-flex-col">
+                <p className="font-medium text-gray-600 mb-2">
+                  {recommendedGoal.messageGrid.title}
+                </p>
+                <div className="text-4xl gap-2 flex items-end font-bold">
+                  <p className="tracking-tighter">{recommendedGoal.messageGrid.content1}</p>
+                  {recommendedGoal.messageGrid.content2 && (
+                    <p className="text-4xl">{recommendedGoal.messageGrid.content2}</p>
+                  )}
+                </div>
+              </div>
+              <hr className=" border-gray-400" />
+              <div className="flex flex-col">
+                {/* <p className="font-medium text-gray-600 mb-2">추천 목표</p> */}
+                <div className="flex items-baseline justify-between gap-x-4 ">
+                  <div className="flex items-baseline">
+                    <span className="text-3xl font-bold tracking-tighter text-gray-900">
+                      {getGoalParts(recommendedGoal).duration.value}
+                    </span>
+                    <span className="text-xl text-gray-600">
+                      {getGoalParts(recommendedGoal).duration.unit}
+                    </span>
+                    <p className="text-xl text-gray-600">&gt;</p>
+                  </div>
+
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-6xl font-bold tracking-tighter text-gray-900">
+                      {getGoalParts(recommendedGoal).change.prefix}
+                      {getGoalParts(recommendedGoal).change.value}
+                    </span>
+                    <span className="text-xl text-gray-600 ">
+                      {getGoalParts(recommendedGoal).change.unit}
+                    </span>
+                    <p className="text-xl text-gray-600  ">
+                      {getGoalParts(recommendedGoal).change.type}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

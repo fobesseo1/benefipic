@@ -22,6 +22,15 @@ const OnboardingScreen = ({ defaultSlide }: { defaultSlide: number }) => {
     }
   }, [defaultSlide]);
 
+  // const slides: Slide[] = [
+  //   {
+  //     title: '찍기만 하면 끝!',
+  //     subtitle: `사진 한 장으로 완성되는\n건강 관리의 모든 것`,
+  //     bulletPoints: ['사진만 찍으면', 'AI가 알아서 분석, 저장'],
+  //     icon: <Camera className="w-9 h-9" />,
+  //     image: '/start/start-1.jpg',
+  //   },
+  // ];
   const slides: Slide[] = [
     {
       title: '찍기만 하면 끝!',
