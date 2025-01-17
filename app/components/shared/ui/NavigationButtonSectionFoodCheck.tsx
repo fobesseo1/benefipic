@@ -79,29 +79,41 @@ export default function NavigationButtonSectionFoodCheck({
     }
   };
 
-  const takePicture = () => {
-    if (videoRef.current) {
+  const takePicture = async () => {
+    if (!videoRef.current) return;
+
+    try {
       const canvas = document.createElement('canvas');
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
-
       const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0);
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
-            setSelectedImage(file);
-            setImageUrl(URL.createObjectURL(file));
-            setStep('image-selected');
 
-            if (stream && setStream) {
-              stream.getTracks().forEach((track) => track.stop());
-              setStream(null);
-            }
-          }
+      if (!ctx) return;
+
+      ctx.drawImage(videoRef.current, 0, 0);
+
+      // blob 생성을 Promise로 래핑
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((b) => {
+          if (b) resolve(b);
+          else reject(new Error('Failed to create blob'));
         }, 'image/jpeg');
+      });
+
+      const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+
+      // 상태 업데이트를 한번에 처리
+      setSelectedImage(file);
+      setImageUrl(URL.createObjectURL(file));
+      setStep('image-selected');
+
+      // 스트림 정리는 상태 업데이트 후에
+      if (stream && setStream) {
+        stream.getTracks().forEach((track) => track.stop());
+        setStream(null);
       }
+    } catch (error) {
+      console.error('Camera capture failed:', error);
     }
   };
 
