@@ -1,11 +1,35 @@
 // utils/image.ts
 
+interface DualQualityResult {
+  displayImage: File; // 고품질 (UI, 필터, Storage용)
+  analysisImage: File; // 저품질 (API 분석용)
+}
+
+export const createDualQualityImages = async (file: File): Promise<DualQualityResult> => {
+  try {
+    // 고품질 버전 생성 (UI, 필터, Storage용)
+    const displayImage = await compressImage(file, 1.0);
+
+    // 저품질 버전 생성 (API 분석용)
+    const analysisImage = await compressImage(file, 0.7);
+
+    return { displayImage, analysisImage };
+  } catch (error) {
+    console.error('이미지 압축 실패:', error);
+    // 실패시 원본 파일로 둘 다 설정
+    return {
+      displayImage: file,
+      analysisImage: file,
+    };
+  }
+};
+
 /**
  * 이미지 파일을 압축하는 함수
  * @param file 압축할 이미지 파일
  * @returns 압축된 이미지 파일을 포함한 Promise
  */
-export const compressImage = (file: File): Promise<File> => {
+export const compressImage = (file: File, quality: number = 0.7): Promise<File> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -55,6 +79,7 @@ export const compressImage = (file: File): Promise<File> => {
                 width: width,
                 height: height,
                 size: (compressedFile.size / 1024).toFixed(2) + 'KB',
+                quality: quality,
               });
 
               resolve(compressedFile);
@@ -63,7 +88,7 @@ export const compressImage = (file: File): Promise<File> => {
             }
           },
           'image/jpeg',
-          0.7 // 압축 품질 (0-1)
+          quality // 파라미터로 받은 quality 사용
         );
       };
 

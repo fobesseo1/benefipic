@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { compressImage } from '@/utils/image';
+import { compressImage, createDualQualityImages } from '@/utils/image';
 
 interface NavigationButtonSectionProps {
   step:
@@ -35,6 +35,7 @@ interface NavigationButtonSectionProps {
       | 'complete'
   ) => void;
   setSelectedImage: (file: File | null) => void;
+  setAnalysisImage: (file: File | null) => void;
   setImageUrl: (url: string) => void;
   onAnalyze: () => Promise<void>;
   onSave?: () => Promise<void>;
@@ -48,6 +49,7 @@ export default function NavigationButtonSectionFood({
   step,
   setStep,
   setSelectedImage,
+  setAnalysisImage,
   setImageUrl,
   onAnalyze,
   stream,
@@ -62,13 +64,19 @@ export default function NavigationButtonSectionFood({
     const file = event.target.files?.[0];
     if (file) {
       try {
-        const compressedFile = await compressImage(file);
-        setSelectedImage(compressedFile);
-        setImageUrl(URL.createObjectURL(compressedFile));
+        const { displayImage, analysisImage } = await createDualQualityImages(file);
+        
+        // 두 버전 모두 저장
+        setSelectedImage(displayImage);
+        setAnalysisImage(analysisImage);
+        
+        // UI에는 고품질 이미지 표시
+        setImageUrl(URL.createObjectURL(displayImage));
         setStep('image-selected');
         setDialogOpen(false);
       } catch (error) {
         console.error('이미지 처리 오류:', error);
+        // 에러 발생시 원본 이미지 사용
         setSelectedImage(file);
         setImageUrl(URL.createObjectURL(file));
         setStep('image-selected');
