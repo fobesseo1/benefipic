@@ -65,11 +65,11 @@ export default function NavigationButtonSectionFood({
     if (file) {
       try {
         const { displayImage, analysisImage } = await createDualQualityImages(file);
-        
+
         // 두 버전 모두 저장
         setSelectedImage(displayImage);
         setAnalysisImage(analysisImage);
-        
+
         // UI에는 고품질 이미지 표시
         setImageUrl(URL.createObjectURL(displayImage));
         setStep('image-selected');
@@ -98,7 +98,6 @@ export default function NavigationButtonSectionFood({
 
       ctx.drawImage(videoRef.current, 0, 0);
 
-      // blob 생성을 Promise로 래핑
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((b) => {
           if (b) resolve(b);
@@ -108,12 +107,14 @@ export default function NavigationButtonSectionFood({
 
       const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
 
-      // 상태 업데이트를 한번에 처리
-      setSelectedImage(file);
-      setImageUrl(URL.createObjectURL(file));
+      // 여기서 createDualQualityImages 사용
+      const { displayImage, analysisImage } = await createDualQualityImages(file);
+
+      setSelectedImage(displayImage);
+      setAnalysisImage(analysisImage);
+      setImageUrl(URL.createObjectURL(displayImage));
       setStep('image-selected');
 
-      // 스트림 정리는 상태 업데이트 후에
       if (stream && setStream) {
         stream.getTracks().forEach((track) => track.stop());
         setStream(null);
