@@ -29,13 +29,12 @@ interface NavigationButtonSectionProps {
     | 'complete';
   setStep: (step: NavigationButtonSectionProps['step']) => void;
   setSelectedImage: (file: File | null) => void;
-  setDisplayImage: (file: File | null) => void;
   setAnalysisImage: (file: File | null) => void;
-  setFilteredDisplayImage: (file: File | null) => void;
   setImageUrl: (url: string) => void;
   onAnalyze: () => Promise<void>;
   onSave?: () => Promise<void>;
   resetAnalyzer?: () => void;
+  setDisplayImage: (file: File | null) => void;
 }
 
 export default function NavigationButtonSection({
@@ -44,7 +43,6 @@ export default function NavigationButtonSection({
   setSelectedImage,
   setAnalysisImage,
   setDisplayImage,
-  setFilteredDisplayImage,
   setImageUrl,
   onAnalyze,
   onSave,
@@ -62,10 +60,9 @@ export default function NavigationButtonSection({
       const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
 
       const { displayImage, analysisImage } = await createDualQualityImages(file);
-
+      setDisplayImage(displayImage);
       setSelectedImage(displayImage);
       setAnalysisImage(analysisImage);
-      setFilteredDisplayImage(null);
       setImageUrl(URL.createObjectURL(displayImage));
       setStep('image-selected');
       setDialogOpen(false);
@@ -100,14 +97,18 @@ export default function NavigationButtonSection({
         try {
           const { displayImage, analysisImage } = await createDualQualityImages(file);
 
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setImageUrl(e.target?.result as string);
+            setIsLoading(false);
+          };
+          reader.readAsDataURL(displayImage);
           setDisplayImage(displayImage);
+          setSelectedImage(displayImage);
           setAnalysisImage(analysisImage);
-          setFilteredDisplayImage(null); // 필터 초기화
-          setImageUrl(URL.createObjectURL(displayImage));
           setStep('image-selected');
           setDialogOpen(false);
           setGalleryOpen(false);
-          setIsLoading(false);
         } catch (error) {
           console.error('이미지 처리 오류:', error);
           setIsLoading(false);
@@ -147,29 +148,16 @@ export default function NavigationButtonSection({
           {step === 'image-selected' ? (
             <div className="flex flex-col gap-4 pt-8 pb-48">
               <button
-                onClick={() => setStep('filter-selection')}
-                className="w-full bg-black text-white rounded-xl py-2 text-lg font-medium flex flex-col items-center justify-center"
-              >
-                <p>다음으로</p>
-                <p className="text-xs tracking-tighter">(음식과 어울리는 이미지 필터 선택하기)</p>
-              </button>
-              <button
-                onClick={resetAnalyzer}
-                className="w-full bg-gray-200 text-gray-600 rounded-xl py-4 text-lg font-medium"
-              >
-                돌아가기
-              </button>
-            </div>
-          ) : step === 'filter-selection' ? (
-            <div className="flex flex-col gap-4 pt-8 pb-48">
-              <button
-                onClick={onAnalyze}
-                className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
+                onClick={() => {
+                  setStep('analyzing');
+                  onAnalyze(); // 추가
+                }}
+                className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium flex flex-col items-center justify-center"
               >
                 분석하기
               </button>
               <button
-                onClick={() => setStep('image-selected')}
+                onClick={resetAnalyzer}
                 className="w-full bg-gray-200 text-gray-600 rounded-xl py-4 text-lg font-medium"
               >
                 돌아가기
