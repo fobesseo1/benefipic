@@ -4,6 +4,7 @@ import MainComponent from './MainComponent';
 import { getUser, createSupabaseServerClient } from '@/lib/supabse/server';
 import { redirect } from 'next/navigation';
 import NoLoginUserAlert from '../components/shared/ui/NoLoginUserAlert';
+import MetaInAppAlert from './MetaInAppAlert';
 
 export default async function MainPage() {
   const currentUser = await getUser();
@@ -41,6 +42,7 @@ export default async function MainPage() {
 
   return (
     <Suspense>
+      <MetaInAppAlert />
       <MainComponent user_id={currentUser_id} />
     </Suspense>
   );
