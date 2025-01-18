@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Camera as CameraIcon, ImageIcon, RefreshCw, X } from 'lucide-react';
-import { Camera } from 'react-camera-pro';
+
 import ImageUploading, { ImageListType } from 'react-images-uploading';
 import {
   Dialog,
@@ -12,6 +12,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { createDualQualityImages } from '@/utils/image';
+import Camera, { FACING_MODES, IMAGE_TYPES } from 'react-html5-camera-photo';
+import 'react-html5-camera-photo/build/css/index.css';
 
 interface NavigationButtonSectionProps {
   step:
@@ -95,38 +97,43 @@ export default function NavigationButtonSection({
   };
 
   // 카메라 뷰 컴포넌트
-  const CameraView = () => (
-    <div className="relative w-full h-[70vh]">
-      <Camera
-        ref={camera}
-        numberOfCamerasCallback={setNumberOfCameras}
-        facingMode="environment"
-        errorMessages={{
-          noCameraAccessible: '카메라에 접근할 수 없습니다. 카메라 연결을 확인해주세요.',
-          permissionDenied: '카메라 권한이 거부되었습니다. 설정에서 권한을 허용해주세요.',
-          switchCamera: '카메라를 전환할 수 없습니다.',
-          canvas: '캔버스를 지원하지 않는 브라우저입니다.',
-        }}
-      />
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-        <button
-          onClick={takePicture}
-          className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center"
-        >
-          <CameraIcon className="w-8 h-8" />
-        </button>
-        {numberOfCameras > 1 && (
-          <button
-            onClick={handleSwitchCamera}
-            className="w-12 h-12 rounded-full bg-white/80 shadow-lg flex items-center justify-center"
-          >
-            <RefreshCw className="w-6 h-6" />
-          </button>
-        )}
-      </div>
-    </div>
-  );
+  const CameraView = () => {
+    const handleTakePhoto = async (dataUri: string) => {
+      try {
+        // Base64 문자열을 File 객체로 변환
+        const response = await fetch(dataUri);
+        const blob = await response.blob();
+        const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
 
+        // 듀얼 퀄리티 이미지 생성
+        const { displayImage, analysisImage } = await createDualQualityImages(file);
+
+        setSelectedImage(displayImage);
+        setAnalysisImage(analysisImage);
+        setImageUrl(URL.createObjectURL(displayImage));
+        setStep('image-selected');
+        setDialogOpen(false);
+      } catch (error) {
+        console.error('Camera capture failed:', error);
+      }
+    };
+
+    return (
+      <div className="relative w-full h-[70vh]">
+        <Camera
+          onTakePhoto={handleTakePhoto}
+          idealFacingMode={FACING_MODES.ENVIRONMENT}
+          imageType={IMAGE_TYPES.JPG}
+          imageCompression={0.97}
+          isImageMirror={false}
+          isSilentMode={false}
+          isDisplayStartCameraError={true}
+          isFullscreen={false}
+          sizeFactor={1}
+        />
+      </div>
+    );
+  };
   // 갤러리 뷰 컴포넌트
   const GalleryView = () => (
     <ImageUploading value={[]} onChange={handleGallerySelect} maxNumber={1} dataURLKey="data_url">
