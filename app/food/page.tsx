@@ -1,6 +1,5 @@
 import { getUser } from '@/lib/supabse/server';
 import FoodAnalyzer from './FoodAnalyzer';
-import FoodAnalyzerNoFilter from './FoodAnalyzerNoFilter';
 import NoLoginUserAlert from '../components/shared/ui/NoLoginUserAlert';
 
 export default async function FoodPage() {
