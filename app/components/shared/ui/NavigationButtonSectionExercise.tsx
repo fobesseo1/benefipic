@@ -34,7 +34,7 @@ interface NavigationButtonSectionExerciseProps {
   setDisplayImage: (file: File | null) => void;
 }
 
-type FacingModeType = (typeof FACING_MODES)[keyof typeof FACING_MODES];
+export type FacingModeType = (typeof FACING_MODES)[keyof typeof FACING_MODES];
 
 export default function NavigationButtonSectionExercise({
   step,
@@ -71,10 +71,6 @@ export default function NavigationButtonSectionExercise({
     } catch (error) {
       console.error('Camera capture failed:', error);
     }
-  };
-
-  const handleCameraError = (error: Error) => {
-    console.error('Camera Error:', error);
   };
 
   const toggleCamera = useCallback(() => {

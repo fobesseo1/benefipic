@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Camera as CameraIcon, ImageIcon, MousePointerClick, X } from 'lucide-react';
+import { Camera as CameraIcon, ImageIcon, MousePointerClick, RefreshCcw, X } from 'lucide-react';
 import Camera, { FACING_MODES, IMAGE_TYPES } from 'react-html5-camera-photo';
 import { useDropzone } from 'react-dropzone';
 import {
@@ -14,6 +14,7 @@ import {
 import { createDualQualityImages } from '@/utils/image';
 import 'react-html5-camera-photo/build/css/index.css';
 import { useRouter } from 'next/navigation';
+import { FacingModeType } from './NavigationButtonSectionExercise';
 
 interface NavigationButtonSectionProps {
   step:
@@ -60,6 +61,9 @@ export default function NavigationButtonSectionMenu({
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const [currentFacingMode, setCurrentFacingMode] = useState<FacingModeType>(
+    FACING_MODES.ENVIRONMENT
+  );
 
   const handleTakePhoto = async (dataUri: string) => {
     try {
@@ -79,19 +83,33 @@ export default function NavigationButtonSectionMenu({
     }
   };
 
+  const toggleCamera = useCallback(() => {
+    setCurrentFacingMode((prevMode) =>
+      prevMode === FACING_MODES.USER ? FACING_MODES.ENVIRONMENT : FACING_MODES.USER
+    );
+  }, []);
+
+  // 카메라 뷰 컴포넌트
   const CameraView = () => (
     <div className="relative w-full h-[70vh]">
       <Camera
         onTakePhoto={handleTakePhoto}
-        idealFacingMode={FACING_MODES.ENVIRONMENT}
+        idealFacingMode={currentFacingMode}
         imageType={IMAGE_TYPES.JPG}
         imageCompression={0.97}
-        isImageMirror={false}
+        isImageMirror={currentFacingMode === FACING_MODES.USER}
         isSilentMode={false}
         isDisplayStartCameraError={true}
         isFullscreen={false}
         sizeFactor={1}
       />
+      <div
+        onClick={toggleCamera}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 p-4 px-6 bg-gray-200 rounded-full flex items-center justify-center gap-2"
+      >
+        <RefreshCcw className="w-6 h-6 " />
+        <p>카메라 전환</p>
+      </div>
     </div>
   );
 
