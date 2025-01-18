@@ -46,6 +46,7 @@ export default function NavigationButtonSection({
 }: NavigationButtonSectionProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // 카메라 촬영 핸들러
   const handleTakePhoto = async (dataUri: string) => {
@@ -87,27 +88,27 @@ export default function NavigationButtonSection({
   const GalleryView = () => {
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
+        setIsLoading(true);
         const file = acceptedFiles[0];
-        const reader = new FileReader();
+        try {
+          const { displayImage, analysisImage } = await createDualQualityImages(file);
 
-        reader.onload = async (e: ProgressEvent<FileReader>) => {
-          try {
-            const { displayImage, analysisImage } = await createDualQualityImages(file);
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setImageUrl(e.target?.result as string);
+            setIsLoading(false);
+          };
+          reader.readAsDataURL(displayImage);
 
-            if (e.target?.result && typeof e.target.result === 'string') {
-              setSelectedImage(displayImage);
-              setAnalysisImage(analysisImage);
-              setImageUrl(e.target.result);
-              setStep('image-selected');
-              setDialogOpen(false);
-              setGalleryOpen(false);
-            }
-          } catch (error) {
-            console.error('이미지 처리 오류:', error);
-          }
-        };
-
-        reader.readAsDataURL(file);
+          setSelectedImage(displayImage);
+          setAnalysisImage(analysisImage);
+          setStep('image-selected');
+          setDialogOpen(false);
+          setGalleryOpen(false);
+        } catch (error) {
+          console.error('이미지 처리 오류:', error);
+          setIsLoading(false);
+        }
       }
     }, []);
 
