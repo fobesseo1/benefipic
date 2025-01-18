@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Camera, ImageIcon } from 'lucide-react';
+import { Camera as CameraIcon, ImageIcon, RefreshCw, X } from 'lucide-react';
+import { Camera } from 'react-camera-pro';
+import ImageUploading, { ImageListType } from 'react-images-uploading';
 import {
   Dialog,
   DialogContent,
@@ -9,133 +11,148 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { compressImage, createDualQualityImages } from '@/utils/image';
+import { createDualQualityImages } from '@/utils/image';
 
 interface NavigationButtonSectionProps {
   step:
     | 'initial'
     | 'camera'
     | 'image-selected'
-    | 'filter-selection' // 여기에 추가
+    | 'filter-selection'
     | 'compress'
     | 'analyzing'
     | 'calculate'
     | 'health-check'
     | 'complete';
-  setStep: (
-    step:
-      | 'initial'
-      | 'camera'
-      | 'image-selected'
-      | 'filter-selection' // 여기에도 추가
-      | 'compress'
-      | 'analyzing'
-      | 'calculate'
-      | 'health-check'
-      | 'complete'
-  ) => void;
+  setStep: (step: NavigationButtonSectionProps['step']) => void;
   setSelectedImage: (file: File | null) => void;
   setAnalysisImage: (file: File | null) => void;
   setImageUrl: (url: string) => void;
   onAnalyze: () => Promise<void>;
   onSave?: () => Promise<void>;
-  resetAnalyzer?: () => void; // 추가
-  stream?: MediaStream | null;
-  setStream?: (stream: MediaStream | null) => void;
-  videoRef: React.RefObject<HTMLVideoElement>;
+  resetAnalyzer?: () => void;
 }
 
-export default function NavigationButtonSectionFood({
+export default function NavigationButtonSection({
   step,
   setStep,
   setSelectedImage,
   setAnalysisImage,
   setImageUrl,
   onAnalyze,
-  stream,
-  setStream,
-  videoRef,
   onSave,
   resetAnalyzer,
 }: NavigationButtonSectionProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [numberOfCameras, setNumberOfCameras] = useState(0);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const camera = useRef<any>(null);
 
-  const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
+  // 갤러리 이미지 선택 핸들러
+  const handleGallerySelect = async (imageList: ImageListType) => {
+    if (imageList.length > 0 && imageList[0].file) {
       try {
-        const { displayImage, analysisImage } = await createDualQualityImages(file);
-
-        // 두 버전 모두 저장
+        const { displayImage, analysisImage } = await createDualQualityImages(imageList[0].file);
         setSelectedImage(displayImage);
         setAnalysisImage(analysisImage);
-
-        // UI에는 고품질 이미지 표시
         setImageUrl(URL.createObjectURL(displayImage));
         setStep('image-selected');
         setDialogOpen(false);
+        setGalleryOpen(false);
       } catch (error) {
         console.error('이미지 처리 오류:', error);
-        // 에러 발생시 원본 이미지 사용
-        setSelectedImage(file);
-        setImageUrl(URL.createObjectURL(file));
-        setStep('image-selected');
-        setDialogOpen(false);
       }
     }
   };
 
+  // 사진 촬영 핸들러
   const takePicture = async () => {
-    if (!videoRef.current) return;
-
     try {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      const ctx = canvas.getContext('2d');
+      if (!camera.current) return;
 
-      if (!ctx) return;
-
-      ctx.drawImage(videoRef.current, 0, 0);
-
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((b) => {
-          if (b) resolve(b);
-          else reject(new Error('Failed to create blob'));
-        }, 'image/jpeg');
-      });
-
+      const photoData = camera.current.takePhoto();
+      const response = await fetch(photoData);
+      const blob = await response.blob();
       const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
 
-      // 여기서 createDualQualityImages 사용
       const { displayImage, analysisImage } = await createDualQualityImages(file);
 
       setSelectedImage(displayImage);
       setAnalysisImage(analysisImage);
       setImageUrl(URL.createObjectURL(displayImage));
       setStep('image-selected');
-
-      if (stream && setStream) {
-        stream.getTracks().forEach((track) => track.stop());
-        setStream(null);
-      }
+      setDialogOpen(false);
     } catch (error) {
       console.error('Camera capture failed:', error);
     }
   };
 
+  // 카메라 전환 핸들러
+  const handleSwitchCamera = () => {
+    if (camera.current && numberOfCameras > 1) {
+      camera.current.switchCamera();
+    }
+  };
+
+  // 카메라 뷰 컴포넌트
+  const CameraView = () => (
+    <div className="relative w-full h-[70vh]">
+      <Camera
+        ref={camera}
+        numberOfCamerasCallback={setNumberOfCameras}
+        facingMode="environment"
+        errorMessages={{
+          noCameraAccessible: '카메라에 접근할 수 없습니다. 카메라 연결을 확인해주세요.',
+          permissionDenied: '카메라 권한이 거부되었습니다. 설정에서 권한을 허용해주세요.',
+          switchCamera: '카메라를 전환할 수 없습니다.',
+          canvas: '캔버스를 지원하지 않는 브라우저입니다.',
+        }}
+      />
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+        <button
+          onClick={takePicture}
+          className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center"
+        >
+          <CameraIcon className="w-8 h-8" />
+        </button>
+        {numberOfCameras > 1 && (
+          <button
+            onClick={handleSwitchCamera}
+            className="w-12 h-12 rounded-full bg-white/80 shadow-lg flex items-center justify-center"
+          >
+            <RefreshCw className="w-6 h-6" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  // 갤러리 뷰 컴포넌트
+  const GalleryView = () => (
+    <ImageUploading value={[]} onChange={handleGallerySelect} maxNumber={1} dataURLKey="data_url">
+      {({ onImageUpload, dragProps }) => (
+        <div
+          onClick={onImageUpload}
+          {...dragProps}
+          className="w-full h-[40vh] border-2 border-dashed border-gray-300 rounded-xl 
+                     flex flex-col items-center justify-center gap-4 cursor-pointer
+                     hover:border-gray-400 transition-colors"
+        >
+          <ImageIcon className="w-12 h-12 text-gray-400" />
+          <div className="text-center">
+            <p className="font-medium">이미지를 선택하거나</p>
+            <p className="text-gray-500">여기로 드래그하세요</p>
+          </div>
+        </div>
+      )}
+    </ImageUploading>
+  );
+
   return (
     <>
       {step === 'compress' || step === 'analyzing' || step === 'calculate' ? null : (
         <div className="absolute bottom-0 w-full px-6 pb-8 bg-white">
-          {step === 'camera' ? (
-            <button
-              onClick={takePicture}
-              className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium"
-            >
-              사진 촬영하기
-            </button>
-          ) : step === 'image-selected' ? (
+          {step === 'image-selected' ? (
             <div className="flex flex-col gap-4 pt-8 pb-48">
               <button
                 onClick={() => setStep('filter-selection')}
@@ -185,41 +202,40 @@ export default function NavigationButtonSectionFood({
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <button className="w-full bg-black text-white rounded-xl py-4 text-lg font-medium flex items-center justify-center gap-4">
-                  <Camera className="w-8 h-8" />
+                  <CameraIcon className="w-8 h-8" />
                   <p>촬영하기 / 불러오기</p>
                 </button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-hidden">
                 <DialogHeader>
                   <DialogTitle>촬영하기 / 불러오기</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 p-4">
-                  <label className="block">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handleImageSelect}
-                      className="hidden"
-                    />
-                    <div className="w-full p-4 bg-black text-white rounded-xl flex items-center justify-center gap-2 cursor-pointer">
-                      <Camera className="w-5 h-5" />
-                      <span>카메라로 촬영하기</span>
-                    </div>
-                  </label>
-
-                  <label className="block">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageSelect}
-                      className="hidden"
-                    />
-                    <div className="w-full p-4 bg-gray-100 text-gray-900 rounded-xl flex items-center justify-center gap-2 cursor-pointer">
-                      <ImageIcon className="w-5 h-5" />
-                      <span>갤러리에서 선택하기</span>
-                    </div>
-                  </label>
+                <div className="space-y-4">
+                  {!galleryOpen ? (
+                    <>
+                      <CameraView />
+                      <button
+                        onClick={() => setGalleryOpen(true)}
+                        className="w-full p-4 bg-gray-100 text-gray-900 rounded-xl 
+                                  flex items-center justify-center gap-2"
+                      >
+                        <ImageIcon className="w-5 h-5" />
+                        <span>갤러리에서 선택하기</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <GalleryView />
+                      <button
+                        onClick={() => setGalleryOpen(false)}
+                        className="w-full p-4 bg-gray-100 text-gray-900 rounded-xl 
+                                  flex items-center justify-center gap-2"
+                      >
+                        <X className="w-5 h-5" />
+                        <span>카메라로 돌아가기</span>
+                      </button>
+                    </>
+                  )}
                 </div>
               </DialogContent>
             </Dialog>

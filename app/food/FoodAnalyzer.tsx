@@ -57,7 +57,6 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   const [imageUrl, setImageUrl] = useState<string>('');
   const [analysis, setAnalysis] = useState<NutritionData | null>(null);
   const [originalAnalysis, setOriginalAnalysis] = useState<NutritionData | null>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [showResultAlert, setShowResultAlert] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +81,6 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   const [filteredDisplayImage, setFilteredDisplayImage] = useState<File | null>(null); //필터적용이미지
 
   const router = useRouter();
-  const videoRef = useRef<HTMLVideoElement>(null);
   const supabase = createSupabaseBrowserClient();
 
   const applyFilters = async () => {
@@ -155,14 +153,6 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       setAnalysis(calculateNutritionByQuantity(originalAnalysis, quantity));
     }
   }, [quantity, originalAnalysis]);
-
-  useEffect(() => {
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, [stream]);
 
   // 이벤트 핸들러
   const handleIncrease = () => {
@@ -473,8 +463,6 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
                 imageUrl={imageUrl}
                 onPreviewChange={setCurrentFilters} // currentFilters prop 제거
               />
-            ) : step === 'camera' ? (
-              <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
             ) : imageUrl ? (
               <img src={imageUrl} alt="Selected food" className="w-full h-full object-cover" />
             ) : (
@@ -632,9 +620,6 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
         setAnalysisImage={setAnalysisImage}
         setImageUrl={setImageUrl}
         onAnalyze={applyFilters}
-        stream={stream}
-        setStream={setStream}
-        videoRef={videoRef}
         onSave={saveFoodLog}
         resetAnalyzer={resetAnalyzer}
       />
