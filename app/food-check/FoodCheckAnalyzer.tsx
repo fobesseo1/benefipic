@@ -317,7 +317,7 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   };
 
   const applyFilters = async () => {
-    if (!displayImage) return;
+    if (!selectedImage) return;
 
     const img = new Image();
     img.crossOrigin = 'anonymous';

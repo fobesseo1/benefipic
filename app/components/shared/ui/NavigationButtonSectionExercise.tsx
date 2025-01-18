@@ -16,7 +16,7 @@ interface NavigationButtonSectionProps {
     | 'initial'
     | 'camera'
     | 'image-selected'
-    | 'filter-selection' // 여기에 추가
+    | 'filter-selection'
     | 'compress'
     | 'analyzing'
     | 'calculate'
@@ -26,7 +26,7 @@ interface NavigationButtonSectionProps {
       | 'initial'
       | 'camera'
       | 'image-selected'
-      | 'filter-selection' // 여기에도 추가
+      | 'filter-selection'
       | 'compress'
       | 'analyzing'
       | 'calculate'
@@ -37,13 +37,13 @@ interface NavigationButtonSectionProps {
   setImageUrl: (url: string) => void;
   onAnalyze: () => Promise<void>;
   onSave?: () => Promise<void>;
-  resetAnalyzer?: () => void; // 추가
+  resetAnalyzer?: () => void;
   stream?: MediaStream | null;
   setStream?: (stream: MediaStream | null) => void;
   videoRef: React.RefObject<HTMLVideoElement>;
 }
 
-export default function NavigationButtonSectionFood({
+export default function NavigationButtonSectionExercise({
   step,
   setStep,
   setSelectedImage,
@@ -64,7 +64,6 @@ export default function NavigationButtonSectionFood({
       try {
         const { displayImage, analysisImage } = await createDualQualityImages(file);
 
-        // 두 버전 모두 저장
         setSelectedImage(displayImage);
         setAnalysisImage(analysisImage);
 
