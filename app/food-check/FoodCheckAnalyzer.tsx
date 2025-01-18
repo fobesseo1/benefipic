@@ -276,15 +276,29 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     }
 
     // 10. 음료류
-    // 매우 나쁜 음료 (-3점)
+    // 매우 나쁜 음료 (-5점)
     if (
       foodName.includes('콜라') ||
       foodName.includes('사이다') ||
       foodName.includes('환타') ||
       foodName.includes('밀크쉐이크') ||
-      foodName.includes('슬러시')
+      foodName.includes('슬러시') ||
+      foodName.includes('펩시')
     ) {
-      score -= 3;
+      // 제로 칼로리 음료 구분
+      if (
+        foodName.includes('제로') ||
+        foodName.includes('zero') ||
+        foodName.includes('라이트') ||
+        foodName.includes('다이어트')
+      ) {
+        score -= 2; // 제로 칼로리 음료는 -2점
+        if (caloriesPerServing <= 5) score += 1; // 실제 칼로리가 매우 낮으면 약간의 보너스
+      } else {
+        score -= 3; // 일반 탄산음료는 -3점
+        // 고칼로리 페널티
+        if (caloriesPerServing > 150) score -= 1;
+      }
     }
     // 나쁜 음료 (-2점)
     else if (
