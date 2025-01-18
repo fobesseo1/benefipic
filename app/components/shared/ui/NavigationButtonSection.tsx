@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { Camera as CameraIcon, ImageIcon, RefreshCw, X } from 'lucide-react';
-
-import ImageUploading, { ImageListType } from 'react-images-uploading';
+import { useState, useCallback } from 'react';
+import { Camera as CameraIcon, ImageIcon, X } from 'lucide-react';
+import Camera, { FACING_MODES, IMAGE_TYPES } from 'react-html5-camera-photo';
+import { useDropzone } from 'react-dropzone';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { createDualQualityImages } from '@/utils/image';
-import Camera, { FACING_MODES, IMAGE_TYPES } from 'react-html5-camera-photo';
 import 'react-html5-camera-photo/build/css/index.css';
 
 interface NavigationButtonSectionProps {
@@ -46,34 +45,12 @@ export default function NavigationButtonSection({
   resetAnalyzer,
 }: NavigationButtonSectionProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [numberOfCameras, setNumberOfCameras] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
-  const camera = useRef<any>(null);
 
-  // 갤러리 이미지 선택 핸들러
-  const handleGallerySelect = async (imageList: ImageListType) => {
-    if (imageList.length > 0 && imageList[0].file) {
-      try {
-        const { displayImage, analysisImage } = await createDualQualityImages(imageList[0].file);
-        setSelectedImage(displayImage);
-        setAnalysisImage(analysisImage);
-        setImageUrl(URL.createObjectURL(displayImage));
-        setStep('image-selected');
-        setDialogOpen(false);
-        setGalleryOpen(false);
-      } catch (error) {
-        console.error('이미지 처리 오류:', error);
-      }
-    }
-  };
-
-  // 사진 촬영 핸들러
-  const takePicture = async () => {
+  // 카메라 촬영 핸들러
+  const handleTakePhoto = async (dataUri: string) => {
     try {
-      if (!camera.current) return;
-
-      const photoData = camera.current.takePhoto();
-      const response = await fetch(photoData);
+      const response = await fetch(dataUri);
       const blob = await response.blob();
       const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
 
@@ -89,71 +66,66 @@ export default function NavigationButtonSection({
     }
   };
 
-  // 카메라 전환 핸들러
-  const handleSwitchCamera = () => {
-    if (camera.current && numberOfCameras > 1) {
-      camera.current.switchCamera();
-    }
-  };
-
   // 카메라 뷰 컴포넌트
-  const CameraView = () => {
-    const handleTakePhoto = async (dataUri: string) => {
-      try {
-        // Base64 문자열을 File 객체로 변환
-        const response = await fetch(dataUri);
-        const blob = await response.blob();
-        const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+  const CameraView = () => (
+    <div className="relative w-full h-[70vh]">
+      <Camera
+        onTakePhoto={handleTakePhoto}
+        idealFacingMode={FACING_MODES.ENVIRONMENT}
+        imageType={IMAGE_TYPES.JPG}
+        imageCompression={0.97}
+        isImageMirror={false}
+        isSilentMode={false}
+        isDisplayStartCameraError={true}
+        isFullscreen={false}
+        sizeFactor={1}
+      />
+    </div>
+  );
 
-        // 듀얼 퀄리티 이미지 생성
-        const { displayImage, analysisImage } = await createDualQualityImages(file);
-
-        setSelectedImage(displayImage);
-        setAnalysisImage(analysisImage);
-        setImageUrl(URL.createObjectURL(displayImage));
-        setStep('image-selected');
-        setDialogOpen(false);
-      } catch (error) {
-        console.error('Camera capture failed:', error);
+  // 갤러리 뷰 컴포넌트
+  const GalleryView = () => {
+    const onDrop = useCallback(async (acceptedFiles: File[]) => {
+      if (acceptedFiles.length > 0) {
+        const file = acceptedFiles[0];
+        try {
+          const { displayImage, analysisImage } = await createDualQualityImages(file);
+          setSelectedImage(displayImage);
+          setAnalysisImage(analysisImage);
+          setImageUrl(URL.createObjectURL(displayImage));
+          setStep('image-selected');
+          setDialogOpen(false);
+          setGalleryOpen(false);
+        } catch (error) {
+          console.error('이미지 처리 오류:', error);
+        }
       }
-    };
+    }, []);
+
+    const { getRootProps, getInputProps } = useDropzone({
+      onDrop,
+      accept: {
+        'image/*': ['.jpeg', '.jpg', '.png', '.heic'],
+      },
+      maxFiles: 1,
+    });
 
     return (
-      <div className="relative w-full h-[70vh]">
-        <Camera
-          onTakePhoto={handleTakePhoto}
-          idealFacingMode={FACING_MODES.ENVIRONMENT}
-          imageType={IMAGE_TYPES.JPG}
-          imageCompression={0.97}
-          isImageMirror={false}
-          isSilentMode={false}
-          isDisplayStartCameraError={true}
-          isFullscreen={false}
-          sizeFactor={1}
-        />
+      <div
+        {...getRootProps()}
+        className="w-full h-[40vh] border-2 border-dashed border-gray-300 rounded-xl 
+                   flex flex-col items-center justify-center gap-4 cursor-pointer
+                   hover:border-gray-400 transition-colors"
+      >
+        <input {...getInputProps()} />
+        <ImageIcon className="w-12 h-12 text-gray-400" />
+        <div className="text-center">
+          <p className="font-medium">이미지를 선택하거나</p>
+          <p className="text-gray-500">여기로 드래그하세요</p>
+        </div>
       </div>
     );
   };
-  // 갤러리 뷰 컴포넌트
-  const GalleryView = () => (
-    <ImageUploading value={[]} onChange={handleGallerySelect} maxNumber={1} dataURLKey="data_url">
-      {({ onImageUpload, dragProps }) => (
-        <div
-          onClick={onImageUpload}
-          {...dragProps}
-          className="w-full h-[40vh] border-2 border-dashed border-gray-300 rounded-xl 
-                     flex flex-col items-center justify-center gap-4 cursor-pointer
-                     hover:border-gray-400 transition-colors"
-        >
-          <ImageIcon className="w-12 h-12 text-gray-400" />
-          <div className="text-center">
-            <p className="font-medium">이미지를 선택하거나</p>
-            <p className="text-gray-500">여기로 드래그하세요</p>
-          </div>
-        </div>
-      )}
-    </ImageUploading>
-  );
 
   return (
     <>
