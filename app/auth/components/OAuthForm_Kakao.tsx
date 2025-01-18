@@ -1,3 +1,5 @@
+//app/auth/components/OAuthForm_Kakao.tsx
+
 'use client';
 
 import { createBrowserClient } from '@supabase/ssr';

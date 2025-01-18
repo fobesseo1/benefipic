@@ -1,3 +1,5 @@
+//app/start/page.tsx
+
 import React from 'react';
 import OnboardingScreen from './Start';
 import { Suspense } from 'react';
