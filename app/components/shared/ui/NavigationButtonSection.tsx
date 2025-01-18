@@ -88,17 +88,26 @@ export default function NavigationButtonSection({
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
         const file = acceptedFiles[0];
-        try {
-          const { displayImage, analysisImage } = await createDualQualityImages(file);
-          setSelectedImage(displayImage);
-          setAnalysisImage(analysisImage);
-          setImageUrl(URL.createObjectURL(displayImage));
-          setStep('image-selected');
-          setDialogOpen(false);
-          setGalleryOpen(false);
-        } catch (error) {
-          console.error('이미지 처리 오류:', error);
-        }
+        const reader = new FileReader();
+
+        reader.onload = async (e: ProgressEvent<FileReader>) => {
+          try {
+            const { displayImage, analysisImage } = await createDualQualityImages(file);
+
+            if (e.target?.result && typeof e.target.result === 'string') {
+              setSelectedImage(displayImage);
+              setAnalysisImage(analysisImage);
+              setImageUrl(e.target.result);
+              setStep('image-selected');
+              setDialogOpen(false);
+              setGalleryOpen(false);
+            }
+          } catch (error) {
+            console.error('이미지 처리 오류:', error);
+          }
+        };
+
+        reader.readAsDataURL(file);
       }
     }, []);
 
