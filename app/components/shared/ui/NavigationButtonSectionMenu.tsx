@@ -105,7 +105,7 @@ export default function NavigationButtonSectionMenu({
       />
       <div
         onClick={toggleCamera}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 p-4 px-6 bg-gray-200 rounded-full flex items-center justify-center gap-2"
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 p-4 px-6 bg-gray-200 rounded-full flex items-center justify-center gap-2"
       >
         <RefreshCcw className="w-6 h-6 " />
         <p>카메라 전환</p>
