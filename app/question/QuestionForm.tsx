@@ -8,7 +8,23 @@ import { ChevronLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Answers, Question } from './tpye';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
-import { HealthCalculator, Gender, ActivityLevel } from '@/app/health-info/HealthCalculator';
+import {
+  HealthCalculator,
+  Gender,
+  ActivityLevel,
+  RecommendedGoal,
+} from '@/app/health-info/HealthCalculator';
+
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 
 export const getBMIStatus = (bmi: number): string => {
   if (bmi < 18.5) return '저체중';
@@ -33,6 +49,8 @@ const QuestionSlidePage = ({
   const [yearError, setYearError] = useState<string>('');
   const [monthError, setMonthError] = useState<string>('');
   const [dayError, setDayError] = useState<string>('');
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const [recommendedGoal, setRecommendedGoal] = useState<RecommendedGoal | null>(null);
 
   const validateDate = (part: 'year' | 'month' | 'day', value: string): boolean => {
     if (value === '') return true;
@@ -136,6 +154,18 @@ const QuestionSlidePage = ({
 
   const saveHealthRecord = async () => {
     const results = calculateResults();
+
+    // RecommendedGoal 계산
+    const recommended = HealthCalculator.calculateRecommendedGoal(
+      Number(answers['weight']),
+      Number(answers['height']),
+      answers['gender'] as Gender
+    );
+    setRecommendedGoal(recommended);
+
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + recommended.duration * 7);
+
     const healthRecord = {
       user_id: currentUser_id,
       gender: answers['gender'],
@@ -150,18 +180,50 @@ const QuestionSlidePage = ({
       recommended_weight: results.recommendedWeight,
     };
 
+    // 영양소 계산을 위한 UserInput 구성
+    const birthDate = new Date(answers['birthdate'] as string);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    const nutrition = HealthCalculator.calculateNutrition({
+      age,
+      gender: answers['gender'] as Gender,
+      height: Number(answers['height']),
+      weight: Number(answers['weight']),
+      activityLevel: answers['activity_level'] as ActivityLevel,
+      goal: recommended.recommendedGoal,
+      targetWeight: recommended.targetWeight,
+      targetDuration: recommended.duration,
+    });
+
+    const goalData = {
+      user_id: currentUser_id,
+      target_weight: Number(recommended.targetWeight.toFixed(1)),
+      target_date: targetDate.toISOString().split('T')[0],
+      daily_calories_target: Math.round(nutrition.totalCalories),
+      daily_protein_target: Number(nutrition.protein.toFixed(1)),
+      daily_fat_target: Number(nutrition.fat.toFixed(1)),
+      daily_carbs_target: Number(nutrition.carbs.toFixed(1)),
+      daily_exercise_minutes_target: nutrition.exerciseMinutes,
+      status: 'active',
+    };
+
     try {
-      // 트랜잭션처럼 처리하기 위해 모든 DB 작업을 Promise.all로 묶음
       await Promise.all([
-        // 1. health_records 테이블 처리 (기존 로직)
+        // health_records 저장
         (async () => {
-          const { data: existingRecord } = await supabase
+          const { data: existingRecords, error: selectError } = await supabase
             .from('health_records')
             .select('*')
-            .eq('user_id', currentUser_id)
-            .single();
+            .eq('user_id', currentUser_id);
 
-          if (existingRecord) {
+          if (selectError) throw selectError;
+
+          if (existingRecords && existingRecords.length > 0) {
             const { error: updateError } = await supabase
               .from('health_records')
               .update(healthRecord)
@@ -177,7 +239,7 @@ const QuestionSlidePage = ({
           }
         })(),
 
-        // 2. weight_tracking 테이블에 체중 기록 추가
+        // weight_tracking 저장
         (async () => {
           const { error: weightError } = await supabase.from('weight_tracking').upsert({
             user_id: currentUser_id,
@@ -186,23 +248,43 @@ const QuestionSlidePage = ({
 
           if (weightError) throw weightError;
         })(),
-      ]);
 
-      // 저장 성공 후 다음 페이지로 이동
-      router.push('/health-info');
+        // fitness_goals 저장
+        (async () => {
+          const { error: goalError } = await supabase.from('fitness_goals').upsert(goalData, {
+            onConflict: 'user_id',
+            ignoreDuplicates: false,
+          });
+
+          if (goalError) throw goalError;
+        })(),
+      ]);
     } catch (error) {
       console.error('Error saving records:', error);
-      // 에러 처리 로직 추가 (예: 토스트 메시지 표시)
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentSlide < questions.length - 1) {
       setCurrentSlide(currentSlide + 1);
     } else if (currentSlide === questions.length - 1) {
-      // 마지막 슬라이드에서는 데이터 저장
-      saveHealthRecord();
+      try {
+        await saveHealthRecord(); // 저장이 완료될 때까지 대기
+        setShowCompletionDialog(true); // 저장 완료 후 다이얼로그 표시
+      } catch (error) {
+        console.error('Error in handleNext:', error);
+        // 에러 처리 (예: 토스트 메시지 표시)
+      }
     }
+  };
+
+  // 새로운 함수 추가
+  const handleStartClick = () => {
+    router.push('/main');
+  };
+
+  const handleGoalClick = () => {
+    router.push('/health-info'); // 목표 설정 페이지로 이동
   };
 
   const handleBack = () => {
@@ -459,6 +541,50 @@ const QuestionSlidePage = ({
     }
   };
 
+  // 목표 텍스트 생성 함수
+  const getGoalParts = (recommendedGoal: RecommendedGoal) => {
+    let duration = {
+      value: recommendedGoal.duration,
+      unit: '주간',
+    };
+
+    let change = {
+      prefix: '',
+      value: 0,
+      unit: 'kg',
+      type: '',
+    };
+
+    switch (recommendedGoal.recommendedGoal) {
+      case 'maintain':
+        change = {
+          prefix: '',
+          value: recommendedGoal.targetWeight,
+          unit: 'kg',
+          type: '유지',
+        };
+        break;
+      case 'gain':
+        change = {
+          prefix: '+',
+          value: recommendedGoal.weightDiff,
+          unit: 'kg',
+          type: '증량',
+        };
+        break;
+      case 'lose':
+        change = {
+          prefix: '-',
+          value: Math.abs(recommendedGoal.weightDiff),
+          unit: 'kg',
+          type: '감량',
+        };
+        break;
+    }
+
+    return { duration, change };
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* Header - Back button and Progress bar */}
@@ -521,6 +647,87 @@ const QuestionSlidePage = ({
           다음
         </button>
       </div>
+
+      {/* Alert Dialog */}
+      {showCompletionDialog && (
+        <AlertDialog open={showCompletionDialog}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-xl font-semibold mb-2">
+                입력하느라 고생했어요!
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-4">
+                {recommendedGoal && (
+                  <div className="p-4 bg-white rounded-xl shadow-xl border-2 border-gray-200">
+                    <div className="flex items-center gap-3 mb-4">
+                      <h3 className="text-xl font-semibold">{recommendedGoal.message}</h3>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center gap-2 px-2 py-12 bg-gray-50 rounded-xl">
+                      <div className="flex flex-col gap-4">
+                        <div className="flex-flex-col">
+                          <p className="font-medium text-gray-600 mb-2">
+                            {recommendedGoal.messageGrid.title}
+                          </p>
+                          <div className="text-4xl gap-2 flex items-end font-bold">
+                            <p className="tracking-tighter">
+                              {recommendedGoal.messageGrid.content1}
+                            </p>
+                            {recommendedGoal.messageGrid.content2 && (
+                              <p className="text-4xl">{recommendedGoal.messageGrid.content2}</p>
+                            )}
+                          </div>
+                        </div>
+                        <hr className="border-gray-400" />
+                        <div className="flex flex-col">
+                          <div className="flex items-baseline justify-between gap-x-4">
+                            <div className="flex items-baseline">
+                              <span className="text-3xl font-bold tracking-tighter text-gray-900">
+                                {getGoalParts(recommendedGoal).duration.value}
+                              </span>
+                              <span className="text-xl text-gray-600">
+                                {getGoalParts(recommendedGoal).duration.unit}
+                              </span>
+                              <p className="text-xl text-gray-600">&gt;</p>
+                            </div>
+
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-6xl font-bold tracking-tighter text-gray-900">
+                                {getGoalParts(recommendedGoal).change.prefix}
+                                {getGoalParts(recommendedGoal).change.value}
+                              </span>
+                              <span className="text-xl text-gray-600">
+                                {getGoalParts(recommendedGoal).change.unit}
+                              </span>
+                              <p className="text-xl text-gray-600">
+                                {getGoalParts(recommendedGoal).change.type}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+              <Button
+                onClick={handleStartClick}
+                className="w-full text-lg font-bold bg-black text-white hover:bg-gray-800 p-6"
+              >
+                시작하기
+              </Button>
+              <Button
+                onClick={handleGoalClick}
+                className="w-full bg-white text-black border-2 p-6 border-black hover:bg-gray-100"
+              >
+                목표수정
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 };
