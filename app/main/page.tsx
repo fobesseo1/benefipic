@@ -42,7 +42,7 @@ export default async function MainPage() {
 
   return (
     <Suspense>
-      {/* <MetaInAppAlert /> */}
+      <MetaInAppAlert />
       <MainComponent user_id={currentUser_id} />
     </Suspense>
   );

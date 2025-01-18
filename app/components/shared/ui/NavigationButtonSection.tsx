@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Camera as CameraIcon, ImageIcon, X } from 'lucide-react';
+import { Camera as CameraIcon, ImageIcon, MousePointerClick, X } from 'lucide-react';
 import Camera, { FACING_MODES, IMAGE_TYPES } from 'react-html5-camera-photo';
 import { useDropzone } from 'react-dropzone';
 import {
@@ -128,10 +128,10 @@ export default function NavigationButtonSection({
                    hover:border-gray-400 transition-colors"
       >
         <input {...getInputProps()} />
-        <ImageIcon className="w-12 h-12 text-gray-400" />
+        <MousePointerClick className="w-12 h-12 text-gray-400" />
         <div className="text-center">
-          <p className="font-medium">이미지를 선택하거나</p>
-          <p className="text-gray-500">여기로 드래그하세요</p>
+          <p className="font-medium">이 곳을 터치하고</p>
+          <p className="text-gray-500">사진을 선택하세요</p>
         </div>
       </div>
     );

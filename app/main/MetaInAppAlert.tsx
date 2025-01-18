@@ -11,7 +11,7 @@ import {
   AlertDialogFooter,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Chrome, Download } from 'lucide-react';
+import { FaChrome } from 'react-icons/fa';
 
 export default function MetaInAppAlert() {
   const [showAlert, setShowAlert] = useState(false);
@@ -20,6 +20,16 @@ export default function MetaInAppAlert() {
   const [showError, setShowError] = useState(false);
 
   useEffect(() => {
+    // 개발 중에는 로컬 스토리지 체크를 건너뛰고 항상 알림창이 보이도록 함
+
+    const hideUntil = localStorage.getItem('hideMetaAlertUntil');
+    const now = new Date().getTime();
+
+    if (hideUntil && parseInt(hideUntil) > now) {
+      setShowAlert(false);
+      return;
+    }
+
     const { appKey } = InAppSpy();
     const isMetaInApp = appKey === 'instagram' || appKey === 'threads' || appKey === 'facebook';
     setShowAlert(isMetaInApp);
@@ -42,64 +52,53 @@ export default function MetaInAppAlert() {
     }
   };
 
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) {
-      setShowError(true);
-      setTimeout(() => setShowError(false), 3000);
-      return;
-    }
-
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null);
-      setIsInstallable(false);
-      setShowAlert(false); // 설치 성공 시 알림창 닫기
-    }
+  // 창 닫기 핸들러
+  const handleClose = () => {
+    setShowAlert(false);
   };
 
+  // 오늘 하루 안보기 핸들러
+  const handleHideToday = () => {
+    const tomorrow = new Date();
+    tomorrow.setHours(23, 59, 59, 999);
+    localStorage.setItem('hideMetaAlertUntil', tomorrow.getTime().toString());
+    setShowAlert(false);
+  };
+
+  // 개발 중에는 이 조건을 제거
   if (!showAlert) return null;
 
   return (
     <AlertDialog open={showAlert}>
-      <AlertDialogContent className="max-w-md">
+      <AlertDialogContent className="max-w-md py-16">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-xl font-semibold mb-2">
-            원활한 서비스 이용을 위해 필요합니다
+          <AlertDialogTitle className="text-xl font-semibold tracking-tighter">
+            원활한 서비스 이용을 위해 알려드립니다
           </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-2">
-            <p>
-              Meta(Instagram, Facebook, Threads) 브라우저에서는
+          <hr />
+          <AlertDialogDescription className="space-y-2 py-8">
+            <p className="leading-relaxed">
+              Meta(Instagram, Facebook, Threads) 브라우저
               <br />
-              사진 촬영과 업로드 기능 이용이 제한됩니다.
+              <span className="text-xl font-bold text-gray-900 ">사진 촬영과 업로드</span>
+              <br />
+              <span className="font-bold text-gray-600">일부 기능이 제한될 수 있습니다.</span>
             </p>
-            <p className="font-medium text-black">아래 두 가지 방법 중 하나를 선택해주세요:</p>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex-col gap-3 sm:flex-col">
-          <Button
-            onClick={openInChrome}
-            className="w-full gap-2 bg-blue-600 hover:bg-blue-700 py-6"
-          >
-            <Chrome className="w-5 h-5" />
+          <Button onClick={openInChrome} className="w-full gap-2 bg-black py-8">
+            <FaChrome />
             Chrome 브라우저로 열기
           </Button>
-          <Button
-            onClick={handleInstallClick}
-            className="w-full gap-2 bg-gray-900 hover:bg-gray-800 py-6"
-            disabled={!isInstallable}
-          >
-            <Download className="w-5 h-5" />앱 설치하기
-            <span className="text-sm">(1회만 설치하면 됩니다)</span>
-          </Button>
-          {showError && (
-            <p className="text-sm text-red-500 text-center mt-2">
-              이미 설치되어 있거나 현재 브라우저에서는 설치할 수 없습니다.
-              <br />
-              Chrome으로 이동해서 다시 시도해주세요.
-            </p>
-          )}
+          <div className="flex w-full gap-2 mt-12 border-t border-gray-200 pt-4">
+            <Button onClick={handleClose} variant="outline" className="flex-1 py-6 bg-gray-200">
+              닫기
+            </Button>
+            <Button onClick={handleHideToday} variant="outline" className="flex-1 py-6 bg-gray-200">
+              오늘 하루 보지 않기
+            </Button>
+          </div>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
