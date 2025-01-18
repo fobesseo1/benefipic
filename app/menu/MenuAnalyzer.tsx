@@ -25,6 +25,7 @@ type AnalysisStep =
   | 'camera'
   | 'image-selected'
   | 'compress'
+  | 'health-check'
   | 'analyzing'
   | 'calculate'
   | 'complete';
@@ -282,6 +283,12 @@ ${userDescription}
       setStep('image-selected');
     }
   };
+  const resetAnalyzer = () => {
+    setStep('initial');
+    setSelectedImage(null);
+    setImageUrl('');
+    setAnalysis(null);
+  };
 
   return (
     <div className="relative min-h-screen min-w-screen flex flex-col bg-gray-900 overflow-hidden">
@@ -397,11 +404,11 @@ ${userDescription}
           setStep={setStep}
           setSelectedImage={setSelectedImage}
           setAnalysisImage={setAnalysisImage}
+          setDisplayImage={setDisplayImage}
           setImageUrl={setImageUrl}
           onAnalyze={analyzeImage}
-          stream={stream}
-          setStream={setStream}
-          videoRef={videoRef}
+        resetAnalyzer={resetAnalyzer}
+       
         />
       )}
 
