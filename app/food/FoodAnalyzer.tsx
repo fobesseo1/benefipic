@@ -5,7 +5,7 @@ import { Minus, Pencil, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { compressImage, fileToBase64 } from '@/utils/image';
+import { applyFiltersAndSave, compressImage, fileToBase64 } from '@/utils/image';
 import NutritionCard from '../components/shared/ui/NutritionCard';
 import NavigationButtonSection from '../components/shared/ui/NavigationButtonSection';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
@@ -94,33 +94,38 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
 
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
+      // 정사각형 크기로 설정
+      const size = Math.min(img.width, img.height);
+      canvas.width = size;
+      canvas.height = size;
 
+      const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
+      // 이미지 중앙 기준으로 크롭
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
+
+      // 필터 적용
       ctx.filter = `
         brightness(${currentFilters.brightness}%)
         contrast(${currentFilters.contrast}%)
         saturate(${currentFilters.saturation}%)
       `;
-      ctx.drawImage(img, 0, 0);
 
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            const filteredFile = new File([blob], 'filtered-food-image.jpg', {
-              type: 'image/jpeg',
-            });
-            setFilteredDisplayImage(filteredFile);
-            setImageUrl(URL.createObjectURL(filteredFile));
-            analyzeImage();
-          }
-        },
-        'image/jpeg',
-        1.0
-      );
+      // 이미지 그리기 (중앙 크롭)
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const filteredFile = new File([blob], 'filtered-food-image.jpg', {
+            type: 'image/jpeg',
+          });
+          setFilteredDisplayImage(filteredFile);
+          setImageUrl(URL.createObjectURL(filteredFile));
+          analyzeImage();
+        }
+      }, 'image/jpeg');
     };
   };
 

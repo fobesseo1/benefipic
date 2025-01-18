@@ -5,22 +5,128 @@ interface DualQualityResult {
   analysisImage: File; // 저품질 (API 분석용)
 }
 
+export const cropSquare = async (file: File): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(img.src);
+
+      // 이미 정사각형이면 그대로 반환
+      if (img.width === img.height) {
+        resolve(file);
+        return;
+      }
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Canvas context failed'));
+        return;
+      }
+
+      // 정사각형 크기 계산 (짧은 변 기준)
+      const size = Math.min(img.width, img.height);
+      canvas.width = size;
+      canvas.height = size;
+
+      // 중앙 기준으로 크롭
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
+
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('Blob creation failed'));
+            return;
+          }
+          resolve(new File([blob], file.name, { type: file.type }));
+        },
+        file.type // 원본 파일 형식 유지
+      );
+    };
+
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(file);
+  });
+};
+
 export const createDualQualityImages = async (file: File): Promise<DualQualityResult> => {
   try {
-    // 고품질 버전 생성 (UI, 필터, Storage용) - 1024px
-    const displayImage = await compressImage(file, 1.0, true);
+    // displayImage는 정사각형으로 크롭만 수행
+    const displayImage = await cropSquare(file);
 
-    // 저품질 버전 생성 (API 분석용) - 512px
-    const analysisImage = await compressImage(file, 0.7, false);
+    // analysisImage는 원본 비율 유지
+    const analysisImage = file;
 
     return { displayImage, analysisImage };
   } catch (error) {
-    console.error('이미지 압축 실패:', error);
+    console.error('이미지 처리 실패:', error);
     return {
       displayImage: file,
       analysisImage: file,
     };
   }
+};
+
+export const applyFiltersAndSave = async (
+  imageFile: File,
+  filters: {
+    brightness: number;
+    contrast: number;
+    saturation: number;
+    warmth: number;
+  }
+): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(img.src);
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) {
+        reject(new Error('Canvas context failed'));
+        return;
+      }
+
+      // 원본이 정사각형이 아닌 경우 중앙 기준으로 크롭
+      const size = Math.min(img.width, img.height);
+      canvas.width = size;
+      canvas.height = size;
+
+      // 중앙 기준으로 크롭 위치 계산
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
+
+      // 필터 적용
+      ctx.filter = `
+        brightness(${filters.brightness}%)
+        contrast(${filters.contrast}%)
+        saturate(${filters.saturation}%)
+      `;
+
+      // 이미지 그리기
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
+
+      // 원본 형식 그대로 유지
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('Blob creation failed'));
+            return;
+          }
+          resolve(new File([blob], imageFile.name, { type: imageFile.type }));
+        },
+        imageFile.type // 원본 파일 형식 유지
+      );
+    };
+
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(imageFile);
+  });
 };
 
 /**
@@ -31,7 +137,8 @@ export const createDualQualityImages = async (file: File): Promise<DualQualityRe
 export const compressImage = (
   file: File,
   quality: number,
-  isForDisplay: boolean = false
+  isForDisplay: boolean = false,
+  shouldCropSquare: boolean = false
 ): Promise<File> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -42,35 +149,62 @@ export const compressImage = (
       img.src = e.target?.result as string;
 
       img.onload = () => {
-        console.log('원본 이미지 정보:', {
-          width: img.width,
-          height: img.height,
-          size: (file.size / 1024).toFixed(2) + 'KB',
-        });
-
         const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
+        let sourceX = 0;
+        let sourceY = 0;
+        let sourceWidth = img.width;
+        let sourceHeight = img.height;
 
-        // isForDisplay에 따라 다른 maxDimension 사용
-        const maxDimension = isForDisplay ? 1024 : 512;
-
-        if (width > maxDimension || height > maxDimension) {
-          if (width > height) {
-            height = Math.round((height * maxDimension) / width);
-            width = maxDimension;
-          } else {
-            width = Math.round((width * maxDimension) / height);
-            height = maxDimension;
-          }
+        // 정사각형 크롭이 필요한 경우
+        if (shouldCropSquare) {
+          const size = Math.min(sourceWidth, sourceHeight);
+          sourceX = (sourceWidth - size) / 2;
+          sourceY = (sourceHeight - size) / 2;
+          sourceWidth = size;
+          sourceHeight = size;
         }
 
-        canvas.width = width;
-        canvas.height = height;
+        // 최대 크기 계산 (정사각형인 경우 한 변의 길이를 기준으로)
+        const maxDimension = isForDisplay ? 1024 : 512;
+        let targetSize = sourceWidth;
 
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
+        if (targetSize > maxDimension) {
+          targetSize = maxDimension;
+        }
 
+        canvas.width = targetSize;
+        canvas.height = targetSize;
+
+        const ctx = canvas.getContext('2d', {
+          alpha: false, // 알파 채널 비활성화
+          willReadFrequently: false, // 성능 최적화
+        });
+
+        if (!ctx) {
+          reject(new Error('Failed to get canvas context'));
+          return;
+        }
+
+        // 배경을 흰색으로 설정 (JPEG 최적화)
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, targetSize, targetSize);
+
+        // 이미지 그리기 (안티앨리어싱 비활성화)
+        ctx.imageSmoothingQuality = 'medium';
+
+        ctx.drawImage(
+          img,
+          sourceX,
+          sourceY,
+          sourceWidth,
+          sourceHeight,
+          0,
+          0,
+          targetSize,
+          targetSize
+        );
+
+        // JPEG 품질을 낮추고 모자이크 효과 최소화
         canvas.toBlob(
           (blob) => {
             if (blob) {
@@ -78,22 +212,13 @@ export const compressImage = (
                 type: 'image/jpeg',
                 lastModified: Date.now(),
               });
-
-              console.log('압축된 이미지 정보:', {
-                width: width,
-                height: height,
-                size: (compressedFile.size / 1024).toFixed(2) + 'KB',
-                quality: quality,
-                isForDisplay: isForDisplay,
-              });
-
               resolve(compressedFile);
             } else {
               reject(new Error('Image compression failed'));
             }
           },
           'image/jpeg',
-          quality
+          Math.min(0.85, quality) // 최대 품질을 85%로 제한
         );
       };
 

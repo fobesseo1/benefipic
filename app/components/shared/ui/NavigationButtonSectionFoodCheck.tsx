@@ -46,7 +46,7 @@ interface NavigationButtonSectionProps {
   videoRef: React.RefObject<HTMLVideoElement>;
 }
 
-export default function NavigationButtonSectionFood({
+export default function NavigationButtonSectionFoodCheck({
   step,
   setStep,
   setSelectedImage,
