@@ -4735,6 +4735,18 @@ export const completedFoodDatabase: FoodItem[] = [
     },
   },
   {
+    id: 'salad',
+    name: '샐러드',
+    unit: '접시',
+    unitWeight: 200,
+    nutrition: {
+      calories: 100,
+      protein: 4,
+      fat: 2,
+      carbs: 10,
+    },
+  },
+  {
     id: 'ricotta_salad',
     name: '리코타치즈샐러드',
     unit: '접시',

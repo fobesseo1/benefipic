@@ -207,6 +207,7 @@ export const validateAndCorrectAnalysis = (
 ): FoodAnalysis => {
   const exactMatch = findExactMatchFood(analysis.foodName, completedFoodDatabase);
   if (exactMatch) {
+    // 정확한 음식 매칭이 있으면 해당 영양정보 사용
     return {
       ...analysis,
       ingredients: analysis.ingredients.map((ing) => ({
@@ -221,43 +222,26 @@ export const validateAndCorrectAnalysis = (
     };
   }
 
-  const matchedFood = completedFoodDatabase.find((food) =>
-    isSimilarName(food.name, analysis.foodName)
-  );
+  // DB에서 각 재료 찾아서 영양가 보정
+  const correctedIngredients = analysis.ingredients.map((ing) => {
+    const matchedItem = findMatchingIngredient(ing.name, completedFoodDatabase, ingredientDatabase);
 
-  const correctedIngredients = analysis.ingredients.map((ing) =>
-    correctIngredient(ing, completedFoodDatabase, ingredientDatabase)
-  );
-
-  if (matchedFood) {
-    const totalWeight = correctedIngredients.reduce((sum, ing) => sum + ing.amount, 0);
-    const ratio = totalWeight / matchedFood.unitWeight;
-    const gptTotal = calculateTotalNutrition(correctedIngredients);
-    const dbTotal = {
-      calories: matchedFood.nutrition.calories * ratio,
-      protein: matchedFood.nutrition.protein * ratio,
-      fat: matchedFood.nutrition.fat * ratio,
-      carbs: matchedFood.nutrition.carbs * ratio,
-    };
-
-    const threshold = 0.3;
-    const difference = Math.abs(gptTotal.calories - dbTotal.calories) / dbTotal.calories;
-
-    if (difference > threshold) {
-      return {
-        ...analysis,
-        ingredients: correctedIngredients.map((ing) => ({
-          ...ing,
-          nutritionPer100g: {
-            calories: (dbTotal.calories / totalWeight) * 100,
-            protein: (dbTotal.protein / totalWeight) * 100,
-            fat: (dbTotal.fat / totalWeight) * 100,
-            carbs: (dbTotal.carbs / totalWeight) * 100,
-          },
-        })),
-      };
+    if (!matchedItem) {
+      // DB에 없으면 OpenAI가 제공한 영양가 그대로 사용
+      return ing;
     }
-  }
+
+    // DB에 있으면 DB의 영양가로 보정 (unitWeight 기준으로 100g당 값으로 변환)
+    return {
+      ...ing,
+      nutritionPer100g: {
+        calories: (matchedItem.data.nutrition.calories * 100) / matchedItem.data.unitWeight,
+        protein: (matchedItem.data.nutrition.protein * 100) / matchedItem.data.unitWeight,
+        fat: (matchedItem.data.nutrition.fat * 100) / matchedItem.data.unitWeight,
+        carbs: (matchedItem.data.nutrition.carbs * 100) / matchedItem.data.unitWeight,
+      },
+    };
+  });
 
   return {
     ...analysis,

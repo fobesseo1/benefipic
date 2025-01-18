@@ -1,3 +1,5 @@
+//app/food/FoodAnalyzer.tsx
+
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -84,47 +86,54 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   const supabase = createSupabaseBrowserClient();
 
   const applyFilters = async () => {
-    if (!selectedImage) return;
+    if (!displayImage) return;
 
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = imageUrl;
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = imageUrl;
 
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      // 정사각형 크기로 설정
-      const size = Math.min(img.width, img.height);
-      canvas.width = size;
-      canvas.height = size;
+      await new Promise((resolve) => {
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const size = Math.min(img.width, img.height);
+          canvas.width = size;
+          canvas.height = size;
 
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
 
-      // 이미지 중앙 기준으로 크롭
-      const sx = (img.width - size) / 2;
-      const sy = (img.height - size) / 2;
+          const sx = (img.width - size) / 2;
+          const sy = (img.height - size) / 2;
 
-      // 필터 적용
-      ctx.filter = `
-        brightness(${currentFilters.brightness}%)
-        contrast(${currentFilters.contrast}%)
-        saturate(${currentFilters.saturation}%)
-      `;
+          ctx.filter = `
+            brightness(${currentFilters.brightness}%)
+            contrast(${currentFilters.contrast}%)
+            saturate(${currentFilters.saturation}%)
+          `;
 
-      // 이미지 그리기 (중앙 크롭)
-      ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
+          ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
 
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const filteredFile = new File([blob], 'filtered-food-image.jpg', {
-            type: 'image/jpeg',
-          });
-          setFilteredDisplayImage(filteredFile);
-          setImageUrl(URL.createObjectURL(filteredFile));
-          analyzeImage();
-        }
-      }, 'image/jpeg');
-    };
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const filteredFile = new File([blob], 'filtered-food-image.jpg', {
+                type: 'image/jpeg',
+              });
+              // 상태 업데이트를 Promise 내부로 이동
+              setFilteredDisplayImage(filteredFile);
+              setImageUrl(URL.createObjectURL(filteredFile));
+              resolve(true);
+            }
+          }, 'image/jpeg');
+        };
+      });
+
+      // 필터 적용이 완료된 후 분석 시작
+      setStep('analyzing');
+      analyzeImage();
+    } catch (error) {
+      console.error('필터 적용 중 오류:', error);
+    }
   };
 
   const handleAdComplete = async () => {
@@ -406,12 +415,20 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   };
 
   const saveFoodLog = async () => {
+    // 명시적으로 필터 적용된 이미지 확인
+    if (!analysis) return;
+
     const imageToSave = filteredDisplayImage || displayImage;
-    if (!imageToSave || !analysis) return;
+    if (!imageToSave) return;
 
     try {
       const fileExt = imageToSave.type.split('/')[1];
       const filePath = `${currentUser_id}/${Date.now()}.${fileExt}`;
+
+      console.log('저장되는 이미지:', {
+        isFiltered: !!filteredDisplayImage,
+        fileType: imageToSave.type,
+      });
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('food-images')
@@ -617,7 +634,9 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
         step={step}
         setStep={setStep}
         setSelectedImage={setSelectedImage}
-        setAnalysisImage={setAnalysisImage}
+        setDisplayImage={setDisplayImage} // 추가
+        setAnalysisImage={setAnalysisImage} // 기존 prop
+        setFilteredDisplayImage={setFilteredDisplayImage} // 추가
         setImageUrl={setImageUrl}
         onAnalyze={applyFilters}
         onSave={saveFoodLog}

@@ -1,3 +1,5 @@
+//app/components/shared/ui/NavigationButtonSection.tsx
+
 'use client';
 
 import { useState, useCallback } from 'react';
@@ -27,7 +29,9 @@ interface NavigationButtonSectionProps {
     | 'complete';
   setStep: (step: NavigationButtonSectionProps['step']) => void;
   setSelectedImage: (file: File | null) => void;
+  setDisplayImage: (file: File | null) => void;
   setAnalysisImage: (file: File | null) => void;
+  setFilteredDisplayImage: (file: File | null) => void;
   setImageUrl: (url: string) => void;
   onAnalyze: () => Promise<void>;
   onSave?: () => Promise<void>;
@@ -39,6 +43,8 @@ export default function NavigationButtonSection({
   setStep,
   setSelectedImage,
   setAnalysisImage,
+  setDisplayImage,
+  setFilteredDisplayImage,
   setImageUrl,
   onAnalyze,
   onSave,
@@ -59,6 +65,7 @@ export default function NavigationButtonSection({
 
       setSelectedImage(displayImage);
       setAnalysisImage(analysisImage);
+      setFilteredDisplayImage(null);
       setImageUrl(URL.createObjectURL(displayImage));
       setStep('image-selected');
       setDialogOpen(false);
@@ -93,18 +100,14 @@ export default function NavigationButtonSection({
         try {
           const { displayImage, analysisImage } = await createDualQualityImages(file);
 
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            setImageUrl(e.target?.result as string);
-            setIsLoading(false);
-          };
-          reader.readAsDataURL(displayImage);
-
-          setSelectedImage(displayImage);
+          setDisplayImage(displayImage);
           setAnalysisImage(analysisImage);
+          setFilteredDisplayImage(null); // 필터 초기화
+          setImageUrl(URL.createObjectURL(displayImage));
           setStep('image-selected');
           setDialogOpen(false);
           setGalleryOpen(false);
+          setIsLoading(false);
         } catch (error) {
           console.error('이미지 처리 오류:', error);
           setIsLoading(false);
