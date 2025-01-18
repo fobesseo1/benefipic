@@ -70,6 +70,9 @@ const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   const [showAdDialog, setShowAdDialog] = useState(false);
   const { checkEligibility } = useAnalysisEligibility(currentUser_id);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [displayImage, setDisplayImage] = useState<File | null>(null); // 고품질
+  const [analysisImage, setAnalysisImage] = useState<File | null>(null); // 저품질
+  const [filteredDisplayImage, setFilteredDisplayImage] = useState<File | null>(null); // 필터적용이미지
 
   useEffect(() => {
     return () => {
@@ -136,7 +139,7 @@ const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   };
 
   const analyzeImage = async () => {
-    if (!selectedImage) return;
+    if (!analysisImage) return;
 
     // 권한 체크
     const eligibility = await checkEligibility();
@@ -166,8 +169,8 @@ const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
 
     try {
       setStep('compress');
-      const base64Image = await fileToBase64(selectedImage);
-      const fileType = selectedImage.type === 'image/png' ? 'png' : 'jpeg';
+      const base64Image = await fileToBase64(analysisImage);
+      const fileType = analysisImage.type === 'image/png' ? 'png' : 'jpeg';
 
       // 사용자 건강 정보 가져오기
       const healthProfile = await getUserHealthProfile(currentUser_id);
@@ -393,6 +396,7 @@ ${userDescription}
           step={step}
           setStep={setStep}
           setSelectedImage={setSelectedImage}
+          setAnalysisImage={setAnalysisImage}
           setImageUrl={setImageUrl}
           onAnalyze={analyzeImage}
           stream={stream}

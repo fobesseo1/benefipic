@@ -87,6 +87,9 @@ const ExerciseAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   const [customExerciseName, setCustomExerciseName] = useState('');
   const [customCaloriesPerHour, setCustomCaloriesPerHour] = useState(0);
   const searchRef = useRef<HTMLDivElement>(null);
+  const [displayImage, setDisplayImage] = useState<File | null>(null); // 고품질
+  const [analysisImage, setAnalysisImage] = useState<File | null>(null); // 저품질
+  const [filteredDisplayImage, setFilteredDisplayImage] = useState<File | null>(null); // 필터적용이미지
 
   // 초기 필터 상태
   const initialFilters = {
@@ -136,7 +139,7 @@ const ExerciseAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   };
   // 필터 적용 함수
   const applyFilters = async () => {
-    if (!selectedImage) return;
+    if (!displayImage) return;
 
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -157,16 +160,20 @@ const ExerciseAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       `;
       ctx.drawImage(img, 0, 0);
 
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const filteredFile = new File([blob], 'filtered-exercise-image.jpg', {
-            type: 'image/jpeg',
-          });
-          setSelectedImage(filteredFile);
-          setImageUrl(URL.createObjectURL(filteredFile));
-          analyzeImage();
-        }
-      }, 'image/jpeg');
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const filteredFile = new File([blob], 'filtered-exercise-image.jpg', {
+              type: 'image/jpeg',
+            });
+            setFilteredDisplayImage(filteredFile); // 필터 적용된 이미지 저장
+            setImageUrl(URL.createObjectURL(filteredFile));
+            analyzeImage();
+          }
+        },
+        'image/jpeg',
+        1.0
+      );
     };
   };
 
@@ -230,7 +237,7 @@ const ExerciseAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
 
   // analyzeImage 함수 구현
   const analyzeImage = async () => {
-    if (!selectedImage) return;
+    if (!analysisImage) return;
 
     // 권한 체크
     const eligibility = await checkEligibility();
@@ -260,8 +267,8 @@ const ExerciseAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
 
     try {
       setStep('compress');
-      const base64Image = await fileToBase64(selectedImage);
-      const fileType = selectedImage.type === 'image/png' ? 'png' : 'jpeg';
+      const base64Image = await fileToBase64(analysisImage); // selectedImage 대신 analysisImage 사용
+      const fileType = analysisImage.type === 'image/png' ? 'png' : 'jpeg';
 
       setStep('analyzing');
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -360,15 +367,16 @@ const ExerciseAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
 
   // 저장 함수 구현
   const saveExerciseLog = async () => {
-    if (!selectedImage || !exerciseData) return;
+    const imageToSave = filteredDisplayImage || displayImage; // 필터 적용된 이미지 우선 사용
+    if (!imageToSave || !exerciseData) return;
 
     try {
-      const fileExt = selectedImage.type.split('/')[1];
+      const fileExt = imageToSave.type.split('/')[1];
       const filePath = `${currentUser_id}/${Date.now()}.${fileExt}`;
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('exercise-images')
-        .upload(filePath, selectedImage);
+        .upload(filePath, imageToSave);
 
       if (uploadError) throw uploadError;
 
@@ -550,6 +558,7 @@ const ExerciseAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
         step={step}
         setStep={setStep}
         setSelectedImage={setSelectedImage}
+        setAnalysisImage={setAnalysisImage}
         setImageUrl={setImageUrl}
         onAnalyze={applyFilters}
         stream={stream}

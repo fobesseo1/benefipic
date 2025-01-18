@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { compressImage } from '@/utils/image';
+import { compressImage, createDualQualityImages } from '@/utils/image';
 
 interface NavigationButtonSectionProps {
   step:
@@ -33,6 +33,7 @@ interface NavigationButtonSectionProps {
       | 'complete'
   ) => void;
   setSelectedImage: (file: File | null) => void;
+  setAnalysisImage: (file: File | null) => void;
   setImageUrl: (url: string) => void;
   onAnalyze: () => Promise<void>;
   onSave?: () => Promise<void>;
@@ -42,10 +43,11 @@ interface NavigationButtonSectionProps {
   videoRef: React.RefObject<HTMLVideoElement>;
 }
 
-export default function NavigationButtonSectionExercise({
+export default function NavigationButtonSectionFood({
   step,
   setStep,
   setSelectedImage,
+  setAnalysisImage,
   setImageUrl,
   onAnalyze,
   stream,
@@ -60,13 +62,19 @@ export default function NavigationButtonSectionExercise({
     const file = event.target.files?.[0];
     if (file) {
       try {
-        const compressedFile = await compressImage(file);
-        setSelectedImage(compressedFile);
-        setImageUrl(URL.createObjectURL(compressedFile));
+        const { displayImage, analysisImage } = await createDualQualityImages(file);
+
+        // 두 버전 모두 저장
+        setSelectedImage(displayImage);
+        setAnalysisImage(analysisImage);
+
+        // UI에는 고품질 이미지 표시
+        setImageUrl(URL.createObjectURL(displayImage));
         setStep('image-selected');
         setDialogOpen(false);
       } catch (error) {
         console.error('이미지 처리 오류:', error);
+        // 에러 발생시 원본 이미지 사용
         setSelectedImage(file);
         setImageUrl(URL.createObjectURL(file));
         setStep('image-selected');
@@ -88,7 +96,6 @@ export default function NavigationButtonSectionExercise({
 
       ctx.drawImage(videoRef.current, 0, 0);
 
-      // blob 생성을 Promise로 래핑
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((b) => {
           if (b) resolve(b);
@@ -98,12 +105,14 @@ export default function NavigationButtonSectionExercise({
 
       const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
 
-      // 상태 업데이트를 한번에 처리
-      setSelectedImage(file);
-      setImageUrl(URL.createObjectURL(file));
+      // 여기서 createDualQualityImages 사용
+      const { displayImage, analysisImage } = await createDualQualityImages(file);
+
+      setSelectedImage(displayImage);
+      setAnalysisImage(analysisImage);
+      setImageUrl(URL.createObjectURL(displayImage));
       setStep('image-selected');
 
-      // 스트림 정리는 상태 업데이트 후에
       if (stream && setStream) {
         stream.getTracks().forEach((track) => track.stop());
         setStream(null);
@@ -111,16 +120,6 @@ export default function NavigationButtonSectionExercise({
     } catch (error) {
       console.error('Camera capture failed:', error);
     }
-  };
-
-  // const resetAnalyzer = () => {
-  //   setStep('initial');
-  //   setSelectedImage(null);
-  //   setImageUrl('');
-  // };
-
-  const isProcessing = (step: NavigationButtonSectionProps['step']): boolean => {
-    return step === 'compress' || step === 'analyzing' || step === 'calculate';
   };
 
   return (

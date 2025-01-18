@@ -98,6 +98,10 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       benefits: string;
     }[];
   } | null>(null);
+  // ExerciseAnalyzer 컴포넌트에 상태 추가
+  const [displayImage, setDisplayImage] = useState<File | null>(null); // 고품질
+  const [analysisImage, setAnalysisImage] = useState<File | null>(null); // 저품질
+  const [filteredDisplayImage, setFilteredDisplayImage] = useState<File | null>(null); // 필터적용이미지
 
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -313,7 +317,7 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   };
 
   const applyFilters = async () => {
-    if (!selectedImage) return;
+    if (!displayImage) return;
 
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -334,16 +338,20 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       `;
       ctx.drawImage(img, 0, 0);
 
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const filteredFile = new File([blob], 'filtered-food-image.jpg', {
-            type: 'image/jpeg',
-          });
-          setSelectedImage(filteredFile);
-          setImageUrl(URL.createObjectURL(filteredFile));
-          analyzeImage();
-        }
-      }, 'image/jpeg');
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const filteredFile = new File([blob], 'filtered-exercise-image.jpg', {
+              type: 'image/jpeg',
+            });
+            setFilteredDisplayImage(filteredFile); // 필터 적용된 이미지 저장
+            setImageUrl(URL.createObjectURL(filteredFile));
+            analyzeImage();
+          }
+        },
+        'image/jpeg',
+        1.0
+      );
     };
   };
 
@@ -473,7 +481,7 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   // API 통신
 
   const analyzeImage = async () => {
-    if (!selectedImage) return;
+    if (!analysisImage) return;
 
     // 권한 체크
     const supabase = createSupabaseBrowserClient();
@@ -507,8 +515,8 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
 
     try {
       setStep('compress');
-      const base64Image = await fileToBase64(selectedImage);
-      const fileType = selectedImage.type === 'image/png' ? 'png' : 'jpeg';
+      const base64Image = await fileToBase64(analysisImage);
+      const fileType = analysisImage.type === 'image/png' ? 'png' : 'jpeg';
 
       setStep('analyzing');
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -705,14 +713,15 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   };
 
   const saveFoodLog = async () => {
-    if (!selectedImage || !analysis) return;
+    const imageToSave = filteredDisplayImage || displayImage;
+    if (!imageToSave || !analysis) return;
     try {
-      const fileExt = selectedImage.type.split('/')[1];
+      const fileExt = imageToSave.type.split('/')[1];
       const filePath = `${currentUser_id}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('food-images')
-        .upload(filePath, selectedImage);
+        .upload(filePath, imageToSave);
 
       if (uploadError) throw uploadError;
 
@@ -739,16 +748,17 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   };
 
   const saveCheckLog = async () => {
-    if (!selectedImage || !analysis) return;
+    const imageToSave = filteredDisplayImage || displayImage;
+    if (!imageToSave || !analysis) return;
 
     try {
-      const fileExt = selectedImage.type.split('/')[1];
+      const fileExt = imageToSave.type.split('/')[1];
       const filePath = `${currentUser_id}/${Date.now()}.${fileExt}`;
 
       // 이미지 업로드
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('food-check-images')
-        .upload(filePath, selectedImage);
+        .upload(filePath, imageToSave);
 
       if (uploadError) throw uploadError;
 
@@ -959,6 +969,7 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
         step={step}
         setStep={setStep}
         setSelectedImage={setSelectedImage}
+        setAnalysisImage={setAnalysisImage}
         setImageUrl={setImageUrl}
         onAnalyze={applyFilters}
         stream={stream}

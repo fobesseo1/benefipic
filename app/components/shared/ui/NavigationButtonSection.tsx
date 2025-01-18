@@ -124,16 +124,6 @@ export default function NavigationButtonSectionFood({
     }
   };
 
-  // const resetAnalyzer = () => {
-  //   setStep('initial');
-  //   setSelectedImage(null);
-  //   setImageUrl('');
-  // };
-
-  const isProcessing = (step: NavigationButtonSectionProps['step']): boolean => {
-    return step === 'compress' || step === 'analyzing' || step === 'calculate';
-  };
-
   return (
     <>
       {step === 'compress' || step === 'analyzing' || step === 'calculate' ? null : (
