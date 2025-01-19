@@ -42,23 +42,39 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
     <AlertDialog open={isOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="tracking-tighter">
-            광고 링크 이동 후 {AD_FREE_HOURS}시간 무제한 이용👌
+          <AlertDialogTitle className="tracking-tighter font-normal pt-4">
+            광고 링크 이동 후 <span className="text-3xl font-semibold">{AD_FREE_HOURS}</span>시간{' '}
+            <span className="text-2xl font-semibold">무제한</span> 이용
           </AlertDialogTitle>
           <AlertDialogDescription className="flex flex-col gap-2">
-            <p className="whitespace-pre-line">{`AI 분석 기능을 계속 사용하시려면\n광고 페이지로 이동해주세요.\n광고 시청 후 ${AD_FREE_HOURS}시간 동안\n제한 없이 이용하실 수 있습니다.`}</p>
-            <div className="mt-4 w-full aspect-square bg-gray-100 flex flex-col items-center justify-center gap-4 shadow-lg">
+            <div className="flex flex-col tracking-tighter pb-4">
+              <p className="">AI 분석 기능을 계속 사용하시려면</p>
+              <p>광고 페이지 방문 후 이용부탁드립니다;;</p>
+              {/* <p className="text-base text-gray-900 font-semibold pt-1">
+                {AD_FREE_HOURS}시간 동안 제한 없이 사용 👌
+              </p> */}
+            </div>
+            <div
+              className="mt-4 w-full aspect-square bg-gray-100 flex flex-col items-center justify-center gap-4 shadow-lg"
+              onClick={handleAdClick}
+            >
               <img src="/ad-coupang.png" alt="ad-coupang" className="w-3/4 object-cover" />
-              <p className="text-xl">쿠팡으로 이동하기</p>
+              <div className="flex flex-col items-center justify-center gap-1">
+                <p className="text-xl">쿠팡으로 이동하기</p>
+                <hr className="border-gray-400 w-full" />
+                <p className="text-lg text-gray-900 font-semibold ">
+                  {AD_FREE_HOURS}시간 동안 제한 없이 사용 👌
+                </p>
+              </div>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <div className="flex flex-col gap-2 mt-4">
-            <Button className="p-6" onClick={handleAdClick}>
+            <Button className="p-6 text-lg tracking-tighter " onClick={handleAdClick}>
               쿠팡 바로 가기 (광고)
             </Button>
-            <Button className="p-6" variant={'outline'} onClick={onClose}>
+            <Button className="p-6 text-gray-400 font-normal" variant={'outline'} onClick={onClose}>
               취소
             </Button>
           </div>
