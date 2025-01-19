@@ -1,4 +1,4 @@
-//app/components/shared/ui/NavigationButtonSection.tsx
+/* //app/components/shared/ui/NavigationButtonSection.tsx
 
 'use client';
 
@@ -242,3 +242,4 @@ export default function NavigationButtonSection({
     </>
   );
 }
+ */
