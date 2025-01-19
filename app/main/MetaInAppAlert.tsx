@@ -11,9 +11,11 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogFooter,
+  AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { FaChrome } from 'react-icons/fa';
+import { InfoIcon, X } from 'lucide-react';
 
 export default function MetaInAppAlert() {
   const [showAlert, setShowAlert] = useState(false);
@@ -72,36 +74,65 @@ export default function MetaInAppAlert() {
 
   return (
     <AlertDialog open={showAlert}>
-      <AlertDialogContent className="max-w-md py-16">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="text-xl font-semibold tracking-tighter">
-            원활한 서비스 이용을 위해 알려드립니다
-          </AlertDialogTitle>
-          <hr />
-          <AlertDialogDescription className="space-y-2 py-8">
-            <p className="leading-relaxed">
-              Meta(Instagram, Facebook, Threads) 브라우저
-              <br />
-              <span className="text-xl font-bold text-gray-900 ">사진 촬영과 업로드</span>
-              <br />
-              <span className="font-bold text-gray-600">일부 기능이 제한될 수 있습니다.</span>
-            </p>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter className="flex-col gap-3 sm:flex-col">
-          <Button onClick={openInChrome} className="w-full gap-2 bg-black py-8">
-            <FaChrome />
-            Chrome 브라우저로 열기
-          </Button>
-          <div className="flex w-full gap-2 mt-12 border-t border-gray-200 pt-4">
-            <Button onClick={handleClose} variant="outline" className="flex-1 py-6 bg-gray-200">
-              닫기
-            </Button>
-            <Button onClick={handleHideToday} variant="outline" className="flex-1 py-6 bg-gray-200">
-              오늘 하루 보지 않기
-            </Button>
+      <AlertDialogContent className="max-w-md  text-center  ">
+        <div className="relative pt-12 pb-6">
+          <div
+            className="absolute right-0 top-0 rounded-full  bg-gray-100 p-2 shadow-sm flex items-center justify-center gap-1"
+            onClick={handleClose}
+          >
+            <X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+            <p className="text-sm font-medium text-gray-400">닫기</p>
           </div>
-        </AlertDialogFooter>
+          {/* 상단 이모티콘 */}
+          <div className="flex justify-center mb-6">
+            <div className="relative ">
+              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 text-red-400">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 8v4M12 16h.01" strokeLinecap="round" />
+                    <circle cx="12" cy="12" r="10" />
+                  </svg>
+                </div>
+              </div>
+              {/* 작은 원 장식들 */}
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-200 rounded-full" />
+              <div className="absolute bottom-0 -left-2 w-4 h-4 bg-red-100 rounded-full" />
+            </div>
+          </div>
+
+          <AlertDialogHeader className="space-y-3 tracking-tighter">
+            <AlertDialogTitle className="text-2xl font-bold text-gray-800">
+              앗, 잠시만요!
+            </AlertDialogTitle>
+            <hr />
+            <AlertDialogDescription className="text-gray-600 pt-6">
+              <p className="text-base leading-relaxed">지금 브라우저에서는</p>
+              <p className=" text-xl font-semibold text-gray-800">
+                사진 기능이 제한될 수 있어요 📸
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter className="flex-col space-y-4 mt-8">
+            <Button
+              onClick={handleHideToday}
+              variant="outline"
+              className="flex-1 py-3 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl text-sm"
+            >
+              알았어! 오늘은 그냥 쓸게
+            </Button>
+            {/* 메인 버튼 */}
+            <Button
+              onClick={openInChrome}
+              className="shadow-md py-6 text-white hover:text-gray-700 hover:bg-gray-50 rounded-xl text-sm"
+            >
+              <FaChrome className="w-5 h-5" />
+              Chrome으로 열기
+            </Button>
+
+            {/* 보조 버튼들 */}
+          </AlertDialogFooter>
+        </div>
       </AlertDialogContent>
     </AlertDialog>
   );
