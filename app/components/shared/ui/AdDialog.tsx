@@ -21,9 +21,20 @@ const AD_URL = 'https://link.coupang.com/a/b8Yjpm'; // 쿠팡 광고 URL
 
 const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) => {
   const handleAdClick = () => {
-    // 새 창에서 광고 URL 열기
-    window.open(AD_URL, '_blank');
-    // 광고 시청 완료 처리
+    try {
+      // 항상 새 창에서 열기 시도
+      const newWindow = window.open(AD_URL, '_blank');
+
+      // 팝업이 차단되었거나 실패한 경우
+      if (newWindow === null || newWindow.closed) {
+        // 현재 창에서 열기로 폴백
+        window.location.href = AD_URL;
+      }
+    } catch (error) {
+      // 에러 발생 시 현재 창에서 열기
+      window.location.href = AD_URL;
+    }
+
     onAdComplete();
   };
 
