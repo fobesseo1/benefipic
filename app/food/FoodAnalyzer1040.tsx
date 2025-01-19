@@ -1,3 +1,5 @@
+//app/food/FoodAnalyzer.tsx
+
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -57,7 +59,6 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   const [imageUrl, setImageUrl] = useState<string>('');
   const [analysis, setAnalysis] = useState<NutritionData | null>(null);
   const [originalAnalysis, setOriginalAnalysis] = useState<NutritionData | null>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [showResultAlert, setShowResultAlert] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,64 +71,12 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   });
   const [showAdDialog, setShowAdDialog] = useState(false);
   const { checkEligibility } = useAnalysisEligibility(currentUser_id);
-  const initialFilters = {
-    brightness: 100,
-    contrast: 100,
-    saturation: 100,
-    warmth: 100,
-  };
-  const [currentFilters, setCurrentFilters] = useState(initialFilters);
+
   const [displayImage, setDisplayImage] = useState<File | null>(null); // 고품질
   const [analysisImage, setAnalysisImage] = useState<File | null>(null); // 저품질
-  const [filteredDisplayImage, setFilteredDisplayImage] = useState<File | null>(null); //필터적용이미지
 
   const router = useRouter();
-  const videoRef = useRef<HTMLVideoElement>(null);
   const supabase = createSupabaseBrowserClient();
-
-  const applyFilters = async () => {
-    if (!selectedImage) return;
-
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = imageUrl;
-
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      // 정사각형 크기로 설정
-      const size = Math.min(img.width, img.height);
-      canvas.width = size;
-      canvas.height = size;
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      // 이미지 중앙 기준으로 크롭
-      const sx = (img.width - size) / 2;
-      const sy = (img.height - size) / 2;
-
-      // 필터 적용
-      ctx.filter = `
-        brightness(${currentFilters.brightness}%)
-        contrast(${currentFilters.contrast}%)
-        saturate(${currentFilters.saturation}%)
-      `;
-
-      // 이미지 그리기 (중앙 크롭)
-      ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
-
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const filteredFile = new File([blob], 'filtered-food-image.jpg', {
-            type: 'image/jpeg',
-          });
-          setFilteredDisplayImage(filteredFile);
-          setImageUrl(URL.createObjectURL(filteredFile));
-          analyzeImage();
-        }
-      }, 'image/jpeg');
-    };
-  };
 
   const handleAdComplete = async () => {
     const supabase = createSupabaseBrowserClient();
@@ -155,14 +104,6 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       setAnalysis(calculateNutritionByQuantity(originalAnalysis, quantity));
     }
   }, [quantity, originalAnalysis]);
-
-  useEffect(() => {
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, [stream]);
 
   // 이벤트 핸들러
   const handleIncrease = () => {
@@ -416,7 +357,7 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   };
 
   const saveFoodLog = async () => {
-    const imageToSave = filteredDisplayImage || displayImage;
+    const imageToSave = displayImage;
     if (!imageToSave || !analysis) return;
 
     try {
@@ -468,14 +409,7 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
             exit={{ x: -160, opacity: 0 }}
             className="w-full aspect-square"
           >
-            {step === 'filter-selection' ? (
-              <FoodImageFilter
-                imageUrl={imageUrl}
-                onPreviewChange={setCurrentFilters} // currentFilters prop 제거
-              />
-            ) : step === 'camera' ? (
-              <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-            ) : imageUrl ? (
+            {imageUrl ? (
               <img src={imageUrl} alt="Selected food" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-black relative">
@@ -630,11 +564,9 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
         setStep={setStep}
         setSelectedImage={setSelectedImage}
         setAnalysisImage={setAnalysisImage}
+        setDisplayImage={setDisplayImage}
         setImageUrl={setImageUrl}
-        onAnalyze={applyFilters}
-        stream={stream}
-        setStream={setStream}
-        videoRef={videoRef}
+        onAnalyze={analyzeImage}
         onSave={saveFoodLog}
         resetAnalyzer={resetAnalyzer}
       />
