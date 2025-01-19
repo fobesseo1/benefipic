@@ -77,7 +77,7 @@ export default function MetaInAppAlert() {
       <AlertDialogContent className="max-w-md  text-center  ">
         <div className="relative pt-12 pb-6">
           <div
-            className="absolute right-0 top-0 rounded-full  bg-gray-100 p-2 shadow-sm flex items-center justify-center gap-1"
+            className="absolute right-0 top-0 rounded-full  bg-gray-50 p-2 shadow-sm flex items-center justify-center gap-1"
             onClick={handleClose}
           >
             <X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
@@ -119,12 +119,12 @@ export default function MetaInAppAlert() {
               variant="outline"
               className="flex-1 py-3 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl text-sm"
             >
-              알았어! 오늘은 그냥 쓸게
+              오늘 하루 보지 않기
             </Button>
             {/* 메인 버튼 */}
             <Button
               onClick={openInChrome}
-              className="shadow-md py-6 text-white hover:text-gray-700 hover:bg-gray-50 rounded-xl text-sm"
+              className="shadow-md py-6 text-white bg-gray-900 hover:text-gray-700 hover:bg-gray-50 rounded-xl text-sm"
             >
               <FaChrome className="w-5 h-5" />
               Chrome으로 열기
