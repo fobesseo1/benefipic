@@ -31,6 +31,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: '#ffffff',
+  viewportFit: 'cover',
 };
 
 export const metadata: Metadata = {
@@ -55,6 +56,7 @@ export const metadata: Metadata = {
     'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'default',
+    'apple-mobile-web-app-title': 'Benefipic',
   },
 };
 

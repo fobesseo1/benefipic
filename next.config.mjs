@@ -1,5 +1,7 @@
+// next.config.mjs
+
 /** @type {import('next').NextConfig} */
-import withPWA from 'next-pwa'
+import withPWA from 'next-pwa';
 
 const nextConfig = {
   experimental: {
@@ -31,6 +33,21 @@ const withPWAConfig = withPWA({
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
   buildExcludes: [/middleware-manifest\.json$/],
-})
+  // 외부 링크 처리를 위한 추가 설정
+  runtimeCaching: [
+    {
+      urlPattern: /^https:\/\/link\.coupang\.com/,
+      handler: 'NetworkOnly',
+      options: {
+        backgroundSync: {
+          name: 'external-links',
+          options: {
+            maxRetentionTime: 60 * 60 * 24, // 24시간
+          },
+        },
+      },
+    },
+  ],
+});
 
 export default withPWAConfig(nextConfig);

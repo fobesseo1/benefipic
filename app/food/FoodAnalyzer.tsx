@@ -25,30 +25,11 @@ import { completedFoodDatabase, ingredientDatabase } from '../food-description/f
 import { useAnalysisEligibility } from '../hooks/useAnalysisEligibility';
 import AdDialog from '../components/shared/ui/AdDialog';
 import { Button } from '@/components/ui/button';
-import {
-  ApiResponse,
-  calculateTotalNutrition,
-  findExactMatchFood,
-  FoodAnalysis,
-  Ingredient,
-  NutritionData,
-  NutritionPer100g,
-  roundNutritionValues,
-  validateAndCorrectAnalysis,
-} from '@/utils/food-analysis';
+import { ApiResponse, NutritionData, validateAndCorrectAnalysis } from '@/utils/food-analysis';
 import FoodImageFilter from '../components/shared/ui/FoodImageFilter';
-
-// 타입 정의
-type AnalysisStep =
-  | 'initial'
-  | 'camera'
-  | 'image-selected'
-  | 'filter-selection'
-  | 'compress'
-  | 'analyzing'
-  | 'calculate'
-  | 'health-check'
-  | 'complete';
+import { AnalysisStep } from './utils/types';
+import { calculateNutritionByQuantity, processApiResponse } from './utils/calculations';
+import { handleDecrease, handleIncrease, handleInputChange } from './utils/handlers';
 
 // 메인 컴포넌트
 const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
@@ -177,95 +158,12 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     };
   }, [stream]);
 
-  // 이벤트 핸들러
-  const handleIncrease = () => {
-    if (quantity < 99) setQuantity((prev) => prev + 1);
-  };
-
-  const handleDecrease = () => {
-    if (quantity > 1) setQuantity((prev) => prev - 1);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (!isNaN(value)) {
-      if (value > 99) setQuantity(99);
-      else if (value < 1) setQuantity(1);
-      else setQuantity(value);
-    }
-  };
-
   const closeNotFoodAlert = () => {
     setNotFoodAlert({
       isOpen: false,
       detectedContent: '',
     });
   };
-
-  // 계산 함수들
-  const calculateNutritionByQuantity = (
-    originalData: NutritionData,
-    qty: number
-  ): NutritionData => {
-    return {
-      ...originalData,
-      nutrition: {
-        calories: Math.round(originalData.nutrition.calories * qty),
-        protein: parseFloat((originalData.nutrition.protein * qty).toFixed(1)),
-        fat: parseFloat((originalData.nutrition.fat * qty).toFixed(1)),
-        carbs: parseFloat((originalData.nutrition.carbs * qty).toFixed(1)),
-      },
-      ingredients: originalData.ingredients.map((ingredient) => {
-        if (ingredient.originalAmount) {
-          return {
-            ...ingredient,
-            amount: `${(ingredient.originalAmount.value * qty).toFixed(1)}${
-              ingredient.originalAmount.unit
-            }`,
-          };
-        }
-        return ingredient;
-      }),
-    };
-  };
-
-  const processApiResponse = (apiData: ApiResponse): NutritionData => {
-    console.log('API 응답 데이터:', apiData);
-
-    // 정확한 매칭 확인
-    const exactMatch = findExactMatchFood(apiData.foodName, completedFoodDatabase);
-
-    // ingredients 형식 변환 (항상 OpenAI 결과 사용)
-    const processedIngredients = apiData.ingredients.map((ingredient) => ({
-      name: ingredient.name,
-      amount: `${ingredient.amount.toString()}${ingredient.unit}`,
-      originalAmount: {
-        value: ingredient.amount,
-        unit: ingredient.unit,
-      },
-    }));
-
-    if (exactMatch) {
-      // 정확히 일치하는 경우 DB의 영양정보 직접 사용
-      return {
-        foodName: apiData.foodName,
-        ingredients: processedIngredients,
-        nutrition: exactMatch.nutrition, // DB 값 그대로 사용
-      };
-    }
-
-    // 일치하지 않는 경우 기존 로직대로 계산
-    const totalNutrition = calculateTotalNutrition(apiData.ingredients);
-    const roundedNutrition = roundNutritionValues(totalNutrition);
-
-    return {
-      foodName: apiData.foodName,
-      ingredients: processedIngredients,
-      nutrition: roundedNutrition,
-    };
-  };
-
-  // API 통신
 
   const analyzeImage = async () => {
     if (!analysisImage) return;
@@ -576,7 +474,7 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
                       <div className="col-span-4 py-2">
                         <div className="flex items-center justify-between h-full">
                           <button
-                            onClick={handleDecrease}
+                            onClick={() => handleDecrease(quantity, setQuantity)}
                             className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full"
                             disabled={quantity <= 1}
                           >
@@ -586,14 +484,14 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
                           <input
                             type="number"
                             value={quantity}
-                            onChange={handleInputChange}
+                            onChange={(e) => handleInputChange(e, setQuantity)}
                             min="1"
                             max="99"
                             className="w-12 h-12 text-center bg-white rounded-lg text-xl font-semibold"
                           />
 
                           <button
-                            onClick={handleIncrease}
+                            onClick={() => handleIncrease(quantity, setQuantity)}
                             className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full"
                             disabled={quantity >= 99}
                           >

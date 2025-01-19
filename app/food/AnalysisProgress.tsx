@@ -1,3 +1,5 @@
+//app/food/AnalysisProgress.tsx
+
 'use client';
 
 import React, { useEffect, useState } from 'react';

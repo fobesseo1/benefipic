@@ -1,13 +1,17 @@
+declare global {
+  interface Navigator {
+    standalone?: boolean;
+  }
+}
+
 import { AD_FREE_HOURS } from '@/app/hooks/useAnalysisEligibility';
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 
@@ -17,25 +21,51 @@ interface AdDialogProps {
   onAdComplete: () => void;
 }
 
-const AD_URL = 'https://link.coupang.com/a/b8Yjpm'; // 쿠팡 광고 URL
+const AD_URL = 'https://link.coupang.com/a/b8Yjpm';
 
 const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) => {
   const handleAdClick = () => {
     try {
-      // 항상 새 창에서 열기 시도
-      const newWindow = window.open(AD_URL, '_blank');
-
-      // 팝업이 차단되었거나 실패한 경우
-      if (newWindow === null || newWindow.closed) {
-        // 현재 창에서 열기로 폴백
-        window.location.href = AD_URL;
+      // 1. 먼저 사용자 작업 상태 저장
+      onAdComplete();
+      
+      // 2. PWA 체크 (iOS Safari 및 다른 브라우저 대응)
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                          // @ts-ignore iOS Safari standalone 속성
+                          window.navigator.standalone || 
+                          document.referrer.includes('android-app://');
+      
+      if (isStandalone) {
+        // PWA에서 실행 시 system 브라우저로 강제 오픈
+        window.open(AD_URL, '_system', 'noopener,noreferrer');
+      } else {
+        // 일반 브라우저에서 실행 시
+        const newWindow = window.open('about:blank', '_blank');
+        if (newWindow) {
+          newWindow.location.href = AD_URL;
+        } else {
+          // 팝업이 차단된 경우 DOM 방식으로 시도
+          const link = document.createElement('a');
+          link.href = AD_URL;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
       }
-    } catch (error) {
-      // 에러 발생 시 현재 창에서 열기
-      window.location.href = AD_URL;
-    }
 
-    onAdComplete();
+    } catch (error) {
+      console.error('광고 열기 실패:', error);
+      // 에러 발생 시에도 마지막 시도
+      const link = document.createElement('a');
+      link.href = AD_URL;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   return (
@@ -48,21 +78,18 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
           </AlertDialogTitle>
           <AlertDialogDescription className="flex flex-col gap-2">
             <div className="flex flex-col tracking-tighter pb-4">
-              <p className="">AI 분석 기능을 계속 사용하시려면</p>
-              <p>광고 페이지 방문 후 이용부탁드립니다;;</p>
-              {/* <p className="text-base text-gray-900 font-semibold pt-1">
-                {AD_FREE_HOURS}시간 동안 제한 없이 사용 👌
-              </p> */}
+              <p>AI 분석 기능을 계속 사용하시려면</p>
+              <p>광고 페이지 방문 후 이용부탁드립니다</p>
             </div>
             <div
-              className="mt-4 w-full aspect-square bg-gray-100 flex flex-col items-center justify-center gap-4 shadow-lg"
+              className="mt-4 w-full aspect-square bg-gray-100 flex flex-col items-center justify-center gap-4 shadow-lg cursor-pointer"
               onClick={handleAdClick}
             >
               <img src="/ad-coupang.png" alt="ad-coupang" className="w-3/4 object-cover" />
               <div className="flex flex-col items-center justify-center gap-1">
                 <p className="text-xl">쿠팡으로 이동하기</p>
                 <hr className="border-gray-400 w-full" />
-                <p className="text-lg text-gray-900 font-semibold ">
+                <p className="text-lg text-gray-900 font-semibold">
                   {AD_FREE_HOURS}시간 동안 제한 없이 사용 👌
                 </p>
               </div>
@@ -71,10 +98,10 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <div className="flex flex-col gap-2 mt-4">
-            <Button className="p-6 text-lg tracking-tighter " onClick={handleAdClick}>
+            <Button className="p-6 text-lg tracking-tighter" onClick={handleAdClick}>
               쿠팡 바로 가기 (광고)
             </Button>
-            <Button className="p-6 text-gray-400 font-normal" variant={'outline'} onClick={onClose}>
+            <Button className="p-6 text-gray-400 font-normal" variant="outline" onClick={onClose}>
               취소
             </Button>
           </div>
