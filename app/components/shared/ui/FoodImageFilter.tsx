@@ -67,7 +67,7 @@ const FoodImageFilter: React.FC<FoodImageFilterProps> = ({ imageUrl, onPreviewCh
         className="w-full aspect-square object-cover rounded-lg"
         style={getFilterStyle()}
       />
-      <div className="w-full  absolute bottom-6 p-4">
+      <div className="w-full  absolute bottom-12 p-4 ">
         <Select value={filterType} onValueChange={handlePresetChange}>
           <SelectTrigger className="z-50 bg-gray-100/60 backdrop-blur-sm text-gray-900 font-semibold border-2 border-black py-6">
             <SelectValue placeholder="필터 선택" />

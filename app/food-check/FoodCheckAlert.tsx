@@ -74,8 +74,8 @@ const FoodCheckAlert: React.FC<FoodCheckAlertProps> = ({
   };
 
   const handleClose = () => {
-    onClose();
     setStep('complete');
+    onClose();
   };
 
   const nutritionItems = [
