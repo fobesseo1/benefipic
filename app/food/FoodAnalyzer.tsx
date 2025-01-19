@@ -76,10 +76,16 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     saturation: 100,
     warmth: 100,
   };
-  const [currentFilters, setCurrentFilters] = useState(initialFilters);
   const [displayImage, setDisplayImage] = useState<File | null>(null); // 고품질
   const [analysisImage, setAnalysisImage] = useState<File | null>(null); // 저품질
-  const [filteredDisplayImage, setFilteredDisplayImage] = useState<File | null>(null); //필터적용이미지
+  const [filteredDisplayImage, setFilteredDisplayImage] = useState<File | null>(null);
+  const [filterType, setFilterType] = useState('none');
+  const [currentFilters, setCurrentFilters] = useState({
+    brightness: 100,
+    contrast: 100,
+    saturation: 100,
+    warmth: 100,
+  });
 
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -94,7 +100,6 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
 
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      // 정사각형 크기로 설정
       const size = Math.min(img.width, img.height);
       canvas.width = size;
       canvas.height = size;
@@ -102,18 +107,26 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      // 이미지 중앙 기준으로 크롭
       const sx = (img.width - size) / 2;
       const sy = (img.height - size) / 2;
 
+      // Instagram 스타일 필터나 기본 필터의 computed style 가져오기
+      const filterDiv = document.createElement('div');
+      filterDiv.className = filterType === 'none' ? '' : `filter-${filterType}`;
+      document.body.appendChild(filterDiv);
+      const computedStyle = window.getComputedStyle(filterDiv);
+      const filterValue = computedStyle.filter;
+      document.body.removeChild(filterDiv);
+
       // 필터 적용
-      ctx.filter = `
+      ctx.filter =
+        filterValue ||
+        `
         brightness(${currentFilters.brightness}%)
         contrast(${currentFilters.contrast}%)
         saturate(${currentFilters.saturation}%)
       `;
 
-      // 이미지 그리기 (중앙 크롭)
       ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
 
       canvas.toBlob((blob) => {
@@ -471,7 +484,9 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
             {step === 'filter-selection' ? (
               <FoodImageFilter
                 imageUrl={imageUrl}
-                onPreviewChange={setCurrentFilters} // currentFilters prop 제거
+                onPreviewChange={setCurrentFilters}
+                filterType={filterType}
+                onFilterChange={setFilterType}
               />
             ) : step === 'camera' ? (
               <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />

@@ -7,11 +7,11 @@ import NoLoginUserAlert from '../components/shared/ui/NoLoginUserAlert';
 
 export default async function WeightTrackerPage() {
   const currentUser = await getUser();
-    const currentUser_id = currentUser?.id;
-  
-    if (!currentUser) {
-      return <NoLoginUserAlert />;
-    }
+  const currentUser_id = currentUser?.id;
+
+  if (!currentUser) {
+    return <NoLoginUserAlert />;
+  }
 
   return (
     <div>

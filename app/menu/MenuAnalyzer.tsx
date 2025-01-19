@@ -18,7 +18,7 @@ import {
   validateAndCorrectAnalysis,
 } from '@/utils/food-analysis';
 import { completedFoodDatabase } from '../food-description/foodDatabase';
-import NavigationButtonSectionMenu from './../components/shared/ui/NavigationButtonSectionMenu';
+import NavigationButtonSectionMenu from '../components/shared/ui/NavigationButtonSectionMenu';
 
 type AnalysisStep =
   | 'initial'

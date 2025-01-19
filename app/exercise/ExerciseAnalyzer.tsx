@@ -99,6 +99,7 @@ const ExerciseAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     warmth: 100,
   };
   const [currentFilters, setCurrentFilters] = useState(initialFilters);
+  const [filterType, setFilterType] = useState('none');
 
   // 헬퍼 함수들
   const calculateTotalCalories = (caloriesPerMinute: number, duration: number): number => {
@@ -138,49 +139,58 @@ const ExerciseAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     };
   };
   // 필터 적용 함수
-  const applyFilters = async () => {
-    if (!selectedImage) return;
+  // 필터 적용 함수
+const applyFilters = async () => {
+  if (!selectedImage) return;
 
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = imageUrl;
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.src = imageUrl;
 
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      // 정사각형 크기로 설정
-      const size = Math.min(img.width, img.height);
-      canvas.width = size;
-      canvas.height = size;
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    // 정사각형 크기로 설정
+    const size = Math.min(img.width, img.height);
+    canvas.width = size;
+    canvas.height = size;
 
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-      // 이미지 중앙 기준으로 크롭
-      const sx = (img.width - size) / 2;
-      const sy = (img.height - size) / 2;
+    // 이미지 중앙 기준으로 크롭
+    const sx = (img.width - size) / 2;
+    const sy = (img.height - size) / 2;
 
-      // 필터 적용
-      ctx.filter = `
-        brightness(${currentFilters.brightness}%)
-        contrast(${currentFilters.contrast}%)
-        saturate(${currentFilters.saturation}%)
-      `;
+    // Instagram 스타일 필터나 기본 필터의 computed style 가져오기
+    const filterDiv = document.createElement('div');
+    filterDiv.className = filterType === 'none' ? '' : `filter-${filterType}`;
+    document.body.appendChild(filterDiv);
+    const computedStyle = window.getComputedStyle(filterDiv);
+    const filterValue = computedStyle.filter;
+    document.body.removeChild(filterDiv);
 
-      // 이미지 그리기 (중앙 크롭)
-      ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
+    // 필터 적용
+    ctx.filter = filterValue || `
+      brightness(${currentFilters.brightness}%)
+      contrast(${currentFilters.contrast}%)
+      saturate(${currentFilters.saturation}%)
+    `;
 
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const filteredFile = new File([blob], 'filtered-exercise-image.jpg', {
-            type: 'image/jpeg',
-          });
-          setFilteredDisplayImage(filteredFile);
-          setImageUrl(URL.createObjectURL(filteredFile));
-          analyzeImage();
-        }
-      }, 'image/jpeg');
-    };
+    // 이미지 그리기 (중앙 크롭)
+    ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const filteredFile = new File([blob], 'filtered-exercise-image.jpg', {
+          type: 'image/jpeg',
+        });
+        setFilteredDisplayImage(filteredFile);
+        setImageUrl(URL.createObjectURL(filteredFile));
+        analyzeImage();
+      }
+    }, 'image/jpeg');
   };
+};
 
   // 광고 완료 처리
   const handleAdComplete = async () => {
@@ -432,7 +442,12 @@ const ExerciseAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
             className="w-full aspect-square"
           >
             {step === 'filter-selection' ? (
-              <ExerciseImageFilter imageUrl={imageUrl} onPreviewChange={setCurrentFilters} />
+              <ExerciseImageFilter
+                imageUrl={imageUrl}
+                onPreviewChange={setCurrentFilters}
+                filterType={filterType}
+                onFilterChange={setFilterType}
+              />
             ) : step === 'camera' ? (
               <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
             ) : imageUrl ? (

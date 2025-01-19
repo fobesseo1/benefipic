@@ -1,7 +1,4 @@
-'use client';
-
 import React from 'react';
-
 import {
   Select,
   SelectContent,
@@ -9,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import './css-filter/instagramFiltersFood.css';
 
 interface FoodImageFilterProps {
   imageUrl: string;
@@ -18,94 +16,109 @@ interface FoodImageFilterProps {
     saturation: number;
     warmth: number;
   }) => void;
+  filterType: string;
+  onFilterChange: (filterType: string) => void;
 }
 
-const FoodImageFilter: React.FC<FoodImageFilterProps> = ({ imageUrl, onPreviewChange }) => {
-  const [filterType, setFilterType] = React.useState('none');
-  const [customFilters, setCustomFilters] = React.useState({
-    brightness: 100,
-    contrast: 100,
-    saturation: 100,
-    warmth: 100,
-  });
+// 필터 옵션 타입 정의
+interface FilterOption {
+  value: string;
+  label: string;
+  description: string;
+  category: 'basic' | 'instagram';
+}
 
-  const presets = {
-    none: { brightness: 100, contrast: 100, saturation: 100, warmth: 100 },
-    default: { brightness: 110, contrast: 115, saturation: 115, warmth: 110 },
-    grilled: { brightness: 95, contrast: 135, saturation: 120, warmth: 120 },
-    fresh: { brightness: 115, contrast: 120, saturation: 130, warmth: 95 },
-    dessert: { brightness: 115, contrast: 110, saturation: 125, warmth: 110 },
-    soup: { brightness: 100, contrast: 130, saturation: 115, warmth: 110 },
-    fried: { brightness: 105, contrast: 135, saturation: 125, warmth: 115 },
-    seafood: { brightness: 110, contrast: 125, saturation: 120, warmth: 95 },
-    tteok: { brightness: 115, contrast: 115, saturation: 115, warmth: 115 },
-    hotpot: { brightness: 105, contrast: 125, saturation: 120, warmth: 120 },
-    noodle: { brightness: 110, contrast: 120, saturation: 115, warmth: 105 },
-  };
+// 필터 옵션 데이터
+const filterOptions: FilterOption[] = [
+  // Basic Food Filters
+  { value: 'none', label: '원본', description: '사진 그대로', category: 'basic' },
+  { value: 'default', label: '기본', description: '음식 맛있게', category: 'basic' },
+  { value: 'grilled', label: '육즙 팡팡', description: '구이,바베큐', category: 'basic' },
+  { value: 'fresh', label: '신선한 채소', description: '채소,과일,샐러드', category: 'basic' },
+  { value: 'dessert', label: '달콤 디저트', description: '디저트류', category: 'basic' },
+  { value: 'soup', label: '깊은 국물', description: '탕/국', category: 'basic' },
+  { value: 'fried', label: '바삭바삭', description: '튀김 요리', category: 'basic' },
+  { value: 'seafood', label: '신선한 해산물', description: '회/생선', category: 'basic' },
+  { value: 'tteok', label: '쫄깃쫄깃', description: '떡볶이/분식', category: 'basic' },
+  { value: 'hotpot', label: '얼큰한맛', description: '매콤 요리', category: 'basic' },
+  { value: 'noodle', label: '탱글면발', description: '면 요리', category: 'basic' },
 
-  const getFilterStyle = () => ({
-    filter: `
-      brightness(${customFilters.brightness}%)
-      contrast(${customFilters.contrast}%)
-      saturate(${customFilters.saturation}%)
-    `,
-    transition: 'filter 0.3s ease',
-  });
+  // Instagram Style Filters
+  { value: '1977', label: '1977', description: '클래식 필름', category: 'instagram' },
+  { value: 'aden', label: 'Aden', description: '파스텔 웜톤', category: 'instagram' },
+  { value: 'brannan', label: 'Brannan', description: '하이 콘트라스트', category: 'instagram' },
+  { value: 'brooklyn', label: 'Brooklyn', description: '빈티지 웜톤', category: 'instagram' },
+  {
+    value: 'clarendon',
+    label: 'Clarendon',
+    description: '선명한 하이라이트',
+    category: 'instagram',
+  },
+  { value: 'earlybird', label: 'Earlybird', description: '클래식 마감', category: 'instagram' },
+  { value: 'gingham', label: 'Gingham', description: '빈티지 소프트', category: 'instagram' },
+  { value: 'hudson', label: 'Hudson', description: '차가운 필름', category: 'instagram' },
+  { value: 'inkwell', label: 'Inkwell', description: '클래식 흑백', category: 'instagram' },
+  { value: 'lofi', label: 'Lofi', description: '선명한 채도', category: 'instagram' },
+  { value: 'mayfair', label: 'Mayfair', description: '따뜻한 핑크', category: 'instagram' },
+  { value: 'nashville', label: 'Nashville', description: '레트로 필름', category: 'instagram' },
+  { value: 'reyes', label: 'Reyes', description: '빈티지 페이드', category: 'instagram' },
+  { value: 'rise', label: 'Rise', description: '소프트 웜톤', category: 'instagram' },
+  { value: 'toaster', label: 'Toaster', description: '골든 브라운', category: 'instagram' },
+];
 
+const FoodImageFilter: React.FC<FoodImageFilterProps> = ({
+  imageUrl,
+  onPreviewChange,
+  filterType,
+  onFilterChange,
+}) => {
   const handlePresetChange = (value: string) => {
-    setFilterType(value);
-    const newFilters = presets[value as keyof typeof presets];
-    setCustomFilters(newFilters);
-    onPreviewChange(newFilters);
+    onFilterChange(value);
+    onPreviewChange({
+      brightness: 100,
+      contrast: 100,
+      saturation: 100,
+      warmth: 100,
+    });
   };
 
   return (
-    <div className=" relative">
-      <img
-        src={imageUrl}
-        alt="Food preview"
-        className="w-full aspect-square object-cover rounded-lg"
-        style={getFilterStyle()}
-      />
-      <div className="w-full  absolute bottom-12 p-4 ">
+    <div className="relative">
+      <div className={filterType === 'none' ? '' : `filter-${filterType}`}>
+        <img
+          src={imageUrl}
+          alt="Food preview"
+          className="w-full aspect-square object-cover rounded-lg"
+        />
+      </div>
+      <div className="w-full absolute bottom-6 p-4">
         <Select value={filterType} onValueChange={handlePresetChange}>
           <SelectTrigger className="z-50 bg-gray-100/60 backdrop-blur-sm text-gray-900 font-semibold border-2 border-black py-6">
             <SelectValue placeholder="필터 선택" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none" className="py-4">
-              원본<span className="text-xs tracking-tighter"> (사진 그대로)</span>
-            </SelectItem>
-            <SelectItem value="default" className="py-4">
-              음식 맛있게<span className="text-xs tracking-tighter"> (기본필터)</span>
-            </SelectItem>
-            <SelectItem value="grilled" className="py-4">
-              육즙 팡팡<span className="text-xs tracking-tighter"> (구이,바베큐)</span>
-            </SelectItem>
-            <SelectItem value="fresh" className="py-4">
-              신선한 채소<span className="text-xs tracking-tighter"> (채소,과일,샐러드)</span>
-            </SelectItem>
-            <SelectItem value="dessert" className="py-4">
-              달콤 디저트<span className="text-xs tracking-tighter"> (디저트류)</span>
-            </SelectItem>
-            <SelectItem value="soup" className="py-4">
-              깊은 국물<span className="text-xs tracking-tighter"> (탕/국)</span>
-            </SelectItem>
-            <SelectItem value="fried" className="py-4">
-              바삭바삭<span className="text-xs tracking-tighter"> (튀김 요리)</span>
-            </SelectItem>
-            <SelectItem value="seafood" className="py-4">
-              신선한 해산물<span className="text-xs tracking-tighter"> (회/생선)</span>
-            </SelectItem>
-            <SelectItem value="tteok" className="py-4">
-              쫄깃쫄깃<span className="text-xs tracking-tighter"> (떡볶이/분식)</span>
-            </SelectItem>
-            <SelectItem value="hotpot" className="py-4">
-              얼큰한맛<span className="text-xs tracking-tighter"> (매콤 요리)</span>
-            </SelectItem>
-            <SelectItem value="noodle" className="py-4">
-              탱글면발<span className="text-xs tracking-tighter"> (면 요리)</span>
-            </SelectItem>
+            {/* Basic Food Filters Section */}
+            {filterOptions
+              .filter((filter) => filter.category === 'basic')
+              .map((filter) => (
+                <SelectItem key={filter.value} value={filter.value} className="py-4">
+                  {filter.label}
+                  <span className="text-xs tracking-tighter"> ({filter.description})</span>
+                </SelectItem>
+              ))}
+
+            {/* Visual Separator */}
+            <div className="h-px bg-gray-200 my-2" />
+
+            {/* Instagram Style Filters Section */}
+            {filterOptions
+              .filter((filter) => filter.category === 'instagram')
+              .map((filter) => (
+                <SelectItem key={filter.value} value={filter.value} className="py-4">
+                  {filter.label}
+                  <span className="text-xs tracking-tighter"> ({filter.description})</span>
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </div>

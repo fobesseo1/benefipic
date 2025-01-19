@@ -4736,13 +4736,13 @@ export const completedFoodDatabase: FoodItem[] = [
   },
   {
     id: 'salad',
-    name: '샐러드',
+    name: '샐러드(드레싱 포함)',
     unit: '접시',
-    unitWeight: 200,
+    unitWeight: 150,
     nutrition: {
-      calories: 100,
-      protein: 4,
-      fat: 2,
+      calories: 184,
+      protein: 1.4,
+      fat: 15.7,
       carbs: 10,
     },
   },
