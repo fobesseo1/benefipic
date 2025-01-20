@@ -14,6 +14,7 @@ import {
   AlertDialogFooter,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import InAppSpy from 'inapp-spy';
 
 interface AdDialogProps {
   isOpen: boolean;
@@ -25,46 +26,37 @@ const AD_URL = 'https://link.coupang.com/a/b8Yjpm';
 
 const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) => {
   const handleAdClick = () => {
+    // PWA 체크
+    const isPWA =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      // @ts-ignore
+      window.navigator.standalone;
+
+    // InAppSpy로 직접 인앱 브라우저 체크
+    const { appKey } = InAppSpy();
+    const isInAppBrowser = appKey === 'instagram' || appKey === 'threads' || appKey === 'facebook';
+
     try {
-      // 1. 먼저 사용자 작업 상태 저장
-      onAdComplete();
-      
-      // 2. PWA 체크 (iOS Safari 및 다른 브라우저 대응)
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                          // @ts-ignore iOS Safari standalone 속성
-                          window.navigator.standalone || 
-                          document.referrer.includes('android-app://');
-      
-      if (isStandalone) {
-        // PWA에서 실행 시 system 브라우저로 강제 오픈
+      if (isPWA) {
+        // PWA인 경우 시스템 브라우저로 강제 열기
         window.open(AD_URL, '_system', 'noopener,noreferrer');
+        onAdComplete();
+      } else if (isInAppBrowser) {
+        // 인앱 브라우저인 경우
+        window.location.href = AD_URL;
+        onAdComplete();
       } else {
-        // 일반 브라우저에서 실행 시
-        const newWindow = window.open('about:blank', '_blank');
+        // 일반 브라우저의 경우
+        const newWindow = window.open('about:blank', '_blank', 'noopener,noreferrer');
         if (newWindow) {
           newWindow.location.href = AD_URL;
-        } else {
-          // 팝업이 차단된 경우 DOM 방식으로 시도
-          const link = document.createElement('a');
-          link.href = AD_URL;
-          link.target = '_blank';
-          link.rel = 'noopener noreferrer';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+          onAdComplete();
         }
       }
-
     } catch (error) {
-      console.error('광고 열기 실패:', error);
-      // 에러 발생 시에도 마지막 시도
-      const link = document.createElement('a');
-      link.href = AD_URL;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      console.error('광고 창 열기 실패:', error);
+      window.open(AD_URL, '_blank', 'noopener,noreferrer');
+      onAdComplete();
     }
   };
 
