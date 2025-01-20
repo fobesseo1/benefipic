@@ -19,13 +19,13 @@ import InAppSpy from 'inapp-spy';
 interface AdDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdComplete: () => void;
+  onAdComplete: () => Promise<void>;
 }
 
 const AD_URL = 'https://link.coupang.com/a/b8Yjpm';
 
 const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) => {
-  const handleAdClick = () => {
+  const handleAdClick = async () => {
     const { appKey } = InAppSpy();
     const isInAppBrowser = appKey === 'instagram' || appKey === 'threads' || appKey === 'facebook';
 
@@ -37,18 +37,10 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
     try {
       // 1. 일반 브라우저 (크롬)
       if (!isPWA && !isInAppBrowser) {
-        onAdComplete();
-        const newWindow = window.open(AD_URL, '_blank', 'noopener,noreferrer');
-
-        if (!newWindow) {
-          // const a = document.createElement('a');
-          // a.href = AD_URL;
-          // a.target = '_blank';
-          // a.rel = 'noopener noreferrer';
-          // a.click();
-          console.log('!newWindow');
-          null;
-        }
+        // Promise 실행만 하고 기다리지 않음
+        onAdComplete().then(() => {
+          window.open(AD_URL, '_blank', 'noopener,noreferrer');
+        });
         return;
       }
 
