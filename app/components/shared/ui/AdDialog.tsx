@@ -38,9 +38,15 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
     try {
       // 1. 일반 브라우저 (크롬)
       if (!isPWA && !isInAppBrowser) {
-        // Promise 실행만 하고 기다리지 않음
         onAdComplete().then(() => {
-          window.open(AD_URL, '_blank', 'noopener,noreferrer');
+          // setTimeout으로 현재 실행 컨텍스트와 분리
+          setTimeout(() => {
+            const a = document.createElement('a');
+            a.href = AD_URL;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.click();
+          }, 0);
         });
         return;
       }
