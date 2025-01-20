@@ -140,7 +140,7 @@ const FoodAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     }
 
     setShowAdDialog(false);
-    analyzeImage(); // 분석 재시작
+    //analyzeImage(); // 분석 재시작
   };
 
   // Effect Hooks
