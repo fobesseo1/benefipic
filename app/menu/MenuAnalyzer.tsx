@@ -19,6 +19,7 @@ import {
 } from '@/utils/food-analysis';
 import { completedFoodDatabase } from '../food-description/foodDatabase';
 import NavigationButtonSectionMenu from '../components/shared/ui/NavigationButtonSectionMenu';
+import AnalysisProgress from './AnalysisProgress';
 
 type AnalysisStep =
   | 'initial'
@@ -340,8 +341,7 @@ ${userDescription}
             >
               {step === 'analyzing' && (
                 <div className="flex flex-col items-center justify-center h-full">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-black" />
-                  <p className="mt-4 text-gray-500">메뉴를 분석하고 있어요...</p>
+                  <AnalysisProgress currentStep={step} />
                 </div>
               )}
 

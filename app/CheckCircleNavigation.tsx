@@ -78,45 +78,60 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
             <Link href="/food">
               <button
                 onClick={() => setShowRouteDialog(false)}
-                className="w-full bg-white border-2 border-gray-200 rounded-xl p-2 flex items-center gap-4 hover:bg-gray-50"
+                className="w-full bg-white border-2 border-gray-200 rounded-xl p-2 flex items-center gap-4 shadow-lg hover:bg-gray-50 hover:-translate-y-0.5 transition-all"
               >
                 <div className="bg-gray-100 p-4 rounded-full">
                   <Salad className="h-8 w-8 text-gray-600" />
                 </div>
-                <span className="flex-1 text-left font-medium text-xl">음식 사진 입력</span>
+                <div className="flex-1 text-left">
+                  <span className="font-semibold text-xl block">오늘의 식사 📸</span>
+                  <span className="text-sm text-gray-400">식사 기록 및 칼로리 체크!</span>
+                </div>
               </button>
             </Link>
+
             <Link href="/food-check">
               <button
                 onClick={() => setShowRouteDialog(false)}
-                className="w-full bg-white border-2 border-gray-200 rounded-xl p-2 flex items-center gap-4 hover:bg-gray-50"
+                className="w-full bg-white border-2 border-gray-200 rounded-xl p-2 flex items-center gap-4 shadow-lg hover:bg-gray-50 hover:-translate-y-0.5 transition-all"
               >
                 <div className="bg-gray-100 p-4 rounded-full">
                   <FileQuestion className="h-8 w-8 text-gray-600" />
                 </div>
-                <span className="flex-1 text-left font-medium text-xl">먹을까? 말까?</span>
+                <div className="flex-1 text-left">
+                  <span className="font-semibold text-xl block">먹을까? 말까?🤔</span>
+                  <span className="text-sm text-gray-400">먹을지 말지 딱! 정해드림</span>
+                </div>
               </button>
             </Link>
+
             <Link href="/menu">
               <button
                 onClick={() => setShowRouteDialog(false)}
-                className="w-full bg-white border-2 border-gray-200 rounded-xl p-2 flex items-center gap-4 hover:bg-gray-50"
+                className="w-full bg-white border-2 border-gray-200 rounded-xl p-2 flex items-center gap-4 shadow-lg hover:bg-gray-50 hover:-translate-y-0.5 transition-all"
               >
                 <div className="bg-gray-100 p-4 rounded-full">
                   <ReceiptText className="h-8 w-8 text-gray-600" />
                 </div>
-                <span className="flex-1 text-left font-medium text-xl">메뉴추천</span>
+                <div className="flex-1 text-left">
+                  <span className="font-semibold text-xl block">메뉴 추천 🍽️</span>
+                  <span className="text-sm text-gray-400">메뉴판 찍으면 건강한 메뉴 추천</span>
+                </div>
               </button>
             </Link>
+
             <Link href="/exercise">
               <button
                 onClick={() => setShowRouteDialog(false)}
-                className="w-full bg-white border-2 border-gray-200 rounded-xl p-2 flex items-center gap-4 hover:bg-gray-50"
+                className="w-full bg-white border-2 border-gray-200 rounded-xl p-2 flex items-center gap-4 shadow-lg hover:bg-gray-50 hover:-translate-y-0.5 transition-all"
               >
-                <div className="bg-gray-100  p-4 rounded-full">
+                <div className="bg-gray-100 p-4 rounded-full">
                   <Dumbbell className="h-8 w-8 text-gray-600" />
                 </div>
-                <span className="flex-1 text-left font-medium text-xl">운동 사진 입력</span>
+                <div className="flex-1 text-left">
+                  <span className="font-semibold text-xl block">오늘의 운동 💪</span>
+                  <span className="text-sm text-gray-400">오늘 운동 바로 기록!</span>
+                </div>
               </button>
             </Link>
           </div>
