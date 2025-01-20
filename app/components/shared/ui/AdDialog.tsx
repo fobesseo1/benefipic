@@ -44,9 +44,21 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
 
       if (!isPWA && !isInAppBrowser) {
         // 새 창에서 광고 URL 열기
-        window.open(AD_URL, '_blank');
         // 광고 시청 완료 처리
         onAdComplete();
+        const newWindow = window.open('about:blank', '_system');
+        if (newWindow) {
+          newWindow.location.href = AD_URL;
+        } else {
+          // 팝업이 차단된 경우 DOM 방식으로 시도
+          const link = document.createElement('a');
+          link.href = AD_URL;
+          link.target = '_system';
+          link.rel = 'noopener noreferrer';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
       }
 
       // PWA
