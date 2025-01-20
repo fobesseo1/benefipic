@@ -26,37 +26,59 @@ const AD_URL = 'https://link.coupang.com/a/b8Yjpm';
 
 const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) => {
   const handleAdClick = () => {
+    // 광고 완료 처리를 먼저 실행하여 현재 상태 유지
+    onAdComplete();
+
+    // InAppSpy로 직접 인앱 브라우저 체크
+    const { appKey } = InAppSpy();
+    const isInAppBrowser = appKey === 'instagram' || appKey === 'threads' || appKey === 'facebook';
+
     // PWA 체크
     const isPWA =
       window.matchMedia('(display-mode: standalone)').matches ||
       // @ts-ignore
       window.navigator.standalone;
 
-    // InAppSpy로 직접 인앱 브라우저 체크
-    const { appKey } = InAppSpy();
-    const isInAppBrowser = appKey === 'instagram' || appKey === 'threads' || appKey === 'facebook';
-
     try {
-      if (isPWA) {
-        // PWA인 경우 시스템 브라우저로 강제 열기
-        window.open(AD_URL, '_system', 'noopener,noreferrer');
-        onAdComplete();
-      } else if (isInAppBrowser) {
-        // 인앱 브라우저인 경우
-        window.location.href = AD_URL;
-        onAdComplete();
-      } else {
-        // 일반 브라우저의 경우
+      // 1. 일반 브라우저 (크롬, 사파리 등)
+      if (!isPWA && !isInAppBrowser) {
         const newWindow = window.open('about:blank', '_blank', 'noopener,noreferrer');
         if (newWindow) {
           newWindow.location.href = AD_URL;
-          onAdComplete();
         }
+        return;
+      }
+
+      // 2. PWA
+      if (isPWA) {
+        const newWindow = window.open(AD_URL, '_blank', 'noopener,noreferrer');
+        if (!newWindow) {
+          // 팝업이 차단된 경우
+          const a = document.createElement('a');
+          a.href = AD_URL;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.click();
+        }
+        return;
+      }
+
+      // 3. 인앱 브라우저
+      if (isInAppBrowser) {
+        const a = document.createElement('a');
+        a.href = AD_URL;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.click();
       }
     } catch (error) {
       console.error('광고 창 열기 실패:', error);
-      window.open(AD_URL, '_blank', 'noopener,noreferrer');
-      onAdComplete();
+      // 에러 발생 시 가장 안전한 방법으로 시도
+      const a = document.createElement('a');
+      a.href = AD_URL;
+      a.target = '_blank';
+      a.rel = 'noopener,noreferrer';
+      a.click();
     }
   };
 
