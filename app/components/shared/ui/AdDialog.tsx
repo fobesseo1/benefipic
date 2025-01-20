@@ -22,6 +22,7 @@ interface AdDialogProps {
   onAdComplete: () => Promise<void>;
 }
 
+//광고링크
 const AD_URL = 'https://link.coupang.com/a/b8Yjpm';
 
 const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) => {
