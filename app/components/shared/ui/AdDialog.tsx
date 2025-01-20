@@ -50,7 +50,7 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
         if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
           const link = document.createElement('a');
           link.href = AD_URL;
-          link.target = '_blank';
+          link.target = '_system';
           link.rel = 'noopener noreferrer';
           document.body.appendChild(link);
           link.click();
@@ -59,7 +59,7 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
         }
 
         // 다른 모바일 브라우저 처리
-        const newWindow = window.open(AD_URL, '_blank');
+        const newWindow = window.open(AD_URL, '_system');
         if (newWindow) {
           newWindow.opener = null;
         } else {
@@ -77,7 +77,7 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
       // PWA
       if (isPWA) {
         await onAdComplete();
-        const newWindow = window.open(AD_URL, '_blank', 'noopener,noreferrer');
+        const newWindow = window.open(AD_URL, '_system', 'noopener,noreferrer');
         if (!newWindow) {
           adLink.click();
         }
@@ -87,7 +87,7 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
 
       // 인앱 브라우저
       if (isInAppBrowser) {
-        const newWindow = window.open(AD_URL, '_blank', 'noopener,noreferrer');
+        const newWindow = window.open(AD_URL, '_system', 'noopener,noreferrer');
         if (!newWindow) {
           window.open(AD_URL, '_system');
         }
