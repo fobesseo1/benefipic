@@ -22,7 +22,6 @@ interface AdDialogProps {
   onAdComplete: () => Promise<void>;
 }
 
-//광고링크
 const AD_URL = 'https://link.coupang.com/a/b8Yjpm';
 
 const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) => {
@@ -31,46 +30,42 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
     const isInAppBrowser = appKey === 'instagram' || appKey === 'threads' || appKey === 'facebook';
 
     const isPWA =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      // @ts-ignore
-      window.navigator.standalone;
+      window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
     try {
+      // 실제 HTML 링크를 만들어서 DOM에 추가
+      const adLink = document.createElement('a');
+      adLink.href = AD_URL;
+      adLink.target = '_blank';
+      adLink.rel = 'noopener noreferrer';
+      document.body.appendChild(adLink);
+
       // 1. 일반 브라우저 (크롬)
       if (!isPWA && !isInAppBrowser) {
-        onAdComplete().then(() => {
-          // setTimeout으로 현재 실행 컨텍스트와 분리
-          setTimeout(() => {
-            const a = document.createElement('a');
-            a.href = AD_URL;
-            a.target = '_blank';
-            a.rel = 'noopener noreferrer';
-            a.click();
-          }, 0);
-        });
+        await onAdComplete(); // 먼저 완료 처리
+        adLink.click(); // 그 다음 링크 클릭
+        document.body.removeChild(adLink); // cleanup
         return;
       }
 
-      // PWA (변경하지 않음 - 잘 동작하는 코드)
+      // PWA
       if (isPWA) {
-        onAdComplete();
+        await onAdComplete();
         const newWindow = window.open(AD_URL, '_blank', 'noopener,noreferrer');
         if (!newWindow) {
-          const a = document.createElement('a');
-          a.href = AD_URL;
-          a.target = '_blank';
-          a.rel = 'noopener noreferrer';
-          a.click();
+          adLink.click();
         }
+        document.body.removeChild(adLink);
         return;
       }
 
-      // 4. 인앱 브라우저
+      // 인앱 브라우저
       if (isInAppBrowser) {
         const newWindow = window.open(AD_URL, '_blank', 'noopener,noreferrer');
         if (!newWindow) {
           window.open(AD_URL, '_system');
         }
+        document.body.removeChild(adLink);
       }
     } catch (error) {
       console.error('광고 창 열기 실패:', error);
