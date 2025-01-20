@@ -7,6 +7,8 @@ import NoLoginUserAlert from '../components/shared/ui/NoLoginUserAlert';
 import MetaInAppAlert from './MetaInAppAlert';
 import NewUserWelcomeAlert from '../components/shared/ui/NewUserWelcomeAlert';
 import { isNewUser } from '@/utils/ad-utils';
+import TutorialOverlay from './TutorialOverlay';
+import TutorialContainer from './TutorialContainer';
 
 export default async function MainPage() {
   const currentUser = await getUser();
@@ -50,6 +52,7 @@ export default async function MainPage() {
     <Suspense>
       <MetaInAppAlert />
       {isNewUserCheck && <NewUserWelcomeAlert />}
+      <TutorialContainer isNewUser={isNewUserCheck} />
       <MainComponent user_id={currentUser_id} />
     </Suspense>
   );
