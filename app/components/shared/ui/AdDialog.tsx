@@ -35,21 +35,26 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
       window.navigator.standalone;
 
     try {
-      // 1. 일반 브라우저 (about:blank 방식)
+      // 1. 일반 브라우저 (크롬)
       if (!isPWA && !isInAppBrowser) {
-        const newWindow = window.open('about:blank', '_blank', 'noopener,noreferrer');
-        if (newWindow) {
-          newWindow.location.href = AD_URL;
-          onAdComplete(); // 새 창이 성공적으로 열린 후에만 실행
+        onAdComplete();
+        const newWindow = window.open(AD_URL, '_blank', 'noopener,noreferrer');
+
+        if (!newWindow) {
+          // const a = document.createElement('a');
+          // a.href = AD_URL;
+          // a.target = '_blank';
+          // a.rel = 'noopener noreferrer';
+          // a.click();
+          console.log('!newWindow');
+          null;
         }
         return;
       }
 
-      // 2. PWA나 인앱은 먼저 상태 저장
-      onAdComplete();
-
-      // 3. PWA
+      // PWA (변경하지 않음 - 잘 동작하는 코드)
       if (isPWA) {
+        onAdComplete();
         const newWindow = window.open(AD_URL, '_blank', 'noopener,noreferrer');
         if (!newWindow) {
           const a = document.createElement('a');
