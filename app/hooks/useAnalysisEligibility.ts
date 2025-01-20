@@ -4,8 +4,15 @@ import { useState } from 'react';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
 
 export const AD_FREE_HOURS = 8; // 광고 시청 후 무료 사용 시간
-export const useAnalysisEligibility = (userId: string) => {
+export const useAnalysisEligibility = (userId: string, isNewUser: boolean) => {
   const checkEligibility = async () => {
+    if (isNewUser) {
+      return {
+        canAnalyze: true,
+        reason: 'new_user',
+      };
+    }
+
     const supabase = createSupabaseBrowserClient();
 
     const { data: user, error } = await supabase

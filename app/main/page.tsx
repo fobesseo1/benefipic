@@ -5,10 +5,16 @@ import { getUser, createSupabaseServerClient } from '@/lib/supabse/server';
 import { redirect } from 'next/navigation';
 import NoLoginUserAlert from '../components/shared/ui/NoLoginUserAlert';
 import MetaInAppAlert from './MetaInAppAlert';
+import NewUserWelcomeAlert from '../components/shared/ui/NewUserWelcomeAlert';
+import { isNewUser } from '@/utils/ad-utils';
 
 export default async function MainPage() {
   const currentUser = await getUser();
+  console.log(currentUser);
   const currentUser_id = currentUser?.id;
+
+  // 신규 유저 체크
+  const isNewUserCheck = isNewUser(currentUser.created_at);
 
   if (!currentUser) {
     return <NoLoginUserAlert />;
@@ -43,6 +49,7 @@ export default async function MainPage() {
   return (
     <Suspense>
       <MetaInAppAlert />
+      {isNewUserCheck && <NewUserWelcomeAlert />}
       <MainComponent user_id={currentUser_id} />
     </Suspense>
   );

@@ -57,7 +57,13 @@ interface ApiResponse {
 }
 
 // 메인 컴포넌트
-const ExerciseAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
+const ExerciseAnalyzer = ({
+  currentUser_id,
+  newUserCheck,
+}: {
+  currentUser_id: string;
+  newUserCheck: boolean;
+}) => {
   // 상태 관리
   const [step, setStep] = useState<AnalysisStep>('initial');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -77,7 +83,7 @@ const ExerciseAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const supabase = createSupabaseBrowserClient();
-  const { checkEligibility } = useAnalysisEligibility(currentUser_id);
+  const { checkEligibility } = useAnalysisEligibility(currentUser_id, newUserCheck);
 
   //수정관련 상태관리
   const [showSearchModal, setShowSearchModal] = useState(false);
@@ -140,57 +146,59 @@ const ExerciseAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
   };
   // 필터 적용 함수
   // 필터 적용 함수
-const applyFilters = async () => {
-  if (!selectedImage) return;
+  const applyFilters = async () => {
+    if (!selectedImage) return;
 
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.src = imageUrl;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = imageUrl;
 
-  img.onload = () => {
-    const canvas = document.createElement('canvas');
-    // 정사각형 크기로 설정
-    const size = Math.min(img.width, img.height);
-    canvas.width = size;
-    canvas.height = size;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      // 정사각형 크기로 설정
+      const size = Math.min(img.width, img.height);
+      canvas.width = size;
+      canvas.height = size;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
-    // 이미지 중앙 기준으로 크롭
-    const sx = (img.width - size) / 2;
-    const sy = (img.height - size) / 2;
+      // 이미지 중앙 기준으로 크롭
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
 
-    // Instagram 스타일 필터나 기본 필터의 computed style 가져오기
-    const filterDiv = document.createElement('div');
-    filterDiv.className = filterType === 'none' ? '' : `filter-${filterType}`;
-    document.body.appendChild(filterDiv);
-    const computedStyle = window.getComputedStyle(filterDiv);
-    const filterValue = computedStyle.filter;
-    document.body.removeChild(filterDiv);
+      // Instagram 스타일 필터나 기본 필터의 computed style 가져오기
+      const filterDiv = document.createElement('div');
+      filterDiv.className = filterType === 'none' ? '' : `filter-${filterType}`;
+      document.body.appendChild(filterDiv);
+      const computedStyle = window.getComputedStyle(filterDiv);
+      const filterValue = computedStyle.filter;
+      document.body.removeChild(filterDiv);
 
-    // 필터 적용
-    ctx.filter = filterValue || `
+      // 필터 적용
+      ctx.filter =
+        filterValue ||
+        `
       brightness(${currentFilters.brightness}%)
       contrast(${currentFilters.contrast}%)
       saturate(${currentFilters.saturation}%)
     `;
 
-    // 이미지 그리기 (중앙 크롭)
-    ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
+      // 이미지 그리기 (중앙 크롭)
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
 
-    canvas.toBlob((blob) => {
-      if (blob) {
-        const filteredFile = new File([blob], 'filtered-exercise-image.jpg', {
-          type: 'image/jpeg',
-        });
-        setFilteredDisplayImage(filteredFile);
-        setImageUrl(URL.createObjectURL(filteredFile));
-        analyzeImage();
-      }
-    }, 'image/jpeg');
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const filteredFile = new File([blob], 'filtered-exercise-image.jpg', {
+            type: 'image/jpeg',
+          });
+          setFilteredDisplayImage(filteredFile);
+          setImageUrl(URL.createObjectURL(filteredFile));
+          analyzeImage();
+        }
+      }, 'image/jpeg');
+    };
   };
-};
 
   // 광고 완료 처리
   const handleAdComplete = async () => {
@@ -209,7 +217,7 @@ const applyFilters = async () => {
     }
 
     setShowAdDialog(false);
-    analyzeImage();
+    //analyzeImage();
   };
 
   // Effect Hooks

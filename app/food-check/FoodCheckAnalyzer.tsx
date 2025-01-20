@@ -49,7 +49,13 @@ import { handleDecrease, handleIncrease, handleInputChange } from '../food/utils
 import { AnalysisStep } from '../food/utils/types';
 
 // 메인 컴포넌트
-const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
+const FoodCheckAnalyzer = ({
+  currentUser_id,
+  newUserCheck,
+}: {
+  currentUser_id: string;
+  newUserCheck: boolean;
+}) => {
   const [step, setStep] = useState<AnalysisStep>('initial');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -68,7 +74,7 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     detectedContent: '',
   });
   const [showAdDialog, setShowAdDialog] = useState(false);
-  const { checkEligibility } = useAnalysisEligibility(currentUser_id);
+  const { checkEligibility } = useAnalysisEligibility(currentUser_id, newUserCheck);
   const initialFilters = {
     brightness: 100,
     contrast: 100,
@@ -184,7 +190,7 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     }
 
     setShowAdDialog(false);
-    analyzeImage(); // 분석 재시작
+    //analyzeImage(); // 분석 재시작
   };
 
   // Effect Hooks
@@ -214,7 +220,7 @@ const FoodCheckAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
 
     // 권한 체크
     const supabase = createSupabaseBrowserClient();
-    const { checkEligibility } = useAnalysisEligibility(currentUser_id);
+    const { checkEligibility } = useAnalysisEligibility(currentUser_id, newUserCheck);
 
     // 권한 체크
     const eligibility = await checkEligibility();

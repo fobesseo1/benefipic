@@ -61,14 +61,20 @@ const getUserHealthProfile = async (userId: string) => {
   };
 };
 
-const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
+const MenuAnalyzer = ({
+  currentUser_id,
+  newUserCheck,
+}: {
+  currentUser_id: string;
+  newUserCheck: boolean;
+}) => {
   const [step, setStep] = useState<AnalysisStep>('initial');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string>('');
   const [analysis, setAnalysis] = useState<NutritionData | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [showAdDialog, setShowAdDialog] = useState(false);
-  const { checkEligibility } = useAnalysisEligibility(currentUser_id);
+  const { checkEligibility } = useAnalysisEligibility(currentUser_id, newUserCheck);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [displayImage, setDisplayImage] = useState<File | null>(null); // 고품질
   const [analysisImage, setAnalysisImage] = useState<File | null>(null); // 저품질
@@ -135,7 +141,7 @@ const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
     }
 
     setShowAdDialog(false);
-    analyzeImage();
+    //analyzeImage();
   };
 
   const analyzeImage = async () => {
@@ -229,7 +235,7 @@ const MenuAnalyzer = ({ currentUser_id }: { currentUser_id: string }) => {
 ${userDescription}
 
 필수 요구사항:
-1. 반드시 사진에 있는 메뉴들 중에서만 선택할 것
+1. 반드시 사진에 있는 메뉴 또는 제품들 중에서 1개의 메뉴 또는 1개의 제품만 선택할 것
 2. 각 음식의 실제 양(g/ml)을 추정할 것
 3. 재료별 영양정보를 상세히 분석할 것
 4. 선택한 메뉴에 대해 다음 정보를 포함할 것:
@@ -239,7 +245,7 @@ ${userDescription}
 다음 형식의 JSON으로 응답해주세요:
 {
   "isFood": true,
-  "foodName": "선택한 메뉴 이름",
+  "foodName": "선택한 메뉴 이름 반드시 한국어로",
   "healthTip": "개인별 맞춤 영양 조언",
   "ingredients": [
     {
