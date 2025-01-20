@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import InAppSpy from 'inapp-spy';
+import { useRouter } from 'next/navigation';
 
 interface AdDialogProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ interface AdDialogProps {
 const AD_URL = 'https://link.coupang.com/a/b8Yjpm';
 
 const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) => {
+  const router = useRouter();
   const handleAdClick = async () => {
     const { appKey } = InAppSpy();
     const isInAppBrowser = appKey === 'instagram' || appKey === 'threads' || appKey === 'facebook';
@@ -40,12 +42,36 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
       adLink.rel = 'noopener noreferrer';
       document.body.appendChild(adLink);
 
-      // 1. 일반 브라우저 (크롬)
       if (!isPWA && !isInAppBrowser) {
-        await onAdComplete(); // 먼저 완료 처리
-        adLink.click(); // 그 다음 링크 클릭
-        document.body.removeChild(adLink); // cleanup
-        return;
+        // 광고 완료 처리
+        onAdComplete();
+
+        // iOS Safari 처리
+        if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+          const link = document.createElement('a');
+          link.href = AD_URL;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          return;
+        }
+
+        // 다른 모바일 브라우저 처리
+        const newWindow = window.open(AD_URL, '_blank');
+        if (newWindow) {
+          newWindow.opener = null;
+        } else {
+          // 팝업이 차단된 경우 대체 처리
+          const link = document.createElement('a');
+          link.href = AD_URL;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
       }
 
       // PWA
