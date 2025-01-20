@@ -38,7 +38,7 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
       // 실제 HTML 링크를 만들어서 DOM에 추가
       const adLink = document.createElement('a');
       adLink.href = AD_URL;
-      adLink.target = '_blank';
+      adLink.target = '_system';
       adLink.rel = 'noopener noreferrer';
       document.body.appendChild(adLink);
 
@@ -66,7 +66,7 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
           // 팝업이 차단된 경우 대체 처리
           const link = document.createElement('a');
           link.href = AD_URL;
-          link.target = '_blank';
+          link.target = '_system';
           link.rel = 'noopener noreferrer';
           document.body.appendChild(link);
           link.click();
@@ -95,7 +95,7 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
       }
     } catch (error) {
       console.error('광고 창 열기 실패:', error);
-      window.open(AD_URL, '_blank', 'noopener,noreferrer');
+      window.open(AD_URL, '_system', 'noopener,noreferrer');
     }
   };
 
