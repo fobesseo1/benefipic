@@ -43,35 +43,10 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
       document.body.appendChild(adLink);
 
       if (!isPWA && !isInAppBrowser) {
-        // 광고 완료 처리
+        // 새 창에서 광고 URL 열기
+        window.open(AD_URL, '_blank');
+        // 광고 시청 완료 처리
         onAdComplete();
-
-        // iOS Safari 처리
-        if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
-          const link = document.createElement('a');
-          link.href = AD_URL;
-          link.target = '_system';
-          link.rel = 'noopener noreferrer';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          return;
-        }
-
-        // 다른 모바일 브라우저 처리
-        const newWindow = window.open(AD_URL, '_system');
-        if (newWindow) {
-          newWindow.opener = null;
-        } else {
-          // 팝업이 차단된 경우 대체 처리
-          const link = document.createElement('a');
-          link.href = AD_URL;
-          link.target = '_system';
-          link.rel = 'noopener noreferrer';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
       }
 
       // PWA
