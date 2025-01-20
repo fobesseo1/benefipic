@@ -1,5 +1,7 @@
 // utils/image.ts
 
+import imageCompression from 'browser-image-compression';
+
 interface DualQualityResult {
   displayImage: File; // 고품질 (UI, 필터, Storage용)
   analysisImage: File; // 저품질 (API 분석용)
@@ -54,11 +56,11 @@ export const cropSquare = async (file: File): Promise<File> => {
 
 export const createDualQualityImages = async (file: File): Promise<DualQualityResult> => {
   try {
-    // displayImage는 정사각형으로 크롭만 수행
-    const displayImage = await cropSquare(file);
+    // displayImage: 고품질 (UI용, 512px)
+    const displayImage = await compressImage(file, 0.95, true, true);
 
-    // analysisImage는 원본 비율 유지
-    const analysisImage = file;
+    // analysisImage: 저품질 (API용, 512px)
+    const analysisImage = await compressImage(file, 0.7, false, false);
 
     return { displayImage, analysisImage };
   } catch (error) {
@@ -134,99 +136,63 @@ export const applyFiltersAndSave = async (
  * @param file 압축할 이미지 파일
  * @returns 압축된 이미지 파일을 포함한 Promise
  */
-export const compressImage = (
+const cropCenter = async (file: File): Promise<File> => {
+  const imageBitmap = await createImageBitmap(file);
+  const size = Math.min(imageBitmap.width, imageBitmap.height);
+
+  const canvas = new OffscreenCanvas(size, size);
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) throw new Error('Failed to get canvas context');
+
+  // 중앙 크롭 계산
+  const sx = (imageBitmap.width - size) / 2;
+  const sy = (imageBitmap.height - size) / 2;
+
+  ctx.drawImage(imageBitmap, sx, sy, size, size, 0, 0, size, size);
+
+  const blob = await canvas.convertToBlob({
+    type: 'image/jpeg',
+    quality: 0.95, // 크롭 단계에서는 높은 품질 유지
+  });
+
+  return new File([blob], file.name, { type: 'image/jpeg' });
+};
+
+export const compressImage = async (
   file: File,
   quality: number,
   isForDisplay: boolean = false,
   shouldCropSquare: boolean = false
 ): Promise<File> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
+  try {
+    // 1. 먼저 중앙 크롭
+    const croppedFile = shouldCropSquare ? await cropCenter(file) : file;
 
-    reader.onload = (e) => {
-      const img = new Image();
-      img.src = e.target?.result as string;
-
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let sourceX = 0;
-        let sourceY = 0;
-        let sourceWidth = img.width;
-        let sourceHeight = img.height;
-
-        // 정사각형 크롭이 필요한 경우
-        if (shouldCropSquare) {
-          const size = Math.min(sourceWidth, sourceHeight);
-          sourceX = (sourceWidth - size) / 2;
-          sourceY = (sourceHeight - size) / 2;
-          sourceWidth = size;
-          sourceHeight = size;
-        }
-
-        // 최대 크기 계산 (정사각형인 경우 한 변의 길이를 기준으로)
-        const maxDimension = isForDisplay ? 1024 : 512;
-        let targetSize = sourceWidth;
-
-        if (targetSize > maxDimension) {
-          targetSize = maxDimension;
-        }
-
-        canvas.width = targetSize;
-        canvas.height = targetSize;
-
-        const ctx = canvas.getContext('2d', {
-          alpha: false, // 알파 채널 비활성화
-          willReadFrequently: false, // 성능 최적화
-        });
-
-        if (!ctx) {
-          reject(new Error('Failed to get canvas context'));
-          return;
-        }
-
-        // 배경을 흰색으로 설정 (JPEG 최적화)
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, targetSize, targetSize);
-
-        // 이미지 그리기 (안티앨리어싱 비활성화)
-        ctx.imageSmoothingQuality = 'medium';
-
-        ctx.drawImage(
-          img,
-          sourceX,
-          sourceY,
-          sourceWidth,
-          sourceHeight,
-          0,
-          0,
-          targetSize,
-          targetSize
-        );
-
-        // JPEG 품질을 낮추고 모자이크 효과 최소화
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              const compressedFile = new File([blob], file.name, {
-                type: 'image/jpeg',
-                lastModified: Date.now(),
-              });
-              resolve(compressedFile);
-            } else {
-              reject(new Error('Image compression failed'));
-            }
-          },
-          'image/jpeg',
-          Math.min(0.85, quality) // 최대 품질을 85%로 제한
-        );
-      };
-
-      img.onerror = () => reject(new Error('Failed to load image'));
+    // 2. 압축 옵션 설정
+    const options = {
+      maxSizeMB: isForDisplay ? 1.5 : 0.5, // 디스플레이용은 더 높은 품질
+      maxWidthOrHeight: isForDisplay ? 600 : 512,
+      useWebWorker: true,
+      fileType: 'image/jpeg',
+      initialQuality: Math.min(0.85, quality), // 최대 품질 제한
+      alwaysKeepResolution: false,
+      // EXIF 데이터 제거로 추가 용량 절감
+      preserveExif: false,
     };
 
-    reader.onerror = () => reject(new Error('Failed to read file'));
-  });
+    // 3. 이미지 압축 실행
+    const compressedFile = await imageCompression(croppedFile, options);
+
+    // 4. 결과 파일 반환
+    return new File([compressedFile], file.name, {
+      type: 'image/jpeg',
+      lastModified: Date.now(),
+    });
+  } catch (error) {
+    console.error('Image compression failed:', error);
+    throw error;
+  }
 };
 
 /**
