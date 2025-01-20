@@ -1,0 +1,1 @@
+self.addEventListener("fetch",(t=>{t.request.url.startsWith("https://link.coupang.com")?t.respondWith(fetch(t.request).catch((()=>new Response(null,{status:502,statusText:"Bad Gateway"})))):"navigate"===t.request.mode&&t.respondWith(fetch(t.request).catch((()=>caches.match("/index.html"))))}));
