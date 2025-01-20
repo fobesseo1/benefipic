@@ -74,6 +74,7 @@ const AdDialog: React.FC<AdDialogProps> = ({ isOpen, onClose, onAdComplete }) =>
 
       // 인앱 브라우저
       if (isInAppBrowser) {
+        await onAdComplete();
         const newWindow = window.open(AD_URL, '_system', 'noopener,noreferrer');
         if (!newWindow) {
           window.open(AD_URL, '_system');
