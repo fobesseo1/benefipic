@@ -590,7 +590,6 @@ export const FoodLogCard = ({
                 )}
 
                 {/* 공유 버튼 */}
-
                 <FoodShareButton log={log} />
               </div>
             </div>

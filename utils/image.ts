@@ -56,7 +56,7 @@ export const cropSquare = async (file: File): Promise<File> => {
 
 export const createDualQualityImages = async (file: File): Promise<DualQualityResult> => {
   try {
-    // displayImage: 고품질 (UI용, 512px)
+    // displayImage: 고품질 (UI용, 600px)
     const displayImage = await compressImage(file, 0.95, true, true);
 
     // analysisImage: 저품질 (API용, 512px)

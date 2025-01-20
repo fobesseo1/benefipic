@@ -10,7 +10,7 @@ import { isNewUser } from '@/utils/ad-utils';
 
 export default async function MainPage() {
   const currentUser = await getUser();
-  console.log(currentUser);
+
   const currentUser_id = currentUser?.id;
 
   // 신규 유저 체크
