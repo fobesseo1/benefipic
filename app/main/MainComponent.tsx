@@ -7,6 +7,7 @@ import ExerciseLogCard from '../components/shared/ui/ExerciseLogCard';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
 import { FoodLog, ExerciseLog, DailyStatusResponse } from '../types/types';
 import dynamic from 'next/dynamic';
+import NutritionBatteryGroup from './NutritionBattery';
 
 const CurrentWeekCalendar = dynamic(() => import('./CurrentWeekCalendar'), { ssr: false });
 
@@ -152,6 +153,10 @@ export default function MainComponent({ user_id }: { user_id: string }) {
               showDeleteButton={false}
               showEditButton={false}
             />
+          </Suspense>
+
+          <Suspense fallback={<div>loading...</div>}>
+            <NutritionBatteryGroup />
           </Suspense>
         </div>
       </div>
