@@ -8,6 +8,7 @@ import MetaInAppAlert from './MetaInAppAlert';
 import NewUserWelcomeAlert from '../components/shared/ui/NewUserWelcomeAlert';
 import { isNewUser } from '@/utils/ad-utils';
 import TutorialContainer from './TutorialContainer';
+import PWAInstallAlert from './PWAInstallAlert';
 
 // app/main/page.tsx
 export default async function MainPage() {
@@ -46,6 +47,11 @@ export default async function MainPage() {
 
   return (
     <Suspense>
+      <PWAInstallAlert
+        userId={currentUser_id}
+        lastPromptDate={currentUser.last_install_prompt}
+        isInstalled={currentUser.pwa_installed}
+      />
       <MetaInAppAlert />
       {isNewUserCheck && <NewUserWelcomeAlert />}
       <TutorialContainer

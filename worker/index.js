@@ -1,3 +1,5 @@
+//worker/index.js
+
 self.addEventListener('fetch', (event) => {
   // 외부 링크(쿠팡 등) 처리
   if (event.request.url.startsWith('https://link.coupang.com')) {
