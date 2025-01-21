@@ -25,6 +25,14 @@ export default function NewUserWelcomeAlert() {
     }
 
     setShowAlert(true);
+
+    // 3초 후 자동으로 닫히는 타이머 설정
+    const timer = setTimeout(() => {
+      setShowAlert(false);
+    }, 3000);
+
+    // 컴포넌트가 언마운트되면 타이머 정리
+    return () => clearTimeout(timer);
   }, []);
 
   const handleClose = () => {
