@@ -52,7 +52,7 @@ export default async function MainPage() {
         lastPromptDate={currentUser.last_install_prompt}
         isInstalled={currentUser.pwa_installed}
       />
-      <MetaInAppAlert userId={currentUser_id} />
+      <MetaInAppAlert />
       {isNewUserCheck && <NewUserWelcomeAlert />}
       <TutorialContainer
         isNewUser={isNewUserCheck}
