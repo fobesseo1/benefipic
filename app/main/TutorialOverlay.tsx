@@ -41,19 +41,17 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ onComplete }) => {
         {/* 컨텐츠 레이아웃 컨테이너 - 모바일 화면 비율 고려 */}
         <div className="w-full  flex flex-col my-auto">
           {/* 상단 여백 및 건너뛰기 버튼 영역 (10vh) */}
-          <div className="h-[5vh] relative">
-            <button
-              onClick={handleComplete}
-              className="absolute top-6 right-6 text-white/80 text-base px-4 py-2"
-            >
+          <div className="h-[5vh] flex items-center justify-end px-4">
+            <button onClick={handleComplete} className=" text-white/80 text-base px-4 py-2">
               건너뛰기
             </button>
           </div>
 
           {/* 이미지 표시 영역 (65vh) */}
-          <div className="h-[65vh] relative">
+          <div className="h-[80h] flex items-center justify-center">
             <AnimatePresence mode="wait">
               <motion.div
+                className="h-full"
                 key={currentStep}
                 initial={{ opacity: 0, scale: 0.95, x: 20 }}
                 animate={{ opacity: 1, scale: 1, x: 0 }}
@@ -67,7 +65,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ onComplete }) => {
                   <img
                     src={tutorialImages[currentStep]}
                     alt={`Tutorial step ${currentStep + 1}`}
-                    className="w-full h-full object-contain select-none"
+                    className="max-h-full w-auto object-cover select-none"
                     draggable={false}
                   />
                 </div>
@@ -76,7 +74,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ onComplete }) => {
           </div>
 
           {/* 하단 컨트롤 영역 (25vh) */}
-          <div className="h-[10vh] flex flex-col justify-center items-center gap-2 py-4">
+          <div className="h-[8vh] flex flex-col justify-center items-center gap-2">
             {/* 다음/시작하기 버튼 */}
             <button
               onClick={handleNext}

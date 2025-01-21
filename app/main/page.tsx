@@ -52,7 +52,7 @@ export default async function MainPage() {
     <Suspense>
       <MetaInAppAlert />
       {isNewUserCheck && <NewUserWelcomeAlert />}
-      {/* <TutorialContainer isNewUser={isNewUserCheck} /> */}
+      <TutorialContainer isNewUser={isNewUserCheck} />
       <MainComponent user_id={currentUser_id} />
     </Suspense>
   );
