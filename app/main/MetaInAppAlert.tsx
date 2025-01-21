@@ -15,17 +15,16 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { FaChrome } from 'react-icons/fa';
-import { InfoIcon, X } from 'lucide-react';
+import { Download, InfoIcon, X } from 'lucide-react';
+import { usePWAInstall } from './usePWAInstall';
 
-export default function MetaInAppAlert() {
+export default function MetaInAppAlert({ userId }: { userId: string }) {
   const [showAlert, setShowAlert] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isInstallable, setIsInstallable] = useState(false);
   const [showError, setShowError] = useState(false);
+  const { isInstallable, promptInstall } = usePWAInstall(userId);
 
   useEffect(() => {
-    // 개발 중에는 로컬 스토리지 체크를 건너뛰고 항상 알림창이 보이도록 함
-
+    // 로컬 스토리지 체크와 메타 인앱 체크만 남김
     const hideUntil = localStorage.getItem('hideMetaAlertUntil');
     const now = new Date().getTime();
 
@@ -37,15 +36,6 @@ export default function MetaInAppAlert() {
     const { appKey } = InAppSpy();
     const isMetaInApp = appKey === 'instagram' || appKey === 'threads' || appKey === 'facebook';
     setShowAlert(isMetaInApp);
-
-    const handler = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setIsInstallable(true);
-    };
-
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
   const openInChrome = () => {
@@ -114,20 +104,30 @@ export default function MetaInAppAlert() {
           </AlertDialogHeader>
 
           <AlertDialogFooter className="flex-col space-y-4 mt-8">
-            <Button
-              onClick={handleHideToday}
-              variant="outline"
-              className="flex-1 py-3 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl text-sm"
-            >
-              오늘 하루 보지 않기
-            </Button>
+            <div className="flex items-center justify-end">
+              <Button
+                onClick={handleHideToday}
+                variant="outline"
+                className="w-1/3 py-3 text-gray-400 font-light rounded-xl text-xs tracking-tighter border-gray-100"
+              >
+                X 오늘 안보기
+              </Button>
+            </div>
             {/* 메인 버튼 */}
             <Button
+              variant="outline"
               onClick={openInChrome}
-              className="shadow-md py-6 text-white bg-gray-900 hover:text-gray-700 hover:bg-gray-50 rounded-xl text-sm"
+              className="shadow-md py-6 text-gray-400 rounded-xl text-sm"
             >
               <FaChrome className="w-5 h-5" />
               Chrome으로 열기
+            </Button>
+
+            <Button
+              onClick={promptInstall}
+              className="shadow-md py-6 text-white bg-red-400 hover:bg-emerald-700 rounded-xl text-sm"
+            >
+              <Download className="w-5 h-5 " />앱 설치하기 | 추천👍
             </Button>
 
             {/* 보조 버튼들 */}
