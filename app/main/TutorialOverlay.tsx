@@ -48,14 +48,14 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ onComplete }) => {
           </div>
 
           {/* 이미지 표시 영역 (65vh) */}
-          <div className="h-[80h] flex items-center justify-center">
+          <div className="h-[75vh] flex items-center justify-center">
             <AnimatePresence mode="wait">
               <motion.div
                 className="h-full"
                 key={currentStep}
-                initial={{ opacity: 0, scale: 0.95, x: 20 }}
+                initial={{ opacity: 0.1, scale: 0.95, x: 20 }}
                 animate={{ opacity: 1, scale: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.95, x: -20 }}
+                exit={{ opacity: 0.1, scale: 0.95, x: -20 }}
                 transition={{
                   duration: 0.4,
                   ease: [0.4, 0, 0.2, 1],
@@ -78,7 +78,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ onComplete }) => {
             {/* 다음/시작하기 버튼 */}
             <button
               onClick={handleNext}
-              className="bg-blue-500 text-white rounded-xl px-8 py-3.5 text-lg font-medium min-w-[160px]"
+              className="bg-blue-500 text-white rounded-xl px-8 py-2 text-lg font-medium min-w-[160px]"
             >
               {isLastStep ? '시작하기' : '다음'}
             </button>
