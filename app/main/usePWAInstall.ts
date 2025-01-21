@@ -1,6 +1,7 @@
 // app/main/usePWAInstall.ts
 'use client';
 
+// app/main/usePWAInstall.ts
 import { useState, useEffect } from 'react';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
 
@@ -16,22 +17,28 @@ export function usePWAInstall(userId: string) {
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
-      // Prevent Chrome 67 and earlier from automatically showing the prompt
+      console.log('beforeinstallprompt triggered');
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
     };
 
     const handleAppInstalled = async () => {
-      // PWA가 설치되면 Supabase 업데이트
+      console.log('App installed event triggered');
       try {
-        await supabase
+        const { data, error } = await supabase
           .from('userdata')
           .update({
             pwa_installed: true,
             last_install_prompt: new Date().toISOString(),
           })
-          .eq('user_id', userId);
+          .eq('id', userId);
+
+        if (error) {
+          console.error('Supabase update error:', error);
+        } else {
+          console.log('Successfully updated installation status:', data);
+        }
       } catch (error) {
         console.error('Failed to update installation status:', error);
       }
@@ -51,6 +58,7 @@ export function usePWAInstall(userId: string) {
 
   const promptInstall = async () => {
     if (!deferredPrompt) {
+      console.log('No deferred prompt available');
       return;
     }
 
@@ -58,25 +66,40 @@ export function usePWAInstall(userId: string) {
     deferredPrompt.prompt();
 
     // Wait for the user to respond to the prompt
-    const { outcome } = await deferredPrompt.userChoice;
+    try {
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log('User choice outcome:', outcome);
 
-    if (outcome === 'accepted') {
-      // 사용자가 설치를 수락했을 때의 처리
-      await supabase
-        .from('userdata')
-        .update({
-          pwa_installed: true,
-          last_install_prompt: new Date().toISOString(),
-        })
-        .eq('user_id', userId);
-    } else {
-      // 사용자가 설치를 거부했을 때의 처리
-      await supabase
-        .from('userdata')
-        .update({
-          last_install_prompt: new Date().toISOString(),
-        })
-        .eq('user_id', userId);
+      if (outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+        const { data, error } = await supabase
+          .from('userdata')
+          .update({
+            pwa_installed: true,
+            last_install_prompt: new Date().toISOString(),
+          })
+          .eq('id', userId);
+
+        if (error) {
+          console.error('Supabase update error:', error);
+        } else {
+          console.log('Successfully updated installation status:', data);
+        }
+      } else {
+        console.log('User dismissed the install prompt');
+        const { error } = await supabase
+          .from('userdata')
+          .update({
+            last_install_prompt: new Date().toISOString(),
+          })
+          .eq('id', userId);
+
+        if (error) {
+          console.error('Supabase update error:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error handling user choice:', error);
     }
 
     setDeferredPrompt(null);

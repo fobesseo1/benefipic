@@ -46,11 +46,18 @@ export default function PWAInstallAlert({ userId, lastPromptDate }: PWAInstallAl
   }, [isInstallable, lastPromptDate]);
 
   const handleClose = async () => {
+    console.log('Closing alert, userId:', userId);
     try {
-      await supabase
+      const { data, error } = await supabase
         .from('userdata')
         .update({ last_install_prompt: new Date().toISOString() })
-        .eq('user_id', userId);
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Failed to update last prompt date:', error);
+      } else {
+        console.log('Successfully updated last prompt date:', data);
+      }
     } catch (error) {
       console.error('Failed to update last prompt date:', error);
     }

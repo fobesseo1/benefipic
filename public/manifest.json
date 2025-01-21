@@ -1,12 +1,12 @@
 {
   "id": "benefipic-pwa-app",
-  "name": "Benefipic - 찍으면 끝나는 식단관리",
+  "name": "Benefipic | 찍으면 끝나는 식단관리",
   "short_name": "Benefipic",
   "description": "찍는 순간 시작되는 내 몸의 변화",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#FF82B2",
+  "theme_color": "#000000",
   "orientation": "portrait",
   "icons": [
     {
