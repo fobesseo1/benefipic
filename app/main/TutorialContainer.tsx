@@ -6,18 +6,24 @@ import TutorialOverlay from './TutorialOverlay';
 
 interface TutorialContainerProps {
   isNewUser: boolean;
+  tutorialFinished: boolean;
+  user_id: string;
 }
 
-const TutorialContainer: React.FC<TutorialContainerProps> = ({ isNewUser }) => {
-  const [showTutorial, setShowTutorial] = useState(isNewUser);
+const TutorialContainer: React.FC<TutorialContainerProps> = ({
+  isNewUser,
+  tutorialFinished,
+  user_id,
+}) => {
+  const [showTutorial, setShowTutorial] = useState(isNewUser && !tutorialFinished);
 
   if (!showTutorial) return null;
 
   return (
     <TutorialOverlay
+      user_id={user_id}
       onComplete={() => {
         setShowTutorial(false);
-        // 여기에 추가로 필요한 튜토리얼 완료 처리를 넣을 수 있습니다
       }}
     />
   );

@@ -7,28 +7,24 @@ import NoLoginUserAlert from '../components/shared/ui/NoLoginUserAlert';
 import MetaInAppAlert from './MetaInAppAlert';
 import NewUserWelcomeAlert from '../components/shared/ui/NewUserWelcomeAlert';
 import { isNewUser } from '@/utils/ad-utils';
-import TutorialOverlay from './TutorialOverlay';
 import TutorialContainer from './TutorialContainer';
 
+// app/main/page.tsx
 export default async function MainPage() {
   const currentUser = await getUser();
-
   const currentUser_id = currentUser?.id;
-
-  // 신규 유저 체크
   const isNewUserCheck = isNewUser(currentUser.created_at);
 
   if (!currentUser) {
     return <NoLoginUserAlert />;
   }
 
-  // Supabase 서버 클라이언트 생성
   const supabase = createSupabaseServerClient();
 
-  // 1. health_records 테이블 확인
+  // tutorial_fin만 가져오기
   const { data: healthRecord, error: healthError } = await supabase
     .from('health_records')
-    .select('*')
+    .select('tutorial_fin')
     .eq('user_id', currentUser_id)
     .single();
 
@@ -36,15 +32,15 @@ export default async function MainPage() {
     redirect('/question');
   }
 
-  // 2. fitness_goals 테이블 확인
-  const { data: fitnessGoal, error: fitnessError } = await supabase
+  // target_weight 존재 여부만 확인
+  const { count: fitnessGoalExists, error: fitnessError } = await supabase
     .from('fitness_goals')
-    .select('*')
+    .select('target_weight', { count: 'exact', head: true })
     .eq('user_id', currentUser_id)
     .eq('status', 'active')
     .single();
 
-  if (fitnessError || !fitnessGoal) {
+  if (fitnessError || !fitnessGoalExists) {
     redirect('/health-info');
   }
 
@@ -52,7 +48,11 @@ export default async function MainPage() {
     <Suspense>
       <MetaInAppAlert />
       {isNewUserCheck && <NewUserWelcomeAlert />}
-      {/* <TutorialContainer isNewUser={isNewUserCheck} /> */}
+      <TutorialContainer
+        isNewUser={isNewUserCheck}
+        tutorialFinished={healthRecord.tutorial_fin}
+        user_id={currentUser_id}
+      />
       <MainComponent user_id={currentUser_id} />
     </Suspense>
   );
