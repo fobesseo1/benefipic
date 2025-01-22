@@ -140,24 +140,39 @@ const ImageAnalysisExperiment = () => {
               role: 'system',
               content: `당신은 음식 영양 분석 전문가입니다.
               - 분석 대상:
-                * 모든 섭취 가능한 음식과 음료
+                * 모든 섭취 가능한 음식과 음료  
                 * 포장된 식품/음료 제품
                 * 물을 포함한 모든 음료
                 * 영양소가 있거나 없더라도 인간이 섭취할 수 있는 모든 것
-              
+                          
               - 영양소 분석 지침:
                 * 물의 경우도 영양소 0으로 기록하되 분석 대상에 포함
                 * 포장 제품의 경우 영양성분표 기준으로 분석
-                * 액체류도 100ml 기준으로 영양소 분석 진행
-              
+                * 영양성분표의 글자가 명확히 보이는 경우에만 letter 항목에 값을 포함
+                * 영양성분표 글자가 불명확한 경우 letter는 null로 처리
+                * 영양성분표가 없거나 불명확한 경우에도 ingredients는 제품 유형과 일반적인 영양가 기준으로 반드시 추정하여 입력
+                          
               - isFood 판단 기준:
                 * true: 모든 음식, 음료, 포장식품을 포함
                 * false: 섭취 불가능한 물체나 비식품만 해당
-              
-              - foodName 음식이름 기준 :
-                * 완성된 음식이 두 개이상 보일경우 (예시: 햄버거, 감자튀김, 콜라) 이경우에는 반드시 힘식이름을 햄버거와 감자튀김 그리고 콜라와 같은 식으로 만들어
-                
-              주의: 음료도 식품으로 간주하여 isFood를 true로 설정해야 합니다.`,
+                          
+              - foodName 음식이름 기준:
+                * 완성된 음식이 두 개이상 보일경우 (예시: 햄버거, 감자튀김, 콜라) 이경우에는 반드시 음식이름을 햄버거와 감자튀김 그리고 콜라와 같은 식으로 만들어
+                          
+              - 영양성분표 분석 기준:
+                * 영양성분표의 기준 단위(1회 제공량, 100ml당, 총 내용량 등)를 반드시 확인
+                * 전체 용량과 기준 단위가 다른 경우 이를 명확히 구분하여 표시
+                * 영양성분표의 글자가 명확하지 않은 경우 letter 항목은 null 처리
+                * ingredients 항목은 제품의 종류, 크기, 일반적인 레시피를 기준으로 항상 최선의 추정값을 제공해야 함
+             
+              - ingredients 추정 기준:
+                * 제품/음식의 종류와 양에 따라 일반적인 영양가 기준으로 추정
+                * 재료의 비율과 양은 제품명, 이미지, 일반적인 레시피를 기준으로 추정
+                * ingredients는 항상 값을 제공해야 하며 null을 사용하지 않음
+                            
+              주의: 
+              - 음료도 식품으로 간주하여 isFood를 true로 설정
+              - 영양성분표의 글자가 불명확한 경우에만 letter를 null로 처리하고, ingredients는 항상 추정값을 제공할 것`,
             },
             {
               role: 'user',
@@ -176,12 +191,19 @@ const ImageAnalysisExperiment = () => {
                   다음 형식의 JSON으로 응답해주세요:
                   {
                     "isFood": true/false,
-                    "foodName": "음식 이름(반드시 한글로 작성해)",
+                    "foodName": "음식 이름(반드시 한글로 작성)",
                     "description": "음식이 아닐 경우 설명",
                     "letter": [
                       {
                         "type": "nutrition_label",
                         "content": "영양성분표에서 읽은 모든 텍스트",
+                        "serving_info": {
+                          "serving_type": "total/per_unit/per_serving",
+                          "total_size": number,
+                          "total_unit": "ml/g",
+                          "base_size": number,  // per_unit, per_serving인 경우
+                          "base_unit": "ml/g"   // per_unit, per_serving인 경우
+                        },
                         "values": {
                           "calories": number,  // 숫자값만
                           "protein": number,   // 숫자값만
