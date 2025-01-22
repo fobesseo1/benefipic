@@ -1,16 +1,19 @@
 // app/SpeechToText.tsx
+// components/SpeechToText.tsx
 'use client';
 
-import 'regenerator-runtime';
-import React, { useEffect, useState } from 'react';
-import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import 'regenerator-runtime/runtime';
+import React, { useEffect, useCallback, useState } from 'react';
+import { Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, RotateCcw } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
-const SpeechToText = () => {
-  const [isSupported, setIsSupported] = useState(true);
+interface SpeechToTextProps {
+  onTranscriptComplete: (transcript: string) => void;
+}
+
+const SpeechToText = ({ onTranscriptComplete }: SpeechToTextProps) => {
+  const [mounted, setMounted] = useState(false);
 
   const {
     transcript,
@@ -21,73 +24,63 @@ const SpeechToText = () => {
   } = useSpeechRecognition();
 
   useEffect(() => {
-    setIsSupported(browserSupportsSpeechRecognition);
-  }, [browserSupportsSpeechRecognition]);
+    setMounted(true);
+  }, []);
 
-  const startListening = () => {
+  let silenceTimer: NodeJS.Timeout;
+
+  const handleStartListening = () => {
+    resetTranscript();
     SpeechRecognition.startListening({
       continuous: true,
-      language: 'ko-KR', // BCP 47 language tag for Korean
+      language: 'ko-KR',
     });
   };
 
-  if (!isSupported) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>
-          죄송합니다. 현재 브라우저는 음성 인식을 지원하지 않습니다. Chrome 브라우저를 사용해주세요.
-        </AlertDescription>
-      </Alert>
-    );
+  const handleStopListening = useCallback(() => {
+    SpeechRecognition.stopListening();
+    if (transcript.trim()) {
+      onTranscriptComplete(transcript);
+    }
+  }, [transcript, onTranscriptComplete]);
+
+  // 3초 무음 감지
+  useEffect(() => {
+    if (listening) {
+      clearTimeout(silenceTimer);
+      silenceTimer = setTimeout(() => {
+        handleStopListening();
+      }, 3000);
+    }
+
+    return () => clearTimeout(silenceTimer);
+  }, [transcript, listening, handleStopListening]);
+
+  // 클라이언트 사이드 렌더링 전에는 아무것도 렌더링하지 않음
+  if (!mounted) return null;
+
+  if (!browserSupportsSpeechRecognition) {
+    return <div>브라우저가 음성 인식을 지원하지 않습니다.</div>;
   }
 
   if (!isMicrophoneAvailable) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>
-          마이크 접근 권한이 필요합니다. 브라우저 설정에서 마이크 권한을 허용해주세요.
-        </AlertDescription>
-      </Alert>
-    );
+    return <div>마이크 접근 권한이 필요합니다.</div>;
   }
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          음성 인식
-          <span className="text-sm font-normal">마이크 상태: {listening ? '켜짐' : '꺼짐'}</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex gap-2 mb-4">
-          <Button
-            onClick={listening ? SpeechRecognition.stopListening : startListening}
-            variant={listening ? 'destructive' : 'default'}
-          >
-            {listening ? (
-              <>
-                <MicOff className="w-4 h-4 mr-2" />
-                중지
-              </>
-            ) : (
-              <>
-                <Mic className="w-4 h-4 mr-2" />
-                시작
-              </>
-            )}
-          </Button>
-          <Button onClick={resetTranscript} variant="outline">
-            <RotateCcw className="w-4 h-4 mr-2" />
-            초기화
-          </Button>
-        </div>
+    <div className="space-y-4">
+      <Button
+        onClick={listening ? handleStopListening : handleStartListening}
+        variant={listening ? 'destructive' : 'default'}
+      >
+        {listening ? <MicOff className="mr-2" /> : <Mic className="mr-2" />}
+        {listening ? '중지' : '시작'}
+      </Button>
 
-        <div className="min-h-32 p-4 bg-muted rounded-lg">
-          {transcript || '음성을 입력해주세요...'}
-        </div>
-      </CardContent>
-    </Card>
+      <div className="p-4 bg-gray-100 rounded-lg min-h-[100px]">
+        {transcript || '음성을 입력해주세요...'}
+      </div>
+    </div>
   );
 };
 
