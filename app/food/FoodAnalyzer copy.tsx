@@ -227,25 +227,28 @@ const FoodAnalyzer = ({
           messages: [
             {
               role: 'system',
-              content: `당신은 음식 영양 분석 전문가입니다. 
-              이미지에 보이는 음식을 분석하되, 음식이 얼마나 보이는지(예: 짬뽕 1그릇, 군만두 3개) 형태로 파악하고,
-              영양성분표가 보인다면 그 정보도 참고하여 분석해주세요.
-              그리고 저울에 무게가 표시되어 있거나 중량이 적혀있으면 반드시 참고해서 분석해주세요
-              이미지에 음식이 아닌 것이 있다면 isFood를 false로 응답해주세요.
+              content: `당신은 음식 영양 분석 전문가입니다.
               
-              응답 형식:
-              {
-                "isFood": true,
-                "foodName": "음식 이름",
-                "description": "영양소 계산 과정 설명",
-                "ingredients": [{"name": "재료명", "amount": 정수값, "unit": "단위"}],
-                "nutrition": {
-                  "calories": 정수값,
-                  "protein": 정수값,
-                  "fat": 정수값,
-                  "carbs": 정수값
-                }
-              }`,
+              1. 분석 대상 및 기본 규칙:
+                - 모든 섭취 가능한 음식/음료/포장식품은 isFood: true
+                - 섭취 불가능한 물체는 isFood: false
+                - 물도 분석 대상 (영양소 0으로 기록)
+              
+              2. 영양성분표 처리 규칙:
+                - 글자가 명확한 경우: letter에 정보 포함
+                - 글자가 불명확하거나 없는 경우: letter는 null, ingredients는 추정값 필수
+                - letter.values가 있으면 serving_info 필수이며 다음을 포함:
+                  * serving_type: total/per_unit/per_serving 중 하나
+                  * total_size/total_unit: 모든 경우 필수
+                  * base_size/base_unit: per_unit/per_serving인 경우 필수
+              
+              3. 음식명 규칙:
+                - 여러 음식이 있는 경우: "A와 B 그리고 C" 형식으로 작성
+              
+              4. ingredients 작성 규칙:
+                - 모든 경우에 반드시 추정값 제공 (null 사용 금지)
+                - 제품/음식 종류, 크기, 일반적인 레시피 기준으로 추정
+                - 재료별 양과 영양가 반드시 포함`,
             },
             {
               role: 'user',
@@ -253,32 +256,54 @@ const FoodAnalyzer = ({
                 {
                   type: 'text',
                   text: `이 음식 사진을 분석해 JSON으로 응답해주세요:
-                  
-                  필수 고려사항:
-                  - 모든 음식/음료를 분석 대상에 포함
-                  - 포장 제품은 영양성분표 기준으로 분석
-                  - 양 추정시 주변 사물 크기 참고
-                  - 모든 음식의 중량/부피 추정 필수
-                  - 음식이 아닐 경우 description만 간단히 작성
-                  
-                  응답 형식:
-                  {
-                    "isFood": true/false,
-                    "foodName": "음식 이름(한글)",
-                    "description": "음식 아닐 경우만 작성",
-                    
-                    "ingredients": [{
-                      "name": "재료명",
-                      "amount": number,
-                      "unit": "g/ml",
-                      "nutritionPer100g": {
-                        "calories": number,
-                        "protein": number,
-                        "fat": number,
-                        "carbs": number
-                      }
-                    }]
-                  }`,
+          
+          필수 고려사항:
+          - 모든 음식/음료를 분석 대상에 포함
+          - 포장 제품은 영양성분표 기준으로 분석
+          - 양 추정시 주변 사물 크기 참고
+          - 모든 음식의 중량/부피 추정 필수
+          - 음식이 아닐 경우 description만 간단히 작성
+          
+          응답 형식:
+          {
+            "isFood": true/false,
+            "foodName": "음식 이름(한글)",
+            "description": "음식 아닐 경우만 작성",
+            "letter": [{
+              "type": "nutrition_label",
+              "content": "영양성분표 전체 텍스트",
+              "serving_info": {
+                "serving_type": "total/per_unit/per_serving",
+                "total_size": number,
+                "total_unit": "ml/g",
+                "base_size": number,
+                "base_unit": "ml/g"
+              },
+              "values": {
+                "calories": number,
+                "protein": number,
+                "fat": number,
+                "carbs": number
+              },
+              "units": {
+                "calories": "표시된 단위",
+                "protein": "표시된 단위",
+                "fat": "표시된 단위",
+                "carbs": "표시된 단위"
+              }
+            }],
+            "ingredients": [{
+              "name": "재료명",
+              "amount": number,
+              "unit": "g/ml",
+              "nutritionPer100g": {
+                "calories": number,
+                "protein": number,
+                "fat": number,
+                "carbs": number
+              }
+            }]
+          }`,
                 },
                 {
                   type: 'image_url',
