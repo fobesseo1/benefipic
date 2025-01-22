@@ -151,28 +151,7 @@ const ImageAnalysisExperiment = () => {
                 * 영양성분표의 글자가 명확히 보이는 경우에만 letter 항목에 값을 포함
                 * 영양성분표 글자가 불명확한 경우 letter는 null로 처리
                 * 영양성분표가 없거나 불명확한 경우에도 ingredients는 제품 유형과 일반적인 영양가 기준으로 반드시 추정하여 입력
-                          
-              - isFood 판단 기준:
-                * true: 모든 음식, 음료, 포장식품을 포함
-                * false: 섭취 불가능한 물체나 비식품만 해당
-                          
-              - foodName 음식이름 기준:
-                * 완성된 음식이 두 개이상 보일경우 (예시: 햄버거, 감자튀김, 콜라) 이경우에는 반드시 음식이름을 햄버거와 감자튀김 그리고 콜라와 같은 식으로 만들어
-                          
-              - 영양성분표 분석 기준:
-                * 영양성분표의 기준 단위(1회 제공량, 100ml당, 총 내용량 등)를 반드시 확인
-                * 전체 용량과 기준 단위가 다른 경우 이를 명확히 구분하여 표시
-                * 영양성분표의 글자가 명확하지 않은 경우 letter 항목은 null 처리
-                * ingredients 항목은 제품의 종류, 크기, 일반적인 레시피를 기준으로 항상 최선의 추정값을 제공해야 함
-             
-              - ingredients 추정 기준:
-                * 제품/음식의 종류와 양에 따라 일반적인 영양가 기준으로 추정
-                * 재료의 비율과 양은 제품명, 이미지, 일반적인 레시피를 기준으로 추정
-                * ingredients는 항상 값을 제공해야 하며 null을 사용하지 않음
-                            
-              주의: 
-              - 음료도 식품으로 간주하여 isFood를 true로 설정
-              - 영양성분표의 글자가 불명확한 경우에만 letter를 null로 처리하고, ingredients는 항상 추정값을 제공할 것`,
+`,
             },
             {
               role: 'user',
@@ -186,51 +165,10 @@ const ImageAnalysisExperiment = () => {
                   - 반드시 사진에 있는 모든 음식을 고려해주세요
                   - 인분 수뿐만 아니라 실제 중량이나 부피도 반드시 추정해주세요
                   - 다만 예외적으로, 음식이 아닐 경우 어떤 이미지인지 아주 간단히 description 항목에 남겨주세요
-                  - 영양성분표가 보이는 경우 반드시 letter 항목에 해당 내용을 추가해주세요
-        
+          
                   다음 형식의 JSON으로 응답해주세요:
                   {
-                    "isFood": true/false,
-                    "foodName": "음식 이름(반드시 한글로 작성)",
-                    "description": "음식이 아닐 경우 설명",
-                    "letter": [
-                      {
-                        "type": "nutrition_label",
-                        "content": "영양성분표에서 읽은 모든 텍스트",
-                        "serving_info": {
-                          "serving_type": "total/per_unit/per_serving",
-                          "total_size": number,
-                          "total_unit": "ml/g",
-                          "base_size": number,  // per_unit, per_serving인 경우
-                          "base_unit": "ml/g"   // per_unit, per_serving인 경우
-                        },
-                        "values": {
-                          "calories": number,  // 숫자값만
-                          "protein": number,   // 숫자값만
-                          "fat": number,       // 숫자값만
-                          "carbs": number      // 숫자값만
-                        },
-                        "units": {
-                          "calories": "실제 영양성분표에 표시된 단위",
-                          "protein": "실제 영양성분표에 표시된 단위",
-                          "fat": "실제 영양성분표에 표시된 단위",
-                          "carbs": "실제 영양성분표에 표시된 단위"
-                        }
-                      }
-                    ],
-                    "ingredients": [
-                      {
-                        "name": "재료명",
-                        "amount": number,
-                        "unit": "g 또는 ml",
-                        "nutritionPer100g": {
-                          "calories": number,
-                          "protein": number,
-                          "fat": number,
-                          "carbs": number
-                        }
-                      }
-                    ]
+                    "모든분석내용": "최대한 자세히 모든 분석 내용과 이미지를 최대한 상세히 특히 글씨가 있는 경우도 최대한 본대로 작성"
                   }`,
                 },
                 {

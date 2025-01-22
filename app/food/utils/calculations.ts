@@ -1,10 +1,12 @@
-import {
+/* import {
+  ApiResponse,
   calculateTotalNutrition,
   findExactMatchFood,
+  findMatchingIngredient,
   roundNutritionValues,
 } from '@/utils/food-analysis';
-import { ApiResponse, NutritionData } from './types';
-import { completedFoodDatabase } from '@/app/food-description/foodDatabase';
+import { NutritionData } from './types';
+import { completedFoodDatabase, ingredientDatabase } from '@/app/food-description/foodDatabase';
 
 export const calculateNutritionByQuantity = (
   originalData: NutritionData,
@@ -32,13 +34,111 @@ export const calculateNutritionByQuantity = (
   };
 };
 
+export const validateAndCorrectAnalysis = (
+  analysis: ApiResponse,
+  completedFoodDatabase: any[]
+): ApiResponse => {
+  // letter 값이 유효한지 체크
+  const isValidLetterNutrition = (letter: ApiResponse['letter']) => {
+    if (!letter || !letter.length || !letter[0].values) return false;
+    const values = letter[0].values;
+    return values.calories > 0 || values.protein > 0 || values.fat > 0 || values.carbs > 0;
+  };
+
+  // Letter 값이 유효할 때만 그대로 반환
+  if (isValidLetterNutrition(analysis.letter)) {
+    return analysis;
+  }
+
+  // Letter 정보가 불완전하면 기존 로직 실행
+  const exactMatch = findExactMatchFood(analysis.foodName, completedFoodDatabase);
+  if (exactMatch) {
+    return {
+      ...analysis,
+      ingredients: analysis.ingredients.map((ing) => ({
+        ...ing,
+        nutritionPer100g: {
+          calories: (exactMatch.nutrition.calories / exactMatch.unitWeight) * 100,
+          protein: (exactMatch.nutrition.protein / exactMatch.unitWeight) * 100,
+          fat: (exactMatch.nutrition.fat / exactMatch.unitWeight) * 100,
+          carbs: (exactMatch.nutrition.carbs / exactMatch.unitWeight) * 100,
+        },
+      })),
+    };
+  }
+
+  const correctedIngredients = analysis.ingredients.map((ing) => {
+    const matchedItem = findMatchingIngredient(ing.name, completedFoodDatabase, ingredientDatabase);
+    if (!matchedItem) return ing;
+
+    return {
+      ...ing,
+      nutritionPer100g: {
+        calories: (matchedItem.data.nutrition.calories * 100) / matchedItem.data.unitWeight,
+        protein: (matchedItem.data.nutrition.protein * 100) / matchedItem.data.unitWeight,
+        fat: (matchedItem.data.nutrition.fat * 100) / matchedItem.data.unitWeight,
+        carbs: (matchedItem.data.nutrition.carbs * 100) / matchedItem.data.unitWeight,
+      },
+    };
+  });
+
+  return {
+    ...analysis,
+    ingredients: correctedIngredients,
+  };
+};
+
 export const processApiResponse = (apiData: ApiResponse): NutritionData => {
   console.log('API 응답 데이터:', apiData);
 
-  // 정확한 매칭 확인
-  const exactMatch = findExactMatchFood(apiData.foodName, completedFoodDatabase);
+  // 타입 가드 수정
+  const isValidLetterNutrition = (
+    letter: ApiResponse['letter']
+  ): letter is NonNullable<typeof letter> & {
+    0: {
+      values: NonNullable<typeof letter>[0]['values'];
+      serving_info: NonNullable<typeof letter>[0]['serving_info'];
+    };
+  } => {
+    if (!letter || !letter.length || !letter[0].values) return false;
+    const values = letter[0].values;
+    return values.calories > 0 || values.protein > 0 || values.fat > 0 || values.carbs > 0;
+  };
 
-  // ingredients 형식 변환 (항상 OpenAI 결과 사용)
+  if (apiData.letter && isValidLetterNutrition(apiData.letter)) {
+    const letter = apiData.letter[0];
+    let adjustedNutrition = { ...letter.values };
+
+    // base_size가 있고, per_serving 또는 per_unit일 때만 보정
+    if (
+      letter.serving_info.base_size &&
+      (letter.serving_info.serving_type === 'per_serving' ||
+        letter.serving_info.serving_type === 'per_unit')
+    ) {
+      const ratio = letter.serving_info.total_size / letter.serving_info.base_size;
+      adjustedNutrition = {
+        calories: letter.values.calories * ratio,
+        protein: letter.values.protein * ratio,
+        fat: letter.values.fat * ratio,
+        carbs: letter.values.carbs * ratio,
+      };
+    }
+
+    return {
+      foodName: apiData.foodName,
+      ingredients: apiData.ingredients.map((ingredient) => ({
+        name: ingredient.name,
+        amount: `${ingredient.amount}${ingredient.unit}`,
+        originalAmount: {
+          value: ingredient.amount,
+          unit: ingredient.unit,
+        },
+      })),
+      nutrition: adjustedNutrition,
+    };
+  }
+
+  // Letter 정보가 불완전하면 기존 로직 실행
   const processedIngredients = apiData.ingredients.map((ingredient) => ({
     name: ingredient.name,
     amount: `${ingredient.amount.toString()}${ingredient.unit}`,
@@ -48,16 +148,16 @@ export const processApiResponse = (apiData: ApiResponse): NutritionData => {
     },
   }));
 
+  const exactMatch = findExactMatchFood(apiData.foodName, completedFoodDatabase);
+
   if (exactMatch) {
-    // 정확히 일치하는 경우 DB의 영양정보 직접 사용
     return {
       foodName: apiData.foodName,
       ingredients: processedIngredients,
-      nutrition: exactMatch.nutrition, // DB 값 그대로 사용
+      nutrition: exactMatch.nutrition,
     };
   }
 
-  // 일치하지 않는 경우 기존 로직대로 계산
   const totalNutrition = calculateTotalNutrition(apiData.ingredients);
   const roundedNutrition = roundNutritionValues(totalNutrition);
 
@@ -282,3 +382,4 @@ export const calculateHealthScore = (food: {
 
   return Math.min(Math.max(1, score), 10);
 };
+ */

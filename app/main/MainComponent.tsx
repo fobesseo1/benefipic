@@ -155,9 +155,9 @@ export default function MainComponent({ user_id }: { user_id: string }) {
             />
           </Suspense>
 
-          <Suspense fallback={<div>loading...</div>}>
+          {/* <Suspense fallback={<div>loading...</div>}>
             <NutritionBatteryGroup />
-          </Suspense>
+          </Suspense> */}
         </div>
       </div>
     </div>

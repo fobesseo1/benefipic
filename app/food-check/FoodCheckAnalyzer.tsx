@@ -26,13 +26,10 @@ import AdDialog from '../components/shared/ui/AdDialog';
 import { Button } from '@/components/ui/button';
 import {
   ApiResponse,
-  calculateTotalNutrition,
-  findExactMatchFood,
-  FoodAnalysis,
-  Ingredient,
+  calculateHealthScore,
+  calculateNutritionByQuantity,
+  processApiResponse,
   NutritionData,
-  NutritionPer100g,
-  roundNutritionValues,
   validateAndCorrectAnalysis,
 } from '@/utils/food-analysis';
 import FoodImageFilter from '../components/shared/ui/FoodImageFilter';
@@ -40,11 +37,6 @@ import AnalysisProgress from './AnalysisProgress';
 import FoodDetectionAlert from '../food/FoodDetectionAlert';
 import FoodCheckAlert from './FoodCheckAlert';
 import NavigationButtonSectionFoodCheck from '../components/shared/ui/NavigationButtonSectionFoodCheck';
-import {
-  calculateHealthScore,
-  calculateNutritionByQuantity,
-  processApiResponse,
-} from '../food/utils/calculations';
 import { handleDecrease, handleIncrease, handleInputChange } from '../food/utils/handlers';
 import { AnalysisStep } from '../food/utils/types';
 

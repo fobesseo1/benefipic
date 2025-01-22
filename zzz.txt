@@ -1,0 +1,48 @@
+다음 형식의 JSON으로 응답해주세요:
+                  {
+                    "isFood": true/false,
+                    "foodName": "음식 이름(반드시 한글로 작성)",
+                    "description": "음식이 아닐 경우 설명",
+                    "letter": [
+                      {
+                        "type": "nutrition_label",
+                        "content": "영양성분표에서 읽은 모든 텍스트",
+                        // values가 있는 경우 serving_info는 필수
+                        "serving_info": {
+                          // 다음 세 타입 중 하나로 반드시 분류
+                          "serving_type": "total/per_unit/per_serving",
+                          // total_size와 total_unit은 항상 필수
+                          "total_size": number,
+                          "total_unit": "ml/g",
+                          // per_unit, per_serving인 경우 base_size와 base_unit도 필수
+                          "base_size": number,
+                          "base_unit": "ml/g"
+                        },
+                        "values": {
+                          "calories": number,  // 숫자값만
+                          "protein": number,   // 숫자값만
+                          "fat": number,       // 숫자값만
+                          "carbs": number      // 숫자값만
+                        },
+                        "units": {
+                          "calories": "실제 영양성분표에 표시된 단위",
+                          "protein": "실제 영양성분표에 표시된 단위",
+                          "fat": "실제 영양성분표에 표시된 단위",
+                          "carbs": "실제 영양성분표에 표시된 단위"
+                        }
+                      }
+                    ],
+                    "ingredients": [
+                      {
+                        "name": "재료명",
+                        "amount": number,
+                        "unit": "g 또는 ml",
+                        "nutritionPer100g": {
+                          "calories": number,
+                          "protein": number,
+                          "fat": number,
+                          "carbs": number
+                        }
+                      }
+                    ]
+                  }
