@@ -1,4 +1,4 @@
-/* // components/SpeechAnalyzerFood.tsx
+// components/SpeechAnalyzerFood.tsx
 'use client';
 
 import 'regenerator-runtime/runtime';
@@ -245,9 +245,8 @@ const SpeechAnalyzerFood = () => {
 };
 
 export default SpeechAnalyzerFood;
- */
 
-// components/SpeechAnalyzerFood.tsx
+/* // components/SpeechAnalyzerFood.tsx
 'use client';
 
 import 'regenerator-runtime/runtime';
@@ -488,3 +487,4 @@ const SpeechAnalyzerFood = () => {
 };
 
 export default SpeechAnalyzerFood;
+ */
