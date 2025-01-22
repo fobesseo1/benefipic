@@ -41,6 +41,18 @@ export const ingredientDatabase: FoodItem[] = [
     },
   },
   {
+    id: 'pork',
+    name: '돼지고기',
+    unit: 'g',
+    unitWeight: 100, // 1kg 기준
+    nutrition: {
+      calories: 260, // 실제 한 마리 기준으로 수정
+      protein: 20, // 약 120g
+      fat: 20, // 약 65g
+      carbs: 0, // 탄수화물은 거의 없음
+    },
+  },
+  {
     id: 'taro',
     name: '토란',
     unit: '개',
@@ -158,6 +170,18 @@ export const ingredientDatabase: FoodItem[] = [
       protein: 2.4,
       fat: 0.2,
       carbs: 1.1,
+    },
+  },
+  {
+    id: 'beef',
+    name: '소고기',
+    unit: 'g',
+    unitWeight: 1,
+    nutrition: {
+      calories: 2.42,
+      protein: 0.19,
+      fat: 0.18,
+      carbs: 0,
     },
   },
   {
