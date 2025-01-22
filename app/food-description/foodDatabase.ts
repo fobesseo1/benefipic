@@ -5759,6 +5759,18 @@ export const completedFoodDatabase: FoodItem[] = [
   },
   {
     id: 'mul_naengmyeon',
+    name: '냉면',
+    unit: '그릇',
+    unitWeight: 450,
+    nutrition: {
+      calories: 425,
+      protein: 15,
+      fat: 3,
+      carbs: 88,
+    },
+  },
+  {
+    id: 'mul_naengmyeon',
     name: '물냉면',
     unit: '그릇',
     unitWeight: 450,
