@@ -4,6 +4,7 @@ import { getUser } from '@/lib/supabse/server';
 import FoodAnalyzer from './FoodAnalyzer';
 import NoLoginUserAlert from '../components/shared/ui/NoLoginUserAlert';
 import { isNewUser } from '@/utils/ad-utils';
+import FoodAnalyzerGpt from './FoodAnalyzerGpt';
 
 export default async function FoodPage() {
   const currentUser = await getUser();
@@ -19,6 +20,8 @@ export default async function FoodPage() {
   return (
     <div>
       <FoodAnalyzer currentUser_id={currentUser_id} newUserCheck={newUserCheck} />
+      {/* <p className="text-red-600">gpt</p>
+      <FoodAnalyzerGpt currentUser_id={currentUser_id} newUserCheck={newUserCheck} /> */}
 
       {/* <FoodAnalyzerNoFilter currentUser_id={currentUser_id} /> */}
     </div>
