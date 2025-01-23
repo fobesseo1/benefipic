@@ -1,5 +1,5 @@
 // app/speech/SpeechAnalyzerFood.tsx
-/* 'use client';
+'use client';
 
 import 'regenerator-runtime/runtime';
 import React, { useState, useEffect, useRef } from 'react';
@@ -247,9 +247,9 @@ const SpeechAnalyzerFood = () => {
   );
 };
 
-export default SpeechAnalyzerFood; */
+export default SpeechAnalyzerFood;
 
-'use client';
+/* 'use client';
 
 import 'regenerator-runtime/runtime';
 import React, { useState, useEffect, useRef } from 'react';
@@ -489,3 +489,4 @@ const SpeechAnalyzerFood = () => {
 };
 
 export default SpeechAnalyzerFood;
+ */
