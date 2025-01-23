@@ -42,8 +42,9 @@ const SpeechAnalyzerFood = () => {
     setIsTypingMode(false);
     setInputText('');
     resetTranscript();
+
     SpeechRecognition.startListening({
-      continuous: true,
+      continuous: false, // continuous 모드 비활성화
       language: 'ko-KR',
     });
   };
@@ -55,21 +56,6 @@ const SpeechAnalyzerFood = () => {
     }
   };
 
-  // 3초 무음 감지
-  React.useEffect(() => {
-    if (listening) {
-      setLastTranscriptTime(Date.now());
-      const timer = setInterval(() => {
-        if (Date.now() - lastTranscriptTime > 3000) {
-          handleStopListening();
-          clearInterval(timer);
-        }
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [listening, transcript, lastTranscriptTime]);
-
   // 음성 입력 중 실시간으로 inputText 업데이트
   useEffect(() => {
     if (listening) {
@@ -77,11 +63,12 @@ const SpeechAnalyzerFood = () => {
     }
   }, [transcript, listening]);
 
-  React.useEffect(() => {
-    if (listening) {
-      setLastTranscriptTime(Date.now());
+  // 말 멈추면 자동 시작
+  useEffect(() => {
+    if (!listening && transcript.trim()) {
+      analyzeFood(transcript);
     }
-  }, [transcript]);
+  }, [listening]);
 
   const analyzeFood = async (text: string) => {
     if (!text.trim()) return;
