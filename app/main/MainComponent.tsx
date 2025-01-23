@@ -9,6 +9,7 @@ import { FoodLog, ExerciseLog, DailyStatusResponse } from '../types/types';
 import dynamic from 'next/dynamic';
 import NutritionBatteryGroup from './NutritionBattery';
 import SpeechAnalyzerFood from '../speech/SpeechAnalyzerFood';
+import { Card } from '@/components/ui/card';
 
 const CurrentWeekCalendar = dynamic(() => import('./CurrentWeekCalendar'), { ssr: false });
 
@@ -22,7 +23,13 @@ export type DailyStatus = {
   remainingCarbs: number;
 };
 
-export default function MainComponent({ user_id }: { user_id: string }) {
+export default function MainComponent({
+  user_id,
+  newUserCheck,
+}: {
+  user_id: string;
+  newUserCheck: boolean;
+}) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dailyStatus, setDailyStatus] = useState<DailyStatus | null>(null);
   const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]);
@@ -57,6 +64,11 @@ export default function MainComponent({ user_id }: { user_id: string }) {
       setIsLoading(false);
     }
   }, []);
+
+  // 부모 컴포넌트의 데이터 갱신
+  const refreshMainData = useCallback(() => {
+    fetchAllData(selectedDate);
+  }, [selectedDate, fetchAllData]);
 
   // 날짜가 변경될 때마다 데이터 다시 불러오기
   useEffect(() => {
@@ -109,6 +121,8 @@ export default function MainComponent({ user_id }: { user_id: string }) {
       <div className="w-full aspect-square p-4 flex flex-col space-y-6">
         <div className="flex flex-col space-y-6">
           <CurrentWeekCalendar selectedDate={selectedDate} onDateSelect={handleDateSelect} />
+
+          {/* 오늘 남은 식사량 */}
           <Suspense fallback={<div>Loading nutrition...</div>}>
             <NutritionCard
               title={
@@ -126,10 +140,14 @@ export default function MainComponent({ user_id }: { user_id: string }) {
           </Suspense>
         </div>
         {/* 음성인식 */}
-        {/* <Suspense fallback={<div>Loading food logs...</div>}>
-          <SpeechAnalyzerFood />
-        </Suspense> */}
-
+        <Suspense fallback={<div>Loading food logs...</div>}>
+          <SpeechAnalyzerFood
+            currentUser_id={user_id}
+            newUserCheck={newUserCheck}
+            onDataUpdate={refreshMainData}
+          />
+        </Suspense>
+        {/* 오늘먹은 식사 */}
         <div className="flex flex-col space-y-6">
           <Suspense fallback={<div>Loading food logs...</div>}>
             <FoodLogCard

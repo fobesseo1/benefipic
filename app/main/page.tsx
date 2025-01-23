@@ -59,7 +59,7 @@ export default async function MainPage() {
         tutorialFinished={healthRecord.tutorial_fin}
         user_id={currentUser_id}
       />
-      <MainComponent user_id={currentUser_id} />
+      <MainComponent user_id={currentUser_id} newUserCheck={isNewUserCheck} />
     </Suspense>
   );
 }

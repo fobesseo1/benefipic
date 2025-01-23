@@ -24,10 +24,10 @@ const FoodDetectionAlert: React.FC<FoodDetectionAlertProps> = ({
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-red-600">음식이 아닌 이미지 감지됨</AlertDialogTitle>
+          <AlertDialogTitle className="text-red-600">음식이 아닌것으로 분석됨</AlertDialogTitle>
           <AlertDialogDescription className="space-y-2">
             <p>{detectedContent}</p>
-            <p className="text-sm text-gray-600">다른 음식 이미지를 선택해주세요.</p>
+            <p className="text-sm text-gray-600">다른 음식을 선택해주세요.</p>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
