@@ -93,25 +93,11 @@ const SpeechAnalyzerFood = () => {
               content: `당신은 음식 영양 분석 전문가입니다.
               -유의사항
               1.사용자의 음성 설명을 듣고 음식의 영양소를 분석해주세요.
-2.음성을 텍스트로 변환한거라 완전히 맞춤법이 맞지 않더라도:
-   - 발음이 비슷한 실제 존재하는 음식 이름을 찾아주세요 (예: "라조기 나둬요" → "라조기", "부대찍게" → "부대찌개")
-   - 음식 이름이 불완전하게 인식되어도 유사한 발음의 음식을 추측해주세요
-   - 명확하지 않은 경우 가장 일반적인 음식을 선택해주세요
-3.반드시!! 입력내용에 음식 관련 단어가 하나라도 포함되어 있다면:
-   - isFood는 무조건 true로 설정
-   - 음식과 관련된 부분만 추출하여 분석
-   - 불필요한 단어나 문장은 무시
-   - 여러 음식이 언급된 경우 '과'로 연결하여 분석
-4.각 영양소를 계산할때 반드시 사람들이 말하는 그릇,개,접시,인분 등의 단위를 g이나 ml 등의 정확한 단위로 환산하여 계산하고 답변해줘
-   - 1그릇 → 구체적인 g이나 ml로 환산
-   - 1인분 → 실제 그램수로 환산
-   - 1접시 → 실제 그램수로 환산
-   - 개수 → 1개당 실제 그램수로 환산
-5.단위 무게나 단위당 칼로리나 영양소에 실제 무게나 단위수를 곱하는 논리로 계산해
-   - 예: 1그릇(300g)이면 100g당 영양소 × 3
-   - 예: 2인분이면 1인분(250g)당 영양소 × 2
-   - 매우 중요. 반드시 차근차근 생각해서 계산
-6.오직 모든 단어가 음식과 완전히 무관할 때만 isFood: false
+              2.음성을 텍스트로 변환한거라 완전히 맞춤법이 맞지 않을수 있으니 발음상 제일 비슷한 음식으로 판단해주세요.
+              3.반드시!! 음식은 구분이 되지 않고 연속으로 입력 되면 각각의 요소들사이에 '과'를 붙인 것으로 생각해서 분석한다(예:'짜장면 짬뽕" 으로 입력 되면 "짜장면과 짬뽕'으로 text입력으로 생각한다.) //반드시 연속으로 입력되도 각각을 잘 따로 계산해서 합쳐야 한다.
+              3.각 영양소를 계산할때 반드시 사람들이 말하는 그릇,개,접시,인분 등의 단위를 g이나 ml 등의 정확한 단위로 환산하여 계산하고 답변해줘
+              4.단위 무게나 단위당 칼로리나 영양소에 실제 무게나 단위수를 곱하는 논리로 계산해//매우 중요. 반드시 차근차근 생각해
+              5.음식이 아닌걸 설명하면 isFood를 false로 대답해줘
               
               응답 형식:
               {
@@ -174,30 +160,13 @@ const SpeechAnalyzerFood = () => {
       <div className="relative">
         <form
           onSubmit={handleSubmit}
-          className="flex items-center  rounded-2xl shadow-sm border px-2 py-4"
+          className="flex items-center bg-white rounded-full shadow-sm border"
         >
-          {listening ? (
-            <button
-              type="button"
-              className="rounded-full w-12 h-12 bg-red-600 shadow-md flex items-center justify-center"
-              onClick={handleStopListening}
-              disabled={isAnalyzing}
-            >
-              <MicOff className="h-6 w-6 text-white" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="rounded-full w-12 h-12 bg-gray-50 shadow-md flex items-center justify-center"
-              onClick={handleStartListening}
-              disabled={isAnalyzing}
-            >
-              <Mic className="h-6 w-6 text-gray-600" />
-            </button>
-          )}
-          {/* <button
+          <Button
             type="button"
-            className="rounded-full w-12 h-12 bg-gray-50 shadow-md flex items-center justify-center"
+            variant="ghost"
+            size="icon"
+            className="rounded-full"
             onClick={listening ? handleStopListening : handleStartListening}
             disabled={isAnalyzing}
           >
@@ -206,12 +175,12 @@ const SpeechAnalyzerFood = () => {
             ) : (
               <Mic className="h-6 w-6 text-gray-500" />
             )}
-          </button> */}
-          <input
+          </Button>
+          <Input
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder="마이크 아이콘 누르고 말하세요..."
-            className="flex-1 border-0 focus-visible:ring-0 bg-transparent p-2"
+            className="flex-1 border-0 focus-visible:ring-0 bg-transparent"
             readOnly={listening}
             onFocus={() => setIsTypingMode(true)}
           />
