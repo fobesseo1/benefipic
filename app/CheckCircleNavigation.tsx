@@ -37,7 +37,7 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
         <div className="relative w-full">
           <div className="absolute bottom-44 right-4 z-50 pointer-events-auto">
             <div
-              className="bg-rose-600 w-16 h-16 flex items-center justify-center rounded-full cursor-pointer shadow-xl"
+              className="bg-black w-16 h-16 flex items-center justify-center rounded-full cursor-pointer shadow-xl"
               style={{
                 boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.6)',
               }}

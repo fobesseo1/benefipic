@@ -14,12 +14,13 @@ import PWAInstallAlert from './PWAInstallAlert';
 export default async function MainPage() {
   const currentUser = await getUser();
   const currentUser_id = currentUser?.id;
-  const isNewUserCheck = isNewUser(currentUser.created_at);
 
   if (!currentUser) {
-    return <NoLoginUserAlert />;
+    redirect('/auth');
+    // return <NoLoginUserAlert />;
   }
 
+  const isNewUserCheck = isNewUser(currentUser.created_at);
   const supabase = createSupabaseServerClient();
 
   // tutorial_fin만 가져오기

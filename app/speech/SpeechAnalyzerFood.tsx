@@ -368,7 +368,7 @@ const SpeechAnalyzerFood = ({
       <div className="relative">
         <form
           onSubmit={handleSubmit}
-          className="flex items-center  rounded-2xl shadow-sm border px-4 py-4"
+          className="flex items-center  rounded-2xl shadow-sm border px-4 py-4 bg-black"
         >
           {listening ? (
             <button
@@ -394,19 +394,17 @@ const SpeechAnalyzerFood = ({
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder="아이콘 터치 후 말하거나 직접 입력하세요..."
-            className="flex-1 border-0 focus-visible:ring-0 bg-transparent p-2 text-sm tracking-tighter"
+            className="flex-1 border-0 focus-visible:ring-0 bg-transparent p-2 text-sm tracking-tighter text-white"
             readOnly={listening || isAnalyzing}
             onFocus={() => setIsTypingMode(true)}
           />
-          <Button
+          <button
             type="submit"
-            variant="ghost"
-            size="icon"
             className="rounded-full"
             disabled={!inputText.trim() || isAnalyzing}
           >
-            <CornerDownLeft className="h-6 w-6 text-gray-500" />
-          </Button>
+            <CornerDownLeft className="h-5 w-5 text-gray-400" size={12} />
+          </button>
         </form>
       </div>
       {/* 에니메이션 */}

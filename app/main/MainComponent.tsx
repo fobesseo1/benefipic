@@ -147,7 +147,7 @@ export default function MainComponent({
             onDataUpdate={refreshMainData}
           />
         </Suspense>
-        {/* 오늘먹은 식사 */}
+        {/* 오늘먹은 음식 */}
         <div className="flex flex-col space-y-6">
           <Suspense fallback={<div>Loading food logs...</div>}>
             <FoodLogCard
