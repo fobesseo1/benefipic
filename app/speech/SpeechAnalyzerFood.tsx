@@ -31,7 +31,7 @@ const SpeechAnalyzerFood = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [inputText, setInputText] = useState('');
   const [isTypingMode, setIsTypingMode] = useState(false);
-  const silenceTimer = useRef<NodeJS.Timeout>();
+  const [lastTranscriptTime, setLastTranscriptTime] = useState<number>(Date.now());
 
   const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } =
     useSpeechRecognition({
@@ -56,16 +56,19 @@ const SpeechAnalyzerFood = () => {
   };
 
   // 3초 무음 감지
-  useEffect(() => {
+  React.useEffect(() => {
     if (listening) {
-      clearTimeout(silenceTimer.current);
-      silenceTimer.current = setTimeout(() => {
-        handleStopListening();
-      }, 3000);
-    }
+      setLastTranscriptTime(Date.now());
+      const timer = setInterval(() => {
+        if (Date.now() - lastTranscriptTime > 3000) {
+          handleStopListening();
+          clearInterval(timer);
+        }
+      }, 1000);
 
-    return () => clearTimeout(silenceTimer.current);
-  }, [transcript, listening]);
+      return () => clearInterval(timer);
+    }
+  }, [listening, transcript, lastTranscriptTime]);
 
   // 음성 입력 중 실시간으로 inputText 업데이트
   useEffect(() => {
@@ -73,6 +76,12 @@ const SpeechAnalyzerFood = () => {
       setInputText(transcript);
     }
   }, [transcript, listening]);
+
+  React.useEffect(() => {
+    if (listening) {
+      setLastTranscriptTime(Date.now());
+    }
+  }, [transcript]);
 
   const analyzeFood = async (text: string) => {
     if (!text.trim()) return;
@@ -145,6 +154,7 @@ const SpeechAnalyzerFood = () => {
     } finally {
       setIsAnalyzing(false);
       resetTranscript();
+      SpeechRecognition.stopListening();
     }
   };
 
