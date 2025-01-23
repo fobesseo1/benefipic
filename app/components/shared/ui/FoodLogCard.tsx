@@ -372,7 +372,7 @@ export const FoodLogCard = ({
                   className="rounded-lg object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gray-200 rounded-t-lg flex items-center justify-center p-4">
+                <div className="w-full h-full bg-gradient-to-r from-gray-100 via-gray-200 to-gray-300 rounded-t-lg flex items-center justify-center p-8">
                   <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
                     <p className="text-center font-semibold line-clamp-1 text-4xl">
                       {log.food_name.slice(0, 6)}

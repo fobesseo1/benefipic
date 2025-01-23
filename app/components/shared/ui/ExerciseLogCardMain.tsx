@@ -29,6 +29,11 @@ import {
   findIconByExerciseName,
   getExerciseIcon,
 } from '@/app/exercise-description/exerciseDatabase';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { FreeMode, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/free-mode';
+import 'swiper/css/pagination';
 
 export interface ExerciseLogCardProps {
   exerciseLogs: ExerciseLog[];
@@ -58,7 +63,7 @@ const calculateCalories = (caloriesPerHour: number, durationMinutes: number) => 
   return Math.round((caloriesPerHour * durationMinutes) / 60);
 };
 
-export const ExerciseLogCard = ({
+export const ExerciseLogCardMain = ({
   exerciseLogs,
   className = '',
   onDelete,
@@ -159,7 +164,7 @@ export const ExerciseLogCard = ({
 
   return (
     <>
-      <Card className={`p-4 ${className}`}>
+      <Card className={`p-4 pb-2  ${className}`}>
         {/* 헤더 부분 */}
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold mb-3">
@@ -174,144 +179,89 @@ export const ExerciseLogCard = ({
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-8">
+        <Swiper
+          modules={[FreeMode, Pagination]}
+          spaceBetween={16}
+          slidesPerView={'auto'}
+          freeMode={true}
+          pagination={{
+            clickable: true,
+          }}
+          className="w-full"
+        >
           {displayLogs.map((log) => {
             const IconComponent = getExerciseIcon(findIconByExerciseName(log.exercise_name));
 
             return (
-              <div key={log.id} className="rounded-lg bg-white">
-                {/* 이미지/아이콘 영역 */}
-                <div className="relative w-full aspect-square">
-                  {log.image_url ? (
-                    <Image
-                      src={log.image_url}
-                      alt={log.exercise_name}
-                      fill
-                      sizes="100vw"
-                      className="rounded-lg object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-r from-gray-100 via-gray-200 to-gray-300 rounded-t-lg flex items-center justify-center p-8">
-                      <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
-                        {IconComponent ? (
-                          <IconComponent className="w-36 h-36 text-gray-600" />
-                        ) : (
-                          <p className="text-center font-semibold text-4xl text-gray-400">
-                            {log.exercise_name.slice(0, 6)}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 정보 영역 */}
-                <div className="pt-4">
-                  {/* 운동 이름과 시간 */}
-                  <div className="grid grid-cols-4 items-end tracking-tighter border-b-[1px] border-gray-600">
-                    <p className="col-span-3 text-xl font-bold text-gray-900 line-clamp-1">
-                      {log.exercise_name}
-                    </p>
-                    <p className="col-span-1 text-sm text-gray-400 text-end">
-                      {formatTime(log.logged_at)}
-                    </p>
-                  </div>
-
-                  {/* 운동 상세 정보 */}
-                  <div className="mt-4">
-                    <div className="flex items-center tracking-tighter gap-[2px] border-t-[1px] border-gray-200">
-                      <Flame size={16} className="text-rose-600" />
-                      <p className="text-rose-600 text-2xl font-bold">
-                        {log.calories_burned}
-                        <span className="text-rose-600 text-xs"> kcal</span>
-                      </p>
-                    </div>
-                    <div className="flex items-center tracking-tighter gap-[2px] border-y-[1px] border-gray-200">
-                      <Timer size={16} className="text-gray-600" />
-                      <p className="text-gray-600 text-2xl font-bold">
-                        {log.duration_minutes}
-                        <span className="text-gray-600 text-xs"> 분</span>
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* 버튼 영역 */}
-                  <div className="w-full mt-3 grid grid-cols-3 gap-2">
-                    {/* 삭제 버튼 */}
-                    {showDeleteButton ? (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <div className="py-2 px-1 bg-gray-50 flex justify-center items-center cursor-pointer rounded-lg hover:bg-gray-600 group shadow-md gap-1">
-                            <Eraser size={16} className="text-gray-400 group-hover:text-white" />
-                            <p className="text-sm text-gray-400 group-hover:text-white">삭제</p>
+              <SwiperSlide key={log.id} style={{ width: '60%' }}>
+                <Card className="p-2">
+                  <div key={log.id} className="rounded-lg bg-white">
+                    {/* 이미지/아이콘 영역 */}
+                    <div className="relative w-full aspect-square">
+                      {log.image_url ? (
+                        <Image
+                          src={log.image_url}
+                          alt={log.exercise_name}
+                          fill
+                          sizes="100vw"
+                          className="rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-r from-gray-100 via-gray-200 to-gray-300 rounded-t-lg flex items-center justify-center p-4">
+                          <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
+                            {IconComponent ? (
+                              <IconComponent className="w-24 h-24 text-gray-600" />
+                            ) : (
+                              <p className="text-center font-semibold text-4xl text-gray-400">
+                                {log.exercise_name.slice(0, 6)}
+                              </p>
+                            )}
                           </div>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>운동 기록 삭제</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              {log.exercise_name} 기록을 삭제하시겠습니까?
-                              <br />
-                              삭제된 기록은 복구할 수 없습니다.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>돌아가기</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(log.id)}
-                              className="bg-red-500 px-4 hover:bg-red-600"
-                            >
-                              삭제하기
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    ) : (
-                      <div />
-                    )}
+                        </div>
+                      )}
+                    </div>
 
-                    {/* 수정 버튼 */}
-                    {showEditButton ? (
-                      <div
-                        onClick={() => {
-                          setShowSearchModal(true);
-                          setSelectedLog(log);
-                          setCustomExerciseName(log.exercise_name);
-                          setCustomCaloriesPerHour(log.calories_per_hour);
-                        }}
-                        className="py-2 px-1 bg-gray-50 flex justify-center items-center cursor-pointer rounded-lg hover:bg-gray-600 group shadow-md gap-1"
-                      >
-                        <Pencil size={16} className="text-gray-400 group-hover:text-white" />
-                        <p className="text-sm text-gray-400 group-hover:text-white">수정</p>
+                    {/* 정보 영역 */}
+                    <div className="pt-4">
+                      {/* 운동 이름과 시간 */}
+                      <div className="grid grid-cols-4 items-end tracking-tighter border-b-[1px] border-gray-600">
+                        <p className="col-span-3 font-bold text-gray-900 line-clamp-1">
+                          {log.exercise_name}
+                        </p>
+                        <p className="col-span-1 text-sm text-gray-400 text-end">
+                          {formatTime(log.logged_at)}
+                        </p>
                       </div>
-                    ) : (
-                      <div />
-                    )}
 
-                    {/* 공유 버튼 */}
-                    <ExerciseShareButton log={log} />
+                      {/* 운동 상세 정보 */}
+                      <div className="mt-2 flex items-center justify-between">
+                        <div className="flex items-center tracking-tighter gap-[2px] ">
+                          <Flame size={16} className="text-rose-600" />
+                          <p className="text-rose-600 text-lg font-bold">
+                            {log.calories_burned}
+                            <span className="text-rose-600 text-xs"> kcal</span>
+                          </p>
+                        </div>
+                        <div className="flex items-center tracking-tighter ">
+                          <Timer size={16} className="text-gray-600" />
+                          <p className="text-gray-600 text-lg font-bold">
+                            {log.duration_minutes}
+                            <span className="text-gray-600 text-xs"> 분</span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </Card>
+              </SwiperSlide>
             );
           })}
-
-          {showPlusButton && (
-            <div className="w-full h-12 rounded-lg flex items-center justify-center cursor-pointer">
-              <Link href="/exercise-all" className="flex items-center gap-2">
-                <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-600">
-                  <Plus size={24} className="text-gray-100" />
-                </div>
-                <p className="text-gray-600 font-medium">더보기</p>
-              </Link>
-            </div>
-          )}
 
           {/* 빈 상태 메시지 */}
           {displayLogs.length === 0 && (
             <div className="text-center py-8 text-gray-500">오늘 기록된 운동이 없습니다</div>
           )}
-        </div>
+        </Swiper>
       </Card>
 
       {/* 운동 수정 다이얼로그 */}
@@ -462,4 +412,4 @@ export const ExerciseLogCard = ({
   );
 };
 
-export default ExerciseLogCard;
+export default ExerciseLogCardMain;

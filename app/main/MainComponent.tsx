@@ -10,6 +10,8 @@ import dynamic from 'next/dynamic';
 import NutritionBatteryGroup from './NutritionBattery';
 import SpeechAnalyzerFood from '../speech/SpeechAnalyzerFood';
 import { Card } from '@/components/ui/card';
+import FoodLogCardMain from '../components/shared/ui/FoodLogCardMain';
+import ExerciseLogCardMain from '../components/shared/ui/ExerciseLogCardMain';
 
 const CurrentWeekCalendar = dynamic(() => import('./CurrentWeekCalendar'), { ssr: false });
 
@@ -121,7 +123,14 @@ export default function MainComponent({
       <div className="w-full aspect-square p-4 flex flex-col space-y-6">
         <div className="flex flex-col space-y-6">
           <CurrentWeekCalendar selectedDate={selectedDate} onDateSelect={handleDateSelect} />
-
+          {/* 음성인식 */}
+          <Suspense fallback={<div>Loading food logs...</div>}>
+            <SpeechAnalyzerFood
+              currentUser_id={user_id}
+              newUserCheck={newUserCheck}
+              onDataUpdate={refreshMainData}
+            />
+          </Suspense>
           {/* 오늘 남은 식사량 */}
           <Suspense fallback={<div>Loading nutrition...</div>}>
             <NutritionCard
@@ -139,25 +148,17 @@ export default function MainComponent({
             />
           </Suspense>
         </div>
-        {/* 음성인식 */}
-        <Suspense fallback={<div>Loading food logs...</div>}>
-          <SpeechAnalyzerFood
-            currentUser_id={user_id}
-            newUserCheck={newUserCheck}
-            onDataUpdate={refreshMainData}
-          />
-        </Suspense>
+
         {/* 오늘먹은 음식 */}
         <div className="flex flex-col space-y-6">
           <Suspense fallback={<div>Loading food logs...</div>}>
-            <FoodLogCard
+            <FoodLogCardMain
               foodLogs={foodLogs}
               dailyCalorieGoal={dailyStatus?.totalCalories || 2000}
               onDelete={handleFoodDelete}
               onDeleteSuccess={async () => {
                 await fetchAllData(selectedDate);
               }}
-              maxItems={3}
               selectedDate={selectedDate}
               showDeleteButton={false}
               showEditButton={false}
@@ -165,7 +166,7 @@ export default function MainComponent({
           </Suspense>
 
           <Suspense fallback={<div>Loading exercise logs...</div>}>
-            <ExerciseLogCard
+            <ExerciseLogCardMain
               exerciseLogs={exerciseLogs}
               onDelete={handleExerciseDelete}
               onDeleteSuccess={async () => {

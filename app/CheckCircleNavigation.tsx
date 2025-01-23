@@ -33,7 +33,7 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
 
   return (
     <>
-      <div className="lg:max-w-lg w-full fixed left-1/2 -translate-x-1/2 bottom-0 pointer-events-none">
+      <div className="z-50 lg:max-w-lg w-full fixed left-1/2 -translate-x-1/2 bottom-0 pointer-events-none">
         <div className="relative w-full">
           <div className="absolute bottom-44 right-4 z-50 pointer-events-auto">
             <div

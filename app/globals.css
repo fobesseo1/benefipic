@@ -101,3 +101,19 @@ body {
     opacity: 0;
   }
 }
+
+.swiper {
+  padding-bottom: 32px !important;
+}
+
+.swiper-pagination {
+  bottom: 0 !important;
+}
+
+.swiper-pagination-bullet {
+  background-color: #6b7280 !important;
+}
+
+.swiper-pagination-bullet-active {
+  background-color: #4b5563 !important;
+}
