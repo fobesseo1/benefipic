@@ -8,6 +8,7 @@ import createSupabaseBrowserClient from '@/lib/supabse/client';
 import { FoodLog, ExerciseLog, DailyStatusResponse } from '../types/types';
 import dynamic from 'next/dynamic';
 import NutritionBatteryGroup from './NutritionBattery';
+import SpeechAnalyzerFood from '../speech/SpeechAnalyzerFood';
 
 const CurrentWeekCalendar = dynamic(() => import('./CurrentWeekCalendar'), { ssr: false });
 
@@ -124,6 +125,10 @@ export default function MainComponent({ user_id }: { user_id: string }) {
             />
           </Suspense>
         </div>
+        {/* 음성인식 */}
+        {/* <Suspense fallback={<div>Loading food logs...</div>}>
+          <SpeechAnalyzerFood />
+        </Suspense> */}
 
         <div className="flex flex-col space-y-6">
           <Suspense fallback={<div>Loading food logs...</div>}>
