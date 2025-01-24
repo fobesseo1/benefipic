@@ -459,6 +459,9 @@ const SpeechAnalyzerExercise = ({
           </button>
         </form>
       </div>
+      {/* 분석,입력 에니메이션 */}
+      {listening && <BreathingCircle />}
+      {isAnalyzing && <AnalyzingWave />}
 
       {/* 분석 결과 알림 */}
       <AlertDialog open={showAnalysisAlert} onOpenChange={setShowAnalysisAlert}>

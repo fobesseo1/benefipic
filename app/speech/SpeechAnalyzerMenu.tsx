@@ -418,7 +418,7 @@ const SpeechAnalyzerMenu = ({
           <input
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="음식을 말하거나 직접 입력하세요..."
+            placeholder="메뉴를 알려주시면 추천해드려요..."
             className="flex-1 border-0 focus-visible:ring-0 bg-transparent p-2 text-sm tracking-tighter text-white"
             readOnly={listening || isAnalyzing}
             onFocus={() => setIsTypingMode(true)}

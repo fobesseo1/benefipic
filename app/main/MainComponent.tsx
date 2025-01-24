@@ -14,6 +14,7 @@ import ExerciseLogCardMain from '../components/shared/ui/ExerciseLogCardMain';
 import { Card } from '@/components/ui/card';
 import { Utensils, CheckSquare, FileText, Dumbbell, Speech } from 'lucide-react';
 import SpeechAnalyzerActionMenu from '../speech/SpeechAnalyzerActionMenu';
+import NutritionCardMain from '../components/shared/ui/NutritionCardMain';
 
 const CurrentWeekCalendar = dynamic(() => import('./CurrentWeekCalendar'), { ssr: false });
 
@@ -120,12 +121,12 @@ export default function MainComponent({
 
   return (
     <div className="relative min-h-screen min-w-screen flex flex-col overflow-hidden">
-      <div className="w-full aspect-square p-4 flex flex-col space-y-6">
+      <div className="w-full aspect-square p-4 flex flex-col space-y-4">
         {/* 캘린더 */}
         <Suspense fallback={<div>Loading food logs...</div>}>
           <CurrentWeekCalendar selectedDate={selectedDate} onDateSelect={setSelectedDate} />
         </Suspense>
-
+        {/* 음성 또는 직접 입력 */}
         <Suspense fallback={<div>Loading food logs...</div>}>
           <Card className="p-4 flex flex-col gap-2">
             <div className="w-full h-24 grid grid-cols-2 gap-2 tracking-tighter font-semibold">
@@ -189,6 +190,22 @@ export default function MainComponent({
               />
             )}
           </Card>
+        </Suspense>
+        {/* 오늘 남은 식사량 */}
+        <Suspense fallback={<div>Loading nutrition...</div>}>
+          <NutritionCardMain
+            title={
+              isToday(selectedDate)
+                ? '오늘 남은 식사량'
+                : `${selectedDate.toLocaleDateString('ko-KR')} 남은 식사량`
+            }
+            nutrition={{
+              calories: dailyStatus?.remainingCalories || 0,
+              protein: dailyStatus?.remainingProtein || 0,
+              fat: dailyStatus?.remainingFat || 0,
+              carbs: dailyStatus?.remainingCarbs || 0,
+            }}
+          />
         </Suspense>
 
         {/* 오늘먹은 음식 */}
