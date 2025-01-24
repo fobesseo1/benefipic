@@ -2,16 +2,18 @@
 
 import { useState, useCallback, useEffect, Suspense } from 'react';
 import NutritionCard from '../components/shared/ui/NutritionCard';
-import FoodLogCard from '../components/shared/ui/FoodLogCard';
-import ExerciseLogCard from '../components/shared/ui/ExerciseLogCard';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
 import { FoodLog, ExerciseLog, DailyStatusResponse } from '../types/types';
 import dynamic from 'next/dynamic';
-import NutritionBatteryGroup from './NutritionBattery';
 import SpeechAnalyzerFood from '../speech/SpeechAnalyzerFood';
-import { Card } from '@/components/ui/card';
+import SpeechAnalyzerFoodCheck from '../speech/SpeechAnalyzerFoodCheck';
+import SpeechAnalyzerMenu from '../speech/SpeechAnalyzerMenu';
+import SpeechAnalyzerExercise from '../speech/SpeechAnalyzerExercise';
 import FoodLogCardMain from '../components/shared/ui/FoodLogCardMain';
 import ExerciseLogCardMain from '../components/shared/ui/ExerciseLogCardMain';
+import { Card } from '@/components/ui/card';
+import { Utensils, CheckSquare, FileText, Dumbbell, Speech } from 'lucide-react';
+import SpeechAnalyzerActionMenu from '../speech/SpeechAnalyzerActionMenu';
 
 const CurrentWeekCalendar = dynamic(() => import('./CurrentWeekCalendar'), { ssr: false });
 
@@ -37,6 +39,9 @@ export default function MainComponent({
   const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]);
   const [exerciseLogs, setExerciseLogs] = useState<ExerciseLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentAnalyzer, setCurrentAnalyzer] = useState<'food' | 'check' | 'menu' | 'exercise'>(
+    'food'
+  );
   const supabase = createSupabaseBrowserClient();
 
   // 날짜 범위 가져오기
@@ -46,11 +51,10 @@ export default function MainComponent({
     start.setHours(0, 0, 0, 0);
     const end = new Date(koreanDate);
     end.setHours(23, 59, 59, 999);
-
     return { utcStart: start, utcEnd: end };
   };
 
-  // 모든 데이터 가져오기
+  // 데이터 가져오기
   const fetchAllData = useCallback(async (date: Date) => {
     try {
       setIsLoading(true);
@@ -61,26 +65,22 @@ export default function MainComponent({
       setFoodLogs(data.foodLogs);
       setExerciseLogs(data.exerciseLogs);
     } catch (error) {
-      console.error('Error fetching all data:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // 부모 컴포넌트의 데이터 갱신
+  // 데이터 갱신
   const refreshMainData = useCallback(() => {
     fetchAllData(selectedDate);
   }, [selectedDate, fetchAllData]);
 
-  // 날짜가 변경될 때마다 데이터 다시 불러오기
   useEffect(() => {
     fetchAllData(selectedDate);
   }, [selectedDate, fetchAllData]);
 
-  const handleDateSelect = (date: Date) => {
-    setSelectedDate(date);
-  };
-
+  // 삭제 핸들러
   const handleFoodDelete = async (id: string) => {
     try {
       const { error } = await supabase
@@ -89,7 +89,7 @@ export default function MainComponent({
         .eq('id', id)
         .eq('user_id', user_id);
       if (error) throw error;
-      await fetchAllData(selectedDate); // Refresh all data after deletion
+      refreshMainData();
     } catch (error) {
       console.error('Error deleting food log:', error);
     }
@@ -103,7 +103,7 @@ export default function MainComponent({
         .eq('id', id)
         .eq('user_id', user_id);
       if (error) throw error;
-      await fetchAllData(selectedDate); // Refresh all data after deletion
+      refreshMainData();
     } catch (error) {
       console.error('Error deleting exercise log:', error);
     }
@@ -121,33 +121,75 @@ export default function MainComponent({
   return (
     <div className="relative min-h-screen min-w-screen flex flex-col overflow-hidden">
       <div className="w-full aspect-square p-4 flex flex-col space-y-6">
-        <div className="flex flex-col space-y-6">
-          <CurrentWeekCalendar selectedDate={selectedDate} onDateSelect={handleDateSelect} />
-          {/* 음성인식 */}
-          <Suspense fallback={<div>Loading food logs...</div>}>
-            <SpeechAnalyzerFood
-              currentUser_id={user_id}
-              newUserCheck={newUserCheck}
-              onDataUpdate={refreshMainData}
-            />
-          </Suspense>
-          {/* 오늘 남은 식사량 */}
-          <Suspense fallback={<div>Loading nutrition...</div>}>
-            <NutritionCard
-              title={
-                isToday(selectedDate)
-                  ? '오늘 남은 식사량'
-                  : `${selectedDate.toLocaleDateString('ko-KR')} 남은 식사량`
-              }
-              nutrition={{
-                calories: dailyStatus?.remainingCalories || 0,
-                protein: dailyStatus?.remainingProtein || 0,
-                fat: dailyStatus?.remainingFat || 0,
-                carbs: dailyStatus?.remainingCarbs || 0,
-              }}
-            />
-          </Suspense>
-        </div>
+        {/* 캘린더 */}
+        <Suspense fallback={<div>Loading food logs...</div>}>
+          <CurrentWeekCalendar selectedDate={selectedDate} onDateSelect={setSelectedDate} />
+        </Suspense>
+
+        <Suspense fallback={<div>Loading food logs...</div>}>
+          <Card className="p-4 flex flex-col gap-2">
+            <div className="w-full h-24 grid grid-cols-2 gap-2 tracking-tighter font-semibold">
+              <button
+                onClick={() => setCurrentAnalyzer('food')}
+                className={`border-gray-200 border-2 flex items-center justify-center gap-2 col-span-1 rounded-xl
+            ${currentAnalyzer === 'food' ? 'bg-gray-900 text-white' : ''}`}
+              >
+                🥄 식사 기록
+              </button>
+              <button
+                onClick={() => setCurrentAnalyzer('check')}
+                className={`border-gray-200 border-2 flex items-center justify-center gap-2 col-span-1 rounded-xl
+            ${currentAnalyzer === 'check' ? 'bg-black text-white' : ''}`}
+              >
+                🤔 먹을까? 말까?
+              </button>
+              <button
+                onClick={() => setCurrentAnalyzer('menu')}
+                className={`border-gray-200 border-2 flex items-center justify-center gap-2 col-span-1 rounded-xl
+            ${currentAnalyzer === 'menu' ? 'bg-black text-white' : ''}`}
+              >
+                🍽️ 메뉴 추천
+              </button>
+              <button
+                onClick={() => setCurrentAnalyzer('exercise')}
+                className={`border-gray-200 border-2 flex items-center justify-center gap-2 col-span-1 rounded-xl
+            ${currentAnalyzer === 'exercise' ? 'bg-black text-white' : ''}`}
+              >
+                💪 운동 기록
+              </button>
+            </div>
+            <hr></hr>
+            {/* 현재 선택된 분석기 표시 */}
+            {currentAnalyzer === 'food' && (
+              <SpeechAnalyzerFood
+                currentUser_id={user_id}
+                newUserCheck={newUserCheck}
+                onDataUpdate={refreshMainData}
+              />
+            )}
+            {currentAnalyzer === 'check' && (
+              <SpeechAnalyzerFoodCheck
+                currentUser_id={user_id}
+                newUserCheck={newUserCheck}
+                onDataUpdate={refreshMainData}
+              />
+            )}
+            {currentAnalyzer === 'menu' && (
+              <SpeechAnalyzerMenu
+                currentUser_id={user_id}
+                newUserCheck={newUserCheck}
+                onDataUpdate={refreshMainData}
+              />
+            )}
+            {currentAnalyzer === 'exercise' && (
+              <SpeechAnalyzerExercise
+                currentUser_id={user_id}
+                newUserCheck={newUserCheck}
+                onDataUpdate={refreshMainData}
+              />
+            )}
+          </Card>
+        </Suspense>
 
         {/* 오늘먹은 음식 */}
         <div className="flex flex-col space-y-6">

@@ -84,7 +84,7 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
                   <Salad className="h-8 w-8 text-gray-600" />
                 </div>
                 <div className="flex-1 text-left">
-                  <span className="font-semibold text-xl block">오늘의 식사 📸</span>
+                  <span className="font-semibold text-xl block">🥄 식사 기록</span>
                   <span className="text-sm text-gray-400">식사 기록 및 칼로리 체크!</span>
                 </div>
               </button>
@@ -99,7 +99,7 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
                   <FileQuestion className="h-8 w-8 text-gray-600" />
                 </div>
                 <div className="flex-1 text-left">
-                  <span className="font-semibold text-xl block">먹을까? 말까?🤔</span>
+                  <span className="font-semibold text-xl block">🤔 먹을까? 말까?</span>
                   <span className="text-sm text-gray-400">먹을지 말지 딱! 정해드림</span>
                 </div>
               </button>
@@ -114,7 +114,7 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
                   <ReceiptText className="h-8 w-8 text-gray-600" />
                 </div>
                 <div className="flex-1 text-left">
-                  <span className="font-semibold text-xl block">메뉴 추천 🍽️</span>
+                  <span className="font-semibold text-xl block">🍽️ 메뉴 추천</span>
                   <span className="text-sm text-gray-400">메뉴판 찍으면 건강한 메뉴 추천</span>
                 </div>
               </button>
@@ -129,7 +129,7 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
                   <Dumbbell className="h-8 w-8 text-gray-600" />
                 </div>
                 <div className="flex-1 text-left">
-                  <span className="font-semibold text-xl block">오늘의 운동 💪</span>
+                  <span className="font-semibold text-xl block">💪 운동 기록</span>
                   <span className="text-sm text-gray-400">오늘 운동 바로 기록!</span>
                 </div>
               </button>

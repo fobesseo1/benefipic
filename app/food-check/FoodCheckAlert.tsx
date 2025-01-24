@@ -16,7 +16,7 @@ import 'react-circular-progressbar/dist/styles.css';
 interface FoodCheckAlertProps {
   isOpen: boolean;
   onClose: () => void;
-  setStep: (step: 'complete') => void;
+  setStep?: (step: 'complete') => void;
   healthCheck: {
     score: number;
     message: string;
@@ -74,7 +74,9 @@ const FoodCheckAlert: React.FC<FoodCheckAlertProps> = ({
   };
 
   const handleClose = () => {
-    setStep('complete');
+    if (setStep) {
+      setStep('complete');
+    }
     onClose();
   };
 

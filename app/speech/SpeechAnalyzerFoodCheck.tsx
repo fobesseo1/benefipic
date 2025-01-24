@@ -1,4 +1,3 @@
-// components/SpeechAnalyzerFood.tsx
 'use client';
 
 import 'regenerator-runtime/runtime';
@@ -15,6 +14,7 @@ import {
   NutritionData,
   processApiResponse,
   validateAndCorrectAnalysis,
+  calculateHealthScore,
 } from '@/utils/food-analysis';
 import { completedFoodDatabase } from '../food-description/foodDatabase';
 import { useRouter } from 'next/navigation';
@@ -32,18 +32,19 @@ import NutritionCard from '../components/shared/ui/NutritionCard';
 import { handleDecrease, handleIncrease, handleInputChange } from '../food/utils/handlers';
 import { useAnalysisEligibility } from '../hooks/useAnalysisEligibility';
 import AdDialog from '../components/shared/ui/AdDialog';
+import FoodCheckAlert from '../food-check/FoodCheckAlert';
 
-interface SpeechAnalyzerFoodProps {
+interface SpeechAnalyzerFoodCheckProps {
   currentUser_id: string;
   newUserCheck: boolean;
-  onDataUpdate?: () => void; // 추가
+  onDataUpdate?: () => void;
 }
 
-const SpeechAnalyzerFood = ({
+const SpeechAnalyzerFoodCheck = ({
   currentUser_id,
   newUserCheck,
   onDataUpdate,
-}: SpeechAnalyzerFoodProps) => {
+}: SpeechAnalyzerFoodCheckProps) => {
   const [analysis, setAnalysis] = useState<NutritionData | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [inputText, setInputText] = useState('');
@@ -62,12 +63,39 @@ const SpeechAnalyzerFood = ({
     foodName: false,
   });
   const [showAdDialog, setShowAdDialog] = useState(false);
+  const [showHealthAlert, setShowHealthAlert] = useState(false);
+  const [healthCheckResult, setHealthCheckResult] = useState<{
+    score: number;
+    message: string;
+    currentFood: {
+      foodName: string;
+      nutrition: {
+        calories: number;
+        protein: number;
+        fat: number;
+        carbs: number;
+      };
+    };
+    alternatives?: {
+      name: string;
+      reason: string;
+      benefits: string;
+    }[];
+  } | null>(null);
+
   const router = useRouter();
 
   const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } =
     useSpeechRecognition({
       commands: [],
     });
+
+  const getHealthMessage = (score: number) => {
+    if (score >= 9) return '아주 훌륭한 선택이에요!';
+    if (score >= 8) return '괜찮은 선택이에요!';
+    if (score >= 7) return '나쁘지 않지만, 다른 선택도...';
+    return '다시 한번 생각해보시겠어요?';
+  };
 
   const handleStartListening = () => {
     setIsTypingMode(false);
@@ -86,7 +114,6 @@ const SpeechAnalyzerFood = ({
     }
   };
 
-  /* 광고 */
   const { checkEligibility } = useAnalysisEligibility(currentUser_id, newUserCheck);
 
   const handleAdComplete = async () => {
@@ -107,7 +134,6 @@ const SpeechAnalyzerFood = ({
     setShowAdDialog(false);
   };
 
-  /* 음식이 아니면 알려주는 알랏 닫기 */
   const closeNotFoodAlert = () => {
     setNotFoodAlert({
       isOpen: false,
@@ -115,7 +141,6 @@ const SpeechAnalyzerFood = ({
     });
   };
 
-  // 3초 무음 감지
   useEffect(() => {
     if (listening) {
       clearTimeout(silenceTimer.current);
@@ -127,14 +152,12 @@ const SpeechAnalyzerFood = ({
     return () => clearTimeout(silenceTimer.current);
   }, [transcript, listening]);
 
-  // 음성 입력 중 실시간으로 inputText 업데이트
   useEffect(() => {
     if (listening) {
       setInputText(transcript);
     }
   }, [transcript, listening]);
 
-  //수정시필요
   useEffect(() => {
     if (originalAnalysis) {
       setAnalysis(calculateNutritionByQuantity(originalAnalysis, quantity));
@@ -144,7 +167,6 @@ const SpeechAnalyzerFood = ({
   const analyzeFood = async (text: string) => {
     if (!text.trim()) return;
 
-    // 권한 체크
     const supabase = createSupabaseBrowserClient();
     const eligibility = await checkEligibility();
 
@@ -156,7 +178,6 @@ const SpeechAnalyzerFood = ({
       return;
     }
 
-    // 오늘의 무료 사용인 경우, last_free_use 업데이트
     if (eligibility.reason === 'daily_free') {
       const { error: updateError } = await supabase
         .from('userdata')
@@ -173,6 +194,7 @@ const SpeechAnalyzerFood = ({
 
     setIsAnalyzing(true);
     try {
+      // 첫 번째 API 호출: 음식 분석
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -185,53 +207,81 @@ const SpeechAnalyzerFood = ({
             {
               role: 'system',
               content: `당신은 음식 영양 분석 전문가입니다.
-              -유의사항
-              1.사용자의 음성 설명을 듣고 음식의 영양소를 분석해주세요.
-2.음성을 텍스트로 변환한거라 완전히 맞춤법이 맞지 않더라도:
-   - 발음이 비슷한 실제 존재하는 음식 이름을 찾아주세요 (예: "라조기 나둬요" → "라조기", "부대찍게" → "부대찌개")
-   - 음식 이름이 불완전하게 인식되어도 유사한 발음의 음식을 추측해주세요
-   - 명확하지 않은 경우 가장 일반적인 음식을 선택해주세요
-3.반드시!! 입력내용에 음식 관련 단어가 하나라도 포함되어 있다면:
-   - isFood는 무조건 true로 설정
-   - 음식과 관련된 부분만 추출하여 분석
-   - 불필요한 단어나 문장은 무시
-   - 여러 음식이 언급된 경우 '과'로 연결하여 분석
-4.각 영양소를 계산할때 반드시 사람들이 말하는 그릇,개,접시,인분 등의 단위를 g이나 ml 등의 정확한 단위로 환산하여 계산하고 답변해줘
-   - 1그릇 → 구체적인 g이나 ml로 환산
-   - 1인분 → 실제 그램수로 환산
-   - 1접시 → 실제 그램수로 환산
-   - 개수 → 1개당 실제 그램수로 환산
-5.단위 무게나 단위당 칼로리나 영양소에 실제 무게나 단위수를 곱하는 논리로 계산해
-   - 예: 1그릇(600g)이면 100g당 영양소 × 6
-   - 예: 2인분이면 1인분(250g)당 영양소 × 2
-   - 매우 중요. 반드시 차근차근 생각해서 계산
-6.오직 모든 단어가 음식과 완전히 무관할 때만 isFood: false
               
-              응답 형식:
-              {
-              "isFood": true,
-  "foodName": "음식 이름",
-  "description": "영양소 계산 과정 설명",
-  "ingredients": [{
-    "name": "재료명",
-    "amount": number,
-    "unit": "g/ml",
-    "nutritionPer100g": {
-      "calories": number,
-      "protein": number,
-      "fat": number,
-      "carbs": number
-    }
-  }]
-              }`,
+              1. 분석 대상 및 기본 규칙:
+                - 모든 섭취 가능한 음식/음료/포장식품은 isFood: true
+                - 섭취 불가능한 물체는 isFood: false
+                - 물도 분석 대상 (영양소 0으로 기록)
+              
+              2. 영양성분표 처리 규칙:
+                - 글자가 명확한 경우: letter에 정보 포함
+                - 글자가 불명확하거나 없는 경우: letter는 null, ingredients는 추정값 필수
+                - letter.values가 있으면 serving_info 필수이며 다음을 포함:
+                  * serving_type: total/per_unit/per_serving 중 하나
+                  * total_size/total_unit: 모든 경우 필수
+                  * base_size/base_unit: per_unit/per_serving인 경우 필수
+              
+              3. 음식명 규칙:
+                - 여러 음식이 있는 경우: "A와 B 그리고 C" 형식으로 작성
+              
+              4. ingredients 작성 규칙:
+                - 모든 경우에 반드시 추정값 제공 (null 사용 금지)
+                - 제품/음식 종류, 크기, 일반적인 레시피 기준으로 추정
+                - 재료별 양과 영양가 반드시 포함`, // 기존 시스템 프롬프트
             },
             {
               role: 'user',
               content: [
                 {
                   type: 'text',
-                  text: `다음 음식을 분석해 JSON으로 응답해주세요:
-                  설명 내용: ${text}`,
+                  text: `다음 음식을 분석해 JSON으로 응답해주세요: ${text}
+                  필수 고려사항:
+          - 모든 음식/음료를 분석 대상에 포함
+          - 포장 제품은 영양성분표 기준으로 분석
+          - 양 추정시 주변 사물 크기 참고
+          - 모든 음식의 중량/부피 추정 필수
+          - 음식이 아닐 경우 description만 간단히 작성
+          
+          응답 형식:
+          {
+            "isFood": true/false,
+            "foodName": "음식 이름(한글)",
+            "description": "음식 아닐 경우만 작성",
+            "letter": [{
+              "type": "nutrition_label",
+              "content": "영양성분표 전체 텍스트",
+              "serving_info": {
+                "serving_type": "total/per_unit/per_serving",
+                "total_size": number,
+                "total_unit": "ml/g",
+                "base_size": number,
+                "base_unit": "ml/g"
+              },
+              "values": {
+                "calories": number,
+                "protein": number,
+                "fat": number,
+                "carbs": number
+              },
+              "units": {
+                "calories": "표시된 단위",
+                "protein": "표시된 단위",
+                "fat": "표시된 단위",
+                "carbs": "표시된 단위"
+              }
+            }],
+            "ingredients": [{
+              "name": "재료명",
+              "amount": number,
+              "unit": "g/ml",
+              "nutritionPer100g": {
+                "calories": number,
+                "protein": number,
+                "fat": number,
+                "carbs": number
+              }
+            }]
+          }`,
                 },
               ],
             },
@@ -242,13 +292,8 @@ const SpeechAnalyzerFood = ({
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('API 요청 실패');
-      }
-
       const data = await response.json();
       const apiResponse = JSON.parse(data.choices[0].message.content) as ApiResponse;
-      console.log('(1차)API 응답:', apiResponse);
 
       if (!apiResponse.isFood) {
         setNotFoodAlert({
@@ -261,16 +306,82 @@ const SpeechAnalyzerFood = ({
         return;
       }
 
-      // 분석 결과 보정
       const correctedResult = validateAndCorrectAnalysis(apiResponse, completedFoodDatabase);
-
-      // 보정된 결과 처리
       const processedData = processApiResponse(correctedResult);
-      console.log('(2차)보정 결과:', processedData);
       setOriginalAnalysis(processedData);
       setAnalysis(processedData);
-      setShowAnalysisAlert(true);
-      setInputText('');
+
+      // 건강 점수 계산
+      const healthScore = calculateHealthScore({
+        foodName: processedData.foodName,
+        nutrition: processedData.nutrition,
+      });
+
+      if (healthScore <= 7) {
+        // 대체 음식 추천을 위한 두 번째 API 호출
+        const recommendationResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              {
+                role: 'system',
+                content: '영양 전문가로서 더 건강한 대체 음식을 추천해주세요.',
+              },
+              {
+                role: 'user',
+                content: `현재 음식: ${processedData.foodName}의 더 건강한 대체 음식을 추천해주세요 대체 음식은 한국에서 쉽게 구할수 있는 음식이었으면 좋겠어 그러나 이게 반드시 한식을 추천해달라는건 아님을 명심해.
+                  영양정보:
+                  - 칼로리: ${processedData.nutrition.calories}kcal
+                  - 단백질: ${processedData.nutrition.protein}g
+                  - 지방: ${processedData.nutrition.fat}g
+                  - 탄수화물: ${processedData.nutrition.carbs}g
+                  
+                  다음 JSON 형식으로 응답해주세요 음식은 최대2개만 추천해줘:
+                  {
+                    "recommendations": [
+                      {
+                        "name": "음식명",
+                        "reason": "추천 이유(한글 20자 내외)",
+                        "benefits": "건강상 이점(한글 20자 내외)"
+                      }
+                    ]
+                  }`,
+              },
+            ],
+            temperature: 0.3,
+            response_format: { type: 'json_object' },
+          }),
+        });
+
+        const alternativesData = await recommendationResponse.json();
+        const alternatives = JSON.parse(alternativesData.choices[0].message.content);
+
+        setHealthCheckResult({
+          score: healthScore,
+          message: getHealthMessage(healthScore),
+          currentFood: {
+            foodName: processedData.foodName,
+            nutrition: processedData.nutrition,
+          },
+          alternatives: alternatives.recommendations,
+        });
+      } else {
+        setHealthCheckResult({
+          score: healthScore,
+          message: getHealthMessage(healthScore),
+          currentFood: {
+            foodName: processedData.foodName,
+            nutrition: processedData.nutrition,
+          },
+        });
+      }
+
+      setShowHealthAlert(true);
     } catch (error) {
       console.error('Analysis failed:', error);
     } finally {
@@ -287,6 +398,7 @@ const SpeechAnalyzerFood = ({
   };
 
   const resetAnalyzer = () => {
+    setShowHealthAlert(false);
     setShowAnalysisAlert(false);
     setAnalysis(null);
     setOriginalAnalysis(null);
@@ -298,7 +410,7 @@ const SpeechAnalyzerFood = ({
   const successSave = () => {
     setShowResultAlert(false);
     if (onDataUpdate) {
-      onDataUpdate(); // 부모 컴포넌트의 데이터 갱신
+      onDataUpdate();
     }
     router.replace('/main');
   };
@@ -310,7 +422,6 @@ const SpeechAnalyzerFood = ({
     try {
       const supabase = createSupabaseBrowserClient();
 
-      // 데이터베이스에 저장
       const { error: insertError } = await supabase.from('food_logs').insert({
         user_id: currentUser_id,
         logged_at: new Date().toISOString(),
@@ -332,6 +443,35 @@ const SpeechAnalyzerFood = ({
     }
   };
 
+  const saveCheckLog = async () => {
+    if (!analysis) return;
+    setShowHealthAlert(false);
+
+    try {
+      const supabase = createSupabaseBrowserClient();
+
+      const { error: insertError } = await supabase.from('food_check_logs').insert({
+        user_id: currentUser_id,
+        logged_at: new Date().toISOString(),
+        food_name: analysis.foodName,
+        calories: analysis.nutrition.calories,
+        protein: analysis.nutrition.protein,
+        fat: analysis.nutrition.fat,
+        carbs: analysis.nutrition.carbs,
+      });
+
+      if (insertError) throw insertError;
+
+      setError(null);
+      setShowResultAlert(true);
+    } catch (error) {
+      console.error('Error saving to food_check_logs:', error);
+      setError('저장 중 오류가 발생했습니다.');
+      setShowResultAlert(true);
+    }
+  };
+
+  // 애니메이션 컴포넌트들
   // 음성 입력 시 작은 파동
   const BreathingCircle = () => (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/20">
@@ -386,7 +526,7 @@ const SpeechAnalyzerFood = ({
   );
 
   return (
-    <div className="space-y-6 ">
+    <div className="space-y-6">
       <div className="relative">
         <form
           onSubmit={handleSubmit}
@@ -429,135 +569,22 @@ const SpeechAnalyzerFood = ({
           </button>
         </form>
       </div>
-      {/* 에니메이션 */}
+
       {listening && <BreathingCircle />}
       {isAnalyzing && <AnalyzingWave />}
-      {/* 분석 결과 알림 */}
-      <AlertDialog open={showAnalysisAlert} onOpenChange={setShowAnalysisAlert}>
-        <AlertDialogContent className="max-w-[400px]">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-bold">{analysis?.foodName}</AlertDialogTitle>
-          </AlertDialogHeader>
 
-          {/* Name & Number Card */}
-          <Card className="p-4">
-            <div className="grid grid-cols-10 gap-2 h-16">
-              <div className="col-span-6 py-2 flex items-center">
-                {editMode.foodName ? (
-                  <Input
-                    type="text"
-                    value={analysis?.foodName}
-                    onChange={(e) => {
-                      setAnalysis((prev) =>
-                        prev
-                          ? {
-                              ...prev,
-                              foodName: e.target.value,
-                            }
-                          : null
-                      );
-                    }}
-                    onBlur={() => setEditMode((prev) => ({ ...prev, foodName: false }))}
-                    className="text-xl font-medium"
-                    autoFocus
-                  />
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-xl line-clamp-2">{analysis?.foodName}</p>
-                    <button
-                      onClick={() => setEditMode((prev) => ({ ...prev, foodName: true }))}
-                      className="p-1 hover:bg-gray-200 rounded-full transition-colors"
-                    >
-                      <Pencil className="w-4 h-4 text-gray-500" />
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div className="col-span-4 py-2">
-                <div className="flex items-center justify-between h-full">
-                  <button
-                    onClick={() => handleDecrease(quantity, setQuantity)}
-                    className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full"
-                    disabled={quantity <= 1}
-                  >
-                    <Minus size={16} />
-                  </button>
+      {/* 건강 체크 Alert */}
+      {healthCheckResult && (
+        <FoodCheckAlert
+          isOpen={showHealthAlert}
+          onClose={() => setShowHealthAlert(false)}
+          healthCheck={healthCheckResult}
+          onSaveToFoodLogs={saveFoodLog}
+          onSaveToCheckLogs={saveCheckLog}
+        />
+      )}
 
-                  <input
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => handleInputChange(e, setQuantity)}
-                    min="1"
-                    max="99"
-                    className="w-12 h-12 text-center bg-white rounded-lg text-xl font-semibold"
-                  />
-
-                  <button
-                    onClick={() => handleIncrease(quantity, setQuantity)}
-                    className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full"
-                    disabled={quantity >= 99}
-                  >
-                    <Plus size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* Nutrition Card */}
-          {analysis && (
-            <NutritionCard
-              nutrition={analysis.nutrition}
-              onNutritionChange={(newNutrition) => {
-                setAnalysis((prev) =>
-                  prev
-                    ? {
-                        ...prev,
-                        nutrition: newNutrition,
-                      }
-                    : null
-                );
-              }}
-              editable={true}
-            />
-          )}
-
-          {/* Ingredients Card */}
-          <Card className="p-4">
-            <h3 className="text-lg font-semibold mb-3">재료 구성</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {analysis?.ingredients.map((ingredient, index) => (
-                <div key={index} className="bg-gray-50 p-3 rounded-lg shadow-md">
-                  <p className="font-medium">{ingredient.name}</p>
-                  <p className="text-sm text-gray-600">{ingredient.amount}</p>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <AlertDialogFooter className="grid grid-cols-2 gap-4">
-            <Button onClick={resetAnalyzer} variant="outline" className="w-full py-6">
-              다시하기
-            </Button>
-            <Button onClick={saveFoodLog} className="w-full py-6">
-              저장하기
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      {/* 광고 */}
-      <AdDialog
-        isOpen={showAdDialog}
-        onClose={() => setShowAdDialog(false)}
-        onAdComplete={handleAdComplete}
-      />
-      {/* 음식 아닌 이미지 경고 알림 추가 */}
-      <FoodDetectionAlert
-        isOpen={notFoodAlert.isOpen}
-        onClose={closeNotFoodAlert}
-        detectedContent={notFoodAlert.detectedContent}
-      />
-      {/* 저장 결과 알림 */}
+      {/* 저장 결과 Alert */}
       <AlertDialog open={showResultAlert} onOpenChange={setShowResultAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -573,8 +600,22 @@ const SpeechAnalyzerFood = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* 음식 아닌 경고 알림 */}
+      <FoodDetectionAlert
+        isOpen={notFoodAlert.isOpen}
+        onClose={closeNotFoodAlert}
+        detectedContent={notFoodAlert.detectedContent}
+      />
+
+      {/* 광고 알림 */}
+      <AdDialog
+        isOpen={showAdDialog}
+        onClose={() => setShowAdDialog(false)}
+        onAdComplete={handleAdComplete}
+      />
     </div>
   );
 };
 
-export default SpeechAnalyzerFood;
+export default SpeechAnalyzerFoodCheck;
