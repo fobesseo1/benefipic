@@ -17,6 +17,18 @@ export interface FoodItem {
 
 export const ingredientDatabase: FoodItem[] = [
   {
+    id: 'golbaenge',
+    name: '골뱅이',
+    unit: 'g',
+    unitWeight: 30,
+    nutrition: {
+      calories: 10,
+      protein: 1.9,
+      fat: 0.1,
+      carbs: 0.6,
+    },
+  },
+  {
     id: 'whopper_jr',
     name: '와퍼 주니어',
     unit: '개',
@@ -2862,6 +2874,30 @@ export const ingredientDatabase: FoodItem[] = [
 
 export const completedFoodDatabase: FoodItem[] = [
   {
+    id: 'golbaenge-muchim',
+    name: '골뱅이무침',
+    unit: '인분',
+    unitWeight: 250,
+    nutrition: {
+      calories: 270,
+      protein: 18,
+      fat: 5,
+      carbs: 40,
+    },
+  },
+  {
+    id: 'french_fries',
+    name: '프렌치 프라이',
+    unit: '개',
+    unitWeight: 100,
+    nutrition: {
+      calories: 317,
+      protein: 3,
+      fat: 15,
+      carbs: 50,
+    },
+  },
+  {
     id: 'french_fries',
     name: '프렌치 프라이',
     unit: '개',
@@ -3760,6 +3796,18 @@ export const completedFoodDatabase: FoodItem[] = [
       protein: 28,
       fat: 14,
       carbs: 92,
+    },
+  },
+  {
+    id: 'champon_bab',
+    name: '짬뽕밥',
+    unit: '그릇',
+    unitWeight: 800,
+    nutrition: {
+      calories: 574,
+      protein: 26,
+      fat: 11,
+      carbs: 93,
     },
   },
   {
@@ -6158,11 +6206,11 @@ export const completedFoodDatabase: FoodItem[] = [
     id: 'milmyeon',
     name: '밀면',
     unit: '그릇',
-    unitWeight: 400,
+    unitWeight: 250,
     nutrition: {
-      calories: 445,
-      protein: 16,
-      fat: 6,
+      calories: 410,
+      protein: 6.4,
+      fat: 4.8,
       carbs: 85,
     },
   },
@@ -6170,12 +6218,12 @@ export const completedFoodDatabase: FoodItem[] = [
     id: 'jjolmyeon',
     name: '쫄면',
     unit: '그릇',
-    unitWeight: 350,
+    unitWeight: 210,
     nutrition: {
-      calories: 465,
-      protein: 15,
-      fat: 8,
-      carbs: 88,
+      calories: 505,
+      protein: 10,
+      fat: 2,
+      carbs: 112,
     },
   },
   {

@@ -18,6 +18,7 @@ interface NutritionCardProps {
   title?: string;
   editable?: boolean;
   onNutritionChange?: (newNutrition: NutritionData) => void;
+  totalDailyCalories?: number;
 }
 
 export const NutritionCardMain = ({
@@ -26,6 +27,7 @@ export const NutritionCardMain = ({
   title = '영양 정보',
   editable = false,
   onNutritionChange,
+  totalDailyCalories = 0,
 }: NutritionCardProps) => {
   const [editMode, setEditMode] = useState({
     calories: false,
@@ -70,9 +72,60 @@ export const NutritionCardMain = ({
     );
   };
 
+  //바랜더링
+  // 퍼센테이지 계산
+  const calculateCaloriePercentage = (): number => {
+    if (!totalDailyCalories) return 0;
+    const percentage = (nutrition.calories / totalDailyCalories) * 100;
+    return Math.round(percentage);
+  };
+
+  const percentage = calculateCaloriePercentage();
+
+  // 색상 클래스 결정
+  const colorClasses = {
+    bar: percentage >= 25 ? 'bg-green-600' : 'bg-rose-600',
+    text: percentage >= 25 ? 'text-green-600' : 'text-rose-600',
+  };
+
+  const getProgressBarStyles = (percentage: number) => {
+    const validPercentage = Math.max(0, percentage);
+    return {
+      width: `${validPercentage}%`,
+    };
+  };
+
   return (
     <Card className={`p-4 ${className}`}>
-      <h3 className="text-lg font-semibold mb-3">{title}</h3>
+      <div className="flex items-center gab-2 mb-3">
+        <h3 className="text-lg font-semibold ">{title}</h3>
+        <div className="h-full w-2"></div>
+        {/* <div className="flex-1 grid grid-cols-12">
+          <div className="col-span-10 flex items-center justify-start rounded-lg bg-gray-200">
+            <div
+              className={`h-full ${colorClasses.bar} rounded-lg`}
+              style={{ width: `${Math.max(0, percentage)}%` }}
+            ></div>
+          </div>
+          <p className={`col-span-2 text-center text-sm tracking-tighter ${colorClasses.text}`}>
+            {percentage}%
+          </p>
+        </div> */}
+      </div>
+      <div className="mb-3 grid grid-cols-12">
+        <div className="h-6 col-span-10 flex items-center justify-start rounded-full bg-gray-200">
+          <div
+            className={`h-6 ${colorClasses.bar} rounded-full`}
+            style={{ width: `${Math.max(0, percentage)}%` }}
+          ></div>
+        </div>
+        <p
+          className={`col-span-2 text-center text-xl font-semibold tracking-tighter ${colorClasses.text}`}
+        >
+          {percentage}
+          <span className="text-sm">%</span>
+        </p>
+      </div>
       <div className="grid grid-cols-2 gap-2">
         <div className="bg-gray-50 p-2 rounded-lg grid grid-cols-10 gap-1 shadow">
           <div className="col-span-3 flex items-center justify-center">

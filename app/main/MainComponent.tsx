@@ -15,6 +15,8 @@ import { Card } from '@/components/ui/card';
 import { Utensils, CheckSquare, FileText, Dumbbell, Speech } from 'lucide-react';
 import SpeechAnalyzerActionMenu from '../speech/SpeechAnalyzerActionMenu';
 import NutritionCardMain from '../components/shared/ui/NutritionCardMain';
+import CalorieMeter from './CalorieMeter';
+import SpeechMainAnalyzer from '../speech/SpeechMainAnalyzer';
 
 const CurrentWeekCalendar = dynamic(() => import('./CurrentWeekCalendar'), { ssr: false });
 
@@ -126,8 +128,16 @@ export default function MainComponent({
         <Suspense fallback={<div>Loading food logs...</div>}>
           <CurrentWeekCalendar selectedDate={selectedDate} onDateSelect={setSelectedDate} />
         </Suspense>
+        <Suspense fallback={<div>Loading analyzer...</div>}>
+          <SpeechMainAnalyzer
+            user_id={user_id}
+            newUserCheck={newUserCheck}
+            onDataUpdate={refreshMainData}
+          />
+        </Suspense>
+
         {/* 음성 또는 직접 입력 */}
-        <Suspense fallback={<div>Loading food logs...</div>}>
+        {/* <Suspense fallback={<div>Loading food logs...</div>}>
           <Card className="p-4 flex flex-col gap-2">
             <div className="w-full h-24 grid grid-cols-2 gap-2 tracking-tighter font-semibold">
               <button
@@ -160,7 +170,7 @@ export default function MainComponent({
               </button>
             </div>
             <hr></hr>
-            {/* 현재 선택된 분석기 표시 */}
+     
             {currentAnalyzer === 'food' && (
               <SpeechAnalyzerFood
                 currentUser_id={user_id}
@@ -190,7 +200,7 @@ export default function MainComponent({
               />
             )}
           </Card>
-        </Suspense>
+        </Suspense> */}
         {/* 오늘 남은 식사량 */}
         <Suspense fallback={<div>Loading nutrition...</div>}>
           <NutritionCardMain
@@ -205,8 +215,28 @@ export default function MainComponent({
               fat: dailyStatus?.remainingFat || 0,
               carbs: dailyStatus?.remainingCarbs || 0,
             }}
+            totalDailyCalories={
+              dailyStatus ? dailyStatus.totalCalories + dailyStatus.remainingCalories : 0
+            }
           />
         </Suspense>
+        {/* 칼로리메타 */}
+        {/* <Suspense fallback={<div>Loading food logs...</div>}>
+          <CalorieMeter
+            title={
+              isToday(selectedDate)
+                ? '오늘 남은 식사량'
+                : `${selectedDate.toLocaleDateString('ko-KR')} 남은 식사량`
+            }
+            currentCalories={dailyStatus?.totalCalories ?? 0}
+            dailyGoal={dailyStatus ? dailyStatus.totalCalories + dailyStatus.remainingCalories : 0}
+            nutrition={{
+              protein: dailyStatus?.remainingProtein ?? 0,
+              fat: dailyStatus?.remainingFat ?? 0,
+              carbs: dailyStatus?.remainingCarbs ?? 0,
+            }}
+          />
+        </Suspense> */}
 
         {/* 오늘먹은 음식 */}
         <div className="flex flex-col space-y-6">
