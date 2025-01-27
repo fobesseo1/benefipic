@@ -354,7 +354,10 @@ export const FoodLogCardMain = ({
         <h3 className="text-lg font-semibold mb-3">
           {isToday(selectedDate)
             ? '오늘 먹은 음식'
-            : `${selectedDate.toLocaleDateString('ko-KR')} 먹은 음식`}
+            : `${selectedDate.toLocaleDateString('ko-KR', {
+                month: 'long',
+                day: 'numeric',
+              })} 먹은 음식`}
         </h3>
         {showMoreButton && (
           <Link href={moreButtonLink}>

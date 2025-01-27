@@ -17,6 +17,8 @@ import SpeechAnalyzerActionMenu from '../speech/SpeechAnalyzerActionMenu';
 import NutritionCardMain from '../components/shared/ui/NutritionCardMain';
 import CalorieMeter from './CalorieMeter';
 import SpeechMainAnalyzer from '../speech/SpeechMainAnalyzer';
+import EtcPage from './EtcPage';
+import NutritionCardNew from '../components/shared/ui/NutritionCardMainNew';
 
 const CurrentWeekCalendar = dynamic(() => import('./CurrentWeekCalendar'), { ssr: false });
 
@@ -124,6 +126,7 @@ export default function MainComponent({
   return (
     <div className="relative min-h-screen min-w-screen flex flex-col overflow-hidden">
       <div className="w-full aspect-square p-4 flex flex-col space-y-4">
+        {/* <EtcPage /> */}
         {/* 캘린더 */}
         <Suspense fallback={<div>Loading food logs...</div>}>
           <CurrentWeekCalendar selectedDate={selectedDate} onDateSelect={setSelectedDate} />
@@ -136,78 +139,16 @@ export default function MainComponent({
           />
         </Suspense>
 
-        {/* 음성 또는 직접 입력 */}
-        {/* <Suspense fallback={<div>Loading food logs...</div>}>
-          <Card className="p-4 flex flex-col gap-2">
-            <div className="w-full h-24 grid grid-cols-2 gap-2 tracking-tighter font-semibold">
-              <button
-                onClick={() => setCurrentAnalyzer('food')}
-                className={`border-gray-200 border-2 flex items-center justify-center gap-2 col-span-1 rounded-xl
-            ${currentAnalyzer === 'food' ? 'bg-gray-900 text-white' : ''}`}
-              >
-                🥄 식사 기록
-              </button>
-              <button
-                onClick={() => setCurrentAnalyzer('check')}
-                className={`border-gray-200 border-2 flex items-center justify-center gap-2 col-span-1 rounded-xl
-            ${currentAnalyzer === 'check' ? 'bg-black text-white' : ''}`}
-              >
-                🤔 먹을까? 말까?
-              </button>
-              <button
-                onClick={() => setCurrentAnalyzer('menu')}
-                className={`border-gray-200 border-2 flex items-center justify-center gap-2 col-span-1 rounded-xl
-            ${currentAnalyzer === 'menu' ? 'bg-black text-white' : ''}`}
-              >
-                🍽️ 메뉴 추천
-              </button>
-              <button
-                onClick={() => setCurrentAnalyzer('exercise')}
-                className={`border-gray-200 border-2 flex items-center justify-center gap-2 col-span-1 rounded-xl
-            ${currentAnalyzer === 'exercise' ? 'bg-black text-white' : ''}`}
-              >
-                💪 운동 기록
-              </button>
-            </div>
-            <hr></hr>
-     
-            {currentAnalyzer === 'food' && (
-              <SpeechAnalyzerFood
-                currentUser_id={user_id}
-                newUserCheck={newUserCheck}
-                onDataUpdate={refreshMainData}
-              />
-            )}
-            {currentAnalyzer === 'check' && (
-              <SpeechAnalyzerFoodCheck
-                currentUser_id={user_id}
-                newUserCheck={newUserCheck}
-                onDataUpdate={refreshMainData}
-              />
-            )}
-            {currentAnalyzer === 'menu' && (
-              <SpeechAnalyzerMenu
-                currentUser_id={user_id}
-                newUserCheck={newUserCheck}
-                onDataUpdate={refreshMainData}
-              />
-            )}
-            {currentAnalyzer === 'exercise' && (
-              <SpeechAnalyzerExercise
-                currentUser_id={user_id}
-                newUserCheck={newUserCheck}
-                onDataUpdate={refreshMainData}
-              />
-            )}
-          </Card>
-        </Suspense> */}
         {/* 오늘 남은 식사량 */}
         <Suspense fallback={<div>Loading nutrition...</div>}>
-          <NutritionCardMain
+          <NutritionCardNew
             title={
               isToday(selectedDate)
                 ? '오늘 남은 식사량'
-                : `${selectedDate.toLocaleDateString('ko-KR')} 남은 식사량`
+                : `${selectedDate.toLocaleDateString('ko-KR', {
+                    month: 'long',
+                    day: 'numeric',
+                  })} 남은 식사량`
             }
             nutrition={{
               calories: dailyStatus?.remainingCalories || 0,

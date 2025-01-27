@@ -170,7 +170,10 @@ export const ExerciseLogCardMain = ({
           <h3 className="text-lg font-semibold mb-3">
             {isToday(selectedDate)
               ? '오늘 한 운동'
-              : `${selectedDate.toLocaleDateString('ko-KR')} 한 운동`}
+              : `${selectedDate.toLocaleDateString('ko-KR', {
+                  month: 'long',
+                  day: 'numeric',
+                })} 한 운동`}
           </h3>
           {showMoreButton && (
             <Link href={moreButtonLink}>
