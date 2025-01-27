@@ -1,23 +1,14 @@
 'use client';
 
 import { useState, useCallback, useEffect, Suspense } from 'react';
-import NutritionCard from '../components/shared/ui/NutritionCard';
 import createSupabaseBrowserClient from '@/lib/supabse/client';
 import { FoodLog, ExerciseLog, DailyStatusResponse } from '../types/types';
 import dynamic from 'next/dynamic';
-import SpeechAnalyzerFood from '../speech/SpeechAnalyzerFood';
-import SpeechAnalyzerFoodCheck from '../speech/SpeechAnalyzerFoodCheck';
-import SpeechAnalyzerMenu from '../speech/SpeechAnalyzerMenu';
-import SpeechAnalyzerExercise from '../speech/SpeechAnalyzerExercise';
+
 import FoodLogCardMain from '../components/shared/ui/FoodLogCardMain';
 import ExerciseLogCardMain from '../components/shared/ui/ExerciseLogCardMain';
-import { Card } from '@/components/ui/card';
-import { Utensils, CheckSquare, FileText, Dumbbell, Speech } from 'lucide-react';
-import SpeechAnalyzerActionMenu from '../speech/SpeechAnalyzerActionMenu';
-import NutritionCardMain from '../components/shared/ui/NutritionCardMain';
-import CalorieMeter from './CalorieMeter';
+
 import SpeechMainAnalyzer from '../speech/SpeechMainAnalyzer';
-import EtcPage from './EtcPage';
 import NutritionCardNew from '../components/shared/ui/NutritionCardMainNew';
 
 const CurrentWeekCalendar = dynamic(() => import('./CurrentWeekCalendar'), { ssr: false });
@@ -161,23 +152,6 @@ export default function MainComponent({
             }
           />
         </Suspense>
-        {/* 칼로리메타 */}
-        {/* <Suspense fallback={<div>Loading food logs...</div>}>
-          <CalorieMeter
-            title={
-              isToday(selectedDate)
-                ? '오늘 남은 식사량'
-                : `${selectedDate.toLocaleDateString('ko-KR')} 남은 식사량`
-            }
-            currentCalories={dailyStatus?.totalCalories ?? 0}
-            dailyGoal={dailyStatus ? dailyStatus.totalCalories + dailyStatus.remainingCalories : 0}
-            nutrition={{
-              protein: dailyStatus?.remainingProtein ?? 0,
-              fat: dailyStatus?.remainingFat ?? 0,
-              carbs: dailyStatus?.remainingCarbs ?? 0,
-            }}
-          />
-        </Suspense> */}
 
         {/* 오늘먹은 음식 */}
         <div className="flex flex-col space-y-6">

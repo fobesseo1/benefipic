@@ -108,11 +108,6 @@ export const NutritionCardNew = ({
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold tracking-tighter">{title}</h3>
         <div className="flex items-center gap-1">
-          {/* <p className="text-2xl tracking-tighter">
-            {percentage}
-            <span className="text-sm">%</span>
-          </p>
-          <p>/</p> */}
           {renderMainCalorie('calories', roundNumber(nutrition.calories), 'kcal')}
         </div>
       </div>
@@ -126,20 +121,6 @@ export const NutritionCardNew = ({
           />
         </div>
 
-        {/* Percentage Indicator */}
-        {/* <div
-          className="absolute -bottom-10 flex flex-col items-center transition-all duration-300 ease-in-out"
-          style={{
-            left: `${Math.min(Math.max(percentage, 2), 98)}%`,
-            transform: 'translateX(-50%)',
-          }}
-        >
-          <span className="text-gray-600 leading-none">▲</span>
-          <p className={`text-sm ${colorClasses.text}`}>
-            {percentage}
-            <span className="text-xs">%</span>
-          </p>
-        </div> */}
         {/* Triangle Indicator */}
         <div
           className="absolute -top-4 flex flex-col items-center transition-all duration-300 ease-in-out"
