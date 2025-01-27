@@ -84,8 +84,8 @@ export const NutritionCardMain = ({
 
   // 색상 클래스 결정
   const colorClasses = {
-    bar: percentage >= 25 ? 'bg-green-600' : 'bg-rose-600',
-    text: percentage >= 25 ? 'text-green-600' : 'text-rose-600',
+    bar: percentage >= 15 ? 'bg-green-600' : percentage >= 0 ? 'bg-gray-400' : 'bg-red-600',
+    text: percentage >= 15 ? 'text-green-600' : percentage >= 0 ? 'text-gray-400' : 'text-red-600',
   };
 
   const getProgressBarStyles = (percentage: number) => {

@@ -120,7 +120,7 @@ const CurrentWeekCalendar: React.FC<CurrentWeekCalendarProps> = ({
             <div
               key={index}
               onClick={() => !isFutureDate && handleDateClick(date)}
-              className={`p-2 text-sm rounded-full cursor-pointer transition-colors
+              className={` flex items-center justify-center w-8 h-8 text-sm rounded-full cursor-pointer transition-colors mx-auto
                 ${
                   isSelected
                     ? 'bg-gray-900 text-white text-lg font-semibold'
@@ -132,7 +132,7 @@ const CurrentWeekCalendar: React.FC<CurrentWeekCalendarProps> = ({
                 ${isFutureDate ? 'cursor-not-allowed opacity-50' : ''}
               `}
             >
-              {date.getDate()}
+              <p className="text-sm">{date.getDate()}</p>
             </div>
           );
         })}

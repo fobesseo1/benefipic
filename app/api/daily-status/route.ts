@@ -46,12 +46,13 @@ export async function GET(req: Request) {
         .eq('user_id', userId)
         .gte('logged_at', utcStart.toISOString())
         .lte('logged_at', utcEnd.toISOString())
-        .order('logged_at', { ascending: false })
+        .order('logged_at', { ascending: false }),
     ]);
 
     // 3. Calculate totals
     const totalCalories = foodLogs?.reduce((sum, item) => sum + item.calories, 0) || 0;
-    const totalExerciseMinutes = exerciseLogs?.reduce((sum, item) => sum + item.duration_minutes, 0) || 0;
+    const totalExerciseMinutes =
+      exerciseLogs?.reduce((sum, item) => sum + item.duration_minutes, 0) || 0;
     const totalProtein = foodLogs?.reduce((sum, item) => sum + item.protein, 0) || 0;
     const totalFat = foodLogs?.reduce((sum, item) => sum + item.fat, 0) || 0;
     const totalCarbs = foodLogs?.reduce((sum, item) => sum + item.carbs, 0) || 0;
@@ -68,7 +69,7 @@ export async function GET(req: Request) {
         remainingCarbs: goals.daily_carbs_target - totalCarbs,
       },
       foodLogs: foodLogs || [],
-      exerciseLogs: exerciseLogs || []
+      exerciseLogs: exerciseLogs || [],
     };
 
     return Response.json(response);
