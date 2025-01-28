@@ -438,7 +438,7 @@ const FoodAnalyzer = ({
       <div
         className={`absolute bottom-0 w-full ${
           step === 'complete'
-            ? 'h-[calc(100vh-50vw+32px)] py-8 pb-32'
+            ? 'h-[calc(100vh-20vw+32px)] py-8 pb-32'
             : 'h-[calc(100vh-100vw+32px)] py-8'
         } flex flex-col px-4  rounded-t-3xl bg-white`}
       >

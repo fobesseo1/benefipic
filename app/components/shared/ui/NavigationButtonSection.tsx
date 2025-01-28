@@ -167,7 +167,7 @@ export default function NavigationButtonSectionFood({
               </button>
             </div>
           ) : step === 'complete' ? (
-            <div className="flex gap-2">
+            <div className="flex gap-2 mt-4">
               <button
                 onClick={resetAnalyzer}
                 className="w-full bg-gray-100 text-gray-400 rounded-xl py-4 text-lg font-medium"
