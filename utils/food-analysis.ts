@@ -266,6 +266,7 @@ export const processApiResponse = (apiData: ApiResponse): NutritionData => {
     return values.calories > 0 || values.protein > 0 || values.fat > 0 || values.carbs > 0;
   };
 
+  // Letter 데이터가 유효한 경우의 처리
   if (apiData.letter && isValidLetterNutrition(apiData.letter)) {
     const letter = apiData.letter[0];
     let adjustedNutrition = { ...letter.values };
@@ -298,6 +299,7 @@ export const processApiResponse = (apiData: ApiResponse): NutritionData => {
     };
   }
 
+  // Letter 데이터가 없거나 유효하지 않은 경우 항상 재료별 계산 수행
   const processedIngredients = apiData.ingredients.map((ingredient) => ({
     name: ingredient.name,
     amount: `${ingredient.amount.toString()}${ingredient.unit}`,
@@ -307,15 +309,7 @@ export const processApiResponse = (apiData: ApiResponse): NutritionData => {
     },
   }));
 
-  const exactMatch = findExactMatchFood(apiData.foodName, completedFoodDatabase);
-  if (exactMatch) {
-    return {
-      foodName: apiData.foodName,
-      ingredients: processedIngredients,
-      nutrition: exactMatch.nutrition,
-    };
-  }
-
+  // 재료별 영양성분 계산 수행 (DB 매칭 여부와 관계없이)
   const totalNutrition = calculateTotalNutrition(apiData.ingredients);
   const roundedNutrition = roundNutritionValues(totalNutrition);
 

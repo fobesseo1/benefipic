@@ -4486,7 +4486,7 @@ export const completedFoodDatabase: FoodItem[] = [
     id: 'pepperoni_pizza',
     name: '페퍼로니피자',
     unit: '판',
-    unitWeight: 1200,
+    unitWeight: 900,
     nutrition: {
       calories: 3080,
       protein: 128,
@@ -4498,7 +4498,7 @@ export const completedFoodDatabase: FoodItem[] = [
     id: 'combination_pizza',
     name: '콤비네이션피자',
     unit: '판',
-    unitWeight: 1200,
+    unitWeight: 900,
     nutrition: {
       calories: 2920,
       protein: 112,
@@ -4510,7 +4510,7 @@ export const completedFoodDatabase: FoodItem[] = [
     id: 'hawaiian_pizza',
     name: '하와이안피자',
     unit: '판',
-    unitWeight: 1200,
+    unitWeight: 900,
     nutrition: {
       calories: 2760,
       protein: 96,
@@ -4522,7 +4522,7 @@ export const completedFoodDatabase: FoodItem[] = [
     id: 'cheese_pizza',
     name: '치즈피자',
     unit: '판',
-    unitWeight: 1200,
+    unitWeight: 900,
     nutrition: {
       calories: 2840,
       protein: 112,
@@ -4534,7 +4534,7 @@ export const completedFoodDatabase: FoodItem[] = [
     id: 'potato_pizza',
     name: '포테이토피자',
     unit: '판',
-    unitWeight: 1200,
+    unitWeight: 900,
     nutrition: {
       calories: 3000,
       protein: 96,
@@ -4546,7 +4546,7 @@ export const completedFoodDatabase: FoodItem[] = [
     id: 'margherita_pizza',
     name: '마르게리타피자',
     unit: '판',
-    unitWeight: 1200,
+    unitWeight: 900,
     nutrition: {
       calories: 2600,
       protein: 96,
@@ -4558,7 +4558,7 @@ export const completedFoodDatabase: FoodItem[] = [
     id: 'sweet_potato_pizza',
     name: '고구마피자',
     unit: '판',
-    unitWeight: 1200,
+    unitWeight: 900,
     nutrition: {
       calories: 2920,
       protein: 96,
@@ -4570,7 +4570,7 @@ export const completedFoodDatabase: FoodItem[] = [
     id: 'seafood_pizza',
     name: '시푸드피자',
     unit: '판',
-    unitWeight: 1200,
+    unitWeight: 900,
     nutrition: {
       calories: 2760,
       protein: 128,
@@ -4582,7 +4582,7 @@ export const completedFoodDatabase: FoodItem[] = [
     id: 'regular_pizza',
     name: '피자',
     unit: '판',
-    unitWeight: 1200,
+    unitWeight: 900,
     nutrition: {
       calories: 2800,
       protein: 104,
