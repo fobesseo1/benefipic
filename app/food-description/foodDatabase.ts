@@ -5087,7 +5087,7 @@ export const completedFoodDatabase: FoodItem[] = [
     id: 'jjajangmyeon',
     name: '짜장면',
     unit: '그릇',
-    unitWeight: 800,
+    unitWeight: 400,
     nutrition: {
       calories: 838,
       protein: 24,
@@ -5096,10 +5096,22 @@ export const completedFoodDatabase: FoodItem[] = [
     },
   },
   {
+    id: 'myeon',
+    name: '면',
+    unit: 'g',
+    unitWeight: 160,
+    nutrition: {
+      calories: 40,
+      protein: 0,
+      fat: 0,
+      carbs: 40,
+    },
+  },
+  {
     id: 'jjamppong',
     name: '짬뽕',
     unit: '그릇',
-    unitWeight: 800,
+    unitWeight: 500,
     nutrition: {
       calories: 520,
       protein: 23,

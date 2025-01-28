@@ -29,10 +29,12 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { useSpeechStore } from '@/app/store/speechStore';
 
 export default function BottomNavigation() {
   const [showRouteDialog, setShowRouteDialog] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const setSpeechAnalyzer = useSpeechStore((state) => state.setSpeechAnalyzer);
   return (
     <div className="z-50 fixed bottom-0 w-full h-16 bg-gradient-to-b from-gray-200 to-gray-50 grid grid-cols-5 px-4 pt-3 gap-4 rounded-t-2xl">
       <Link href="/main">
@@ -52,18 +54,28 @@ export default function BottomNavigation() {
         </div>
         <p className="text-gray-600 text-xs font-semibold">사진</p>
       </div>
-      <div className="col-span-1   flex flex-col items-center gap-[2px]">
-        <div className="w-8 h-8 flex items-center justify-center ">
-          <Pen className="w-7 h-7 text-gray-600 " />
+      <Link href="/main">
+        <div
+          className="col-span-1 flex flex-col items-center gap-[2px]"
+          onClick={() => setSpeechAnalyzer(true, true)}
+        >
+          <div className="w-8 h-8 flex items-center justify-center">
+            <Pen className="w-7 h-7 text-gray-600" />
+          </div>
+          <p className="text-gray-600 text-xs font-semibold">텍스트</p>
         </div>
-        <p className="text-gray-600 text-xs font-semibold">텍스트</p>
-      </div>
-      <div className="col-span-1   flex flex-col items-center gap-[2px]">
-        <div className="w-8 h-8 flex items-center justify-center ">
-          <Mic className="w-7 h-7 text-gray-600 " />
+      </Link>
+      <Link href="/main">
+        <div
+          className="col-span-1 flex flex-col items-center gap-[2px]"
+          onClick={() => setSpeechAnalyzer(true, true)} // 'voice' 모드로 설정
+        >
+          <div className="w-8 h-8 flex items-center justify-center">
+            <Mic className="w-7 h-7 text-gray-600" />
+          </div>
+          <p className="text-gray-600 text-xs font-semibold">음성</p>
         </div>
-        <p className="text-gray-600 text-xs font-semibold">음성</p>
-      </div>
+      </Link>
 
       <div
         className="col-span-1   flex flex-col items-center gap-[2px]"

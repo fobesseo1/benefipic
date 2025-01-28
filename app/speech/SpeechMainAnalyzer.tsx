@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mic, ChevronUp, ChevronDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import SpeechAnalyzerFood from '../speech/SpeechAnalyzerFood';
 import SpeechAnalyzerFoodCheck from '../speech/SpeechAnalyzerFoodCheck';
 import SpeechAnalyzerMenu from '../speech/SpeechAnalyzerMenu';
 import SpeechAnalyzerExercise from '../speech/SpeechAnalyzerExercise';
+import { useSpeechStore } from '@/app/store/speechStore';
 
 // 트리거 컴포넌트
 const TriggerComponent = ({ onClick }: { onClick: () => void }) => (
@@ -83,16 +84,90 @@ interface MainAnalyzerProps {
   totalDailyCalories?: number;
 }
 
+// 깜빡
+const blinkStyle = `
+  @keyframes borderBlink {
+    0% {
+      box-shadow: 0 0 0 0 rgba(156, 163, 175, 0.4);
+      border-color: rgb(156, 163, 175);
+      background-image: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+    }
+    35% {
+      box-shadow: 0 0 0 5px rgba(209, 213, 219, 0.2);
+      border-color: rgb(190, 195, 200);
+      background-image: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(209, 213, 219, 0);
+      border-color: rgb(209, 213, 219);
+      background-image: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+    }
+    85% {
+      box-shadow: 0 0 0 5px rgba(209, 213, 219, 0.2);
+      border-color: rgb(190, 195, 200);
+      background-image: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+    }
+    95% {
+      box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.2);
+      border-color: rgb(170, 175, 180);
+      background-image: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(156, 163, 175, 0.4);
+      border-color: rgb(156, 163, 175);
+      background-image: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+    }
+  }
+
+  .border-blink {
+    border-width: 3px;
+    animation: borderBlink 3s ease-in-out infinite;
+  }
+`;
+
 export const SpeechMainAnalyzer = ({
   user_id,
   newUserCheck,
   onDataUpdate,
   totalDailyCalories,
 }: MainAnalyzerProps) => {
+  const { showSpeechAnalyzer, highlightSpeechAnalyzer, setSpeechAnalyzer, resetSpeechAnalyzer } =
+    useSpeechStore();
   const [showTrigger, setShowTrigger] = useState(true);
   const [currentAnalyzer, setCurrentAnalyzer] = useState<'food' | 'check' | 'menu' | 'exercise'>(
     'food'
   );
+
+  // showSpeechAnalyzer 상태가 변경될 때 showTrigger 업데이트
+  useEffect(() => {
+    if (showSpeechAnalyzer) {
+      setShowTrigger(false);
+    }
+  }, [showSpeechAnalyzer]);
+
+  // highlightSpeechAnalyzer가 true일 때 3초 후 false로 변경
+  useEffect(() => {
+    if (highlightSpeechAnalyzer) {
+      const timer = setTimeout(() => {
+        setSpeechAnalyzer(showSpeechAnalyzer, false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightSpeechAnalyzer, showSpeechAnalyzer, setSpeechAnalyzer]);
+
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = blinkStyle;
+    document.head.appendChild(styleElement);
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
+
+  // 카드의 className을 동적으로 설정
+  const cardClassName = `p-4 flex flex-col gap-1 border-[1px] ${
+    highlightSpeechAnalyzer ? 'border-blink' : ''
+  }`;
 
   const handleAnalyzerSelect = (type: 'food' | 'check' | 'menu' | 'exercise') => {
     setCurrentAnalyzer(type);
@@ -113,7 +188,7 @@ export const SpeechMainAnalyzer = ({
           <TriggerComponent onClick={handleTriggerClick} />
         </Card>
       ) : (
-        <Card className="p-4 flex flex-col gap-1">
+        <Card className={cardClassName}>
           {/* <hr className="my-2" /> */}
           {currentAnalyzer === 'food' && (
             <SpeechAnalyzerFood
