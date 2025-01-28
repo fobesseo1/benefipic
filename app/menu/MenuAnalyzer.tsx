@@ -80,6 +80,7 @@ const MenuAnalyzer = ({
   const [displayImage, setDisplayImage] = useState<File | null>(null); // 고품질
   const [analysisImage, setAnalysisImage] = useState<File | null>(null); // 저품질
   const [filteredDisplayImage, setFilteredDisplayImage] = useState<File | null>(null); // 필터적용이미지
+  const [dailyCaloriesTarget, setDailyCaloriesTarget] = useState(0);
 
   useEffect(() => {
     return () => {
@@ -88,6 +89,24 @@ const MenuAnalyzer = ({
       }
     };
   }, [stream]);
+
+  //오늘목표칼로리 가져오기
+  useEffect(() => {
+    const fetchDailyCaloriesTarget = async () => {
+      const supabase = createSupabaseBrowserClient();
+      const { data, error } = await supabase
+        .from('fitness_goals')
+        .select('daily_calories_target')
+        .eq('user_id', currentUser_id)
+        .single();
+
+      if (data) {
+        setDailyCaloriesTarget(data.daily_calories_target);
+      }
+    };
+
+    fetchDailyCaloriesTarget();
+  }, [currentUser_id]);
 
   const processApiResponse = (apiData: ApiResponse): NutritionData => {
     console.log('API 응답 데이터:', apiData);
@@ -357,7 +376,10 @@ ${userDescription}
                   </Card>
 
                   {/* Nutrition Card */}
-                  <NutritionCard nutrition={analysis.nutrition} />
+                  <NutritionCard
+                    nutrition={analysis.nutrition}
+                    totalDailyCalories={dailyCaloriesTarget}
+                  />
 
                   {/* healthTip Card */}
                   <Card className="p-4">

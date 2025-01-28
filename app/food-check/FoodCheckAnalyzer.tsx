@@ -102,6 +102,7 @@ const FoodCheckAnalyzer = ({
     saturation: 100,
     warmth: 100,
   });
+  const [dailyCaloriesTarget, setDailyCaloriesTarget] = useState(0);
 
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -199,6 +200,24 @@ const FoodCheckAnalyzer = ({
       }
     };
   }, [stream]);
+
+  //오늘목표칼로리 가져오기
+  useEffect(() => {
+    const fetchDailyCaloriesTarget = async () => {
+      const supabase = createSupabaseBrowserClient();
+      const { data, error } = await supabase
+        .from('fitness_goals')
+        .select('daily_calories_target')
+        .eq('user_id', currentUser_id)
+        .single();
+
+      if (data) {
+        setDailyCaloriesTarget(data.daily_calories_target);
+      }
+    };
+
+    fetchDailyCaloriesTarget();
+  }, [currentUser_id]);
 
   const closeNotFoodAlert = () => {
     setNotFoodAlert({
@@ -699,6 +718,7 @@ const FoodCheckAnalyzer = ({
                       );
                     }}
                     editable={true}
+                    totalDailyCalories={dailyCaloriesTarget}
                   />
 
                   {/* Ingredients Card */}
