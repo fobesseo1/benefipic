@@ -132,12 +132,18 @@ export const NutritionCard = ({
   const percentage = calculateCaloriePercentage();
 
   const colorClasses = {
-    bar: percentage >= 50 ? 'bg-red-600' : percentage >= 35 ? 'bg-gray-400' : 'bg-green-600',
-    text: percentage >= 50 ? 'text-red-600' : percentage >= 35 ? 'text-gray-400' : 'text-green-600',
+    bar: percentage >= 50 ? 'bg-red-600' : percentage >= 35 ? 'bg-gray-600' : 'bg-green-600',
+    text: percentage >= 50 ? 'text-red-600' : percentage >= 35 ? 'text-gray-600' : 'text-green-600',
+    card:
+      percentage >= 50
+        ? 'border-4 border-red-600 bg-red-50 shadow-lg'
+        : percentage >= 35
+        ? 'border-4 border-gray-600 bg-gray-100 shadow-lg'
+        : 'border-4 border-green-600 bg-green-50 shadow-lg',
   };
 
   return (
-    <Card className={`p-4 ${className}`}>
+    <Card className={`p-4 ${className} ${colorClasses.card}`}>
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold tracking-tighter">{title}</h3>
         <div className="flex items-center gap-1">

@@ -9,6 +9,8 @@ import NewUserWelcomeAlert from '../components/shared/ui/NewUserWelcomeAlert';
 import { isNewUser } from '@/utils/ad-utils';
 import TutorialContainer from './TutorialContainer';
 import PWAInstallAlert from './PWAInstallAlert';
+import { Camera, Home, Menu, Mic, Pen } from 'lucide-react';
+import Link from 'next/link';
 
 // app/main/page.tsx
 export default async function MainPage() {

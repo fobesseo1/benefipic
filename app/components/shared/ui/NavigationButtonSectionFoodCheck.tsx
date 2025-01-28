@@ -133,7 +133,7 @@ export default function NavigationButtonSectionFoodCheck({
   return (
     <>
       {step === 'compress' || step === 'analyzing' || step === 'calculate' ? null : (
-        <div className="absolute bottom-0 w-full px-6 pb-8 bg-white">
+        <div className="absolute bottom-12 w-full px-6 pb-8 bg-white">
           {step === 'camera' ? (
             <button
               onClick={takePicture}

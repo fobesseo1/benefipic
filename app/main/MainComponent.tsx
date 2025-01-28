@@ -115,7 +115,7 @@ export default function MainComponent({
   };
 
   return (
-    <div className="relative min-h-screen min-w-screen flex flex-col overflow-hidden">
+    <div className="relative min-h-screen min-w-screen flex flex-col overflow-hidden  ">
       <div className="w-full aspect-square p-4 flex flex-col space-y-4">
         {/* <EtcPage /> */}
         {/* 캘린더 */}

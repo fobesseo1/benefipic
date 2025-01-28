@@ -35,7 +35,7 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
     <>
       <div className="z-50 lg:max-w-lg w-full fixed left-1/2 -translate-x-1/2 bottom-0 pointer-events-none">
         <div className="relative w-full">
-          <div className="absolute bottom-44 right-4 z-50 pointer-events-auto">
+          <div className="absolute bottom-20 right-4 z-50 pointer-events-auto">
             <div
               className="bg-black w-16 h-16 flex items-center justify-center rounded-full cursor-pointer shadow-xl"
               style={{
@@ -46,7 +46,8 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
               <Camera className="w-7 h-7 text-white" />
             </div>
           </div>
-          <div className="absolute bottom-[168px] right-4 z-50 w-8 h-[2px] bg-gray-400 pointer-events-auto mr-4 shadow-lg"></div>
+
+          {/*  <div className="absolute bottom-[168px] right-4 z-50 w-8 h-[2px] bg-gray-400 pointer-events-auto mr-4 shadow-lg"></div>
           <div className="absolute bottom-24 right-4 z-50 pointer-events-auto">
             <CircleButtonWithAlert />
           </div>
@@ -61,7 +62,7 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
                 <House className="w-7 h-7 text-white" />
               </div>
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
 

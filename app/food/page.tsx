@@ -5,6 +5,8 @@ import FoodAnalyzer from './FoodAnalyzer';
 import NoLoginUserAlert from '../components/shared/ui/NoLoginUserAlert';
 import { isNewUser } from '@/utils/ad-utils';
 import FoodAnalyzerGpt from './FoodAnalyzerGpt';
+import { Camera, Home, Menu, Mic, Pen } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function FoodPage() {
   const currentUser = await getUser();
@@ -18,7 +20,7 @@ export default async function FoodPage() {
   }
 
   return (
-    <div>
+    <div className="pb-16 relative">
       <FoodAnalyzer currentUser_id={currentUser_id} newUserCheck={newUserCheck} />
       {/* <p className="text-red-600">gpt</p>
       <FoodAnalyzerGpt currentUser_id={currentUser_id} newUserCheck={newUserCheck} /> */}

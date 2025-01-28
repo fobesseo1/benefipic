@@ -12,6 +12,7 @@ import AnalyticsTracker from './components/analyticsTracker/AnalyticsTracker';
 import MobileDetector from './MobileDetector';
 import BrowserRedirect from './components/BrowserRedirect';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import BottomNavigation from './BottomNavigation';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -81,9 +82,10 @@ export default async function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <MobileDetector>
-          <div className="min-h-screen w-full bg-white">
-            <div className="relative min-h-screen w-full flex flex-col">
+          <div className="min-h-screen w-full bg-white  ">
+            <div className="relative pb-16 min-h-screen w-full flex flex-col ">
               {children}
+              <BottomNavigation />
               <StoreInitializer currentUser={currentUser} />
               <MysticSymbolsEffect />
               {shouldShowNav && <CheckCircleNavigation currentUser={currentUser} />}
