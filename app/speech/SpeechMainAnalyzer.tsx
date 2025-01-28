@@ -120,7 +120,7 @@ const blinkStyle = `
   }
 
   .border-blink {
-    border-width: 3px;
+    border-width: 4px;
     animation: borderBlink 3s ease-in-out infinite;
   }
 `;
@@ -179,6 +179,7 @@ export const SpeechMainAnalyzer = ({
 
   const handleToggle = () => {
     setShowTrigger(!showTrigger);
+    resetSpeechAnalyzer();
   };
 
   return (
