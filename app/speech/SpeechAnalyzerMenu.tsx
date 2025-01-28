@@ -82,8 +82,27 @@ const SpeechAnalyzerMenu = ({
   const [showResultAlert, setShowResultAlert] = useState(false);
   const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
   const [showAdDialog, setShowAdDialog] = useState(false);
+  const [dailyCaloriesTarget, setDailyCaloriesTarget] = useState(0);
 
   const router = useRouter();
+
+  //오늘목표칼로리 가져오기
+  useEffect(() => {
+    const fetchDailyCaloriesTarget = async () => {
+      const supabase = createSupabaseBrowserClient();
+      const { data, error } = await supabase
+        .from('fitness_goals')
+        .select('daily_calories_target')
+        .eq('user_id', currentUser_id)
+        .single();
+
+      if (data) {
+        setDailyCaloriesTarget(data.daily_calories_target);
+      }
+    };
+
+    fetchDailyCaloriesTarget();
+  }, [currentUser_id]);
 
   const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } =
     useSpeechRecognition({
@@ -447,7 +466,12 @@ const SpeechAnalyzerMenu = ({
           </AlertDialogHeader>
 
           {/* Nutrition Card */}
-          {analysis && <NutritionCard nutrition={analysis.nutrition} />}
+          {analysis && (
+            <NutritionCard
+              nutrition={analysis.nutrition}
+              totalDailyCalories={dailyCaloriesTarget}
+            />
+          )}
 
           {/* Health Tip Card */}
           {analysis?.healthTip && (
