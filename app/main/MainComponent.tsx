@@ -127,6 +127,9 @@ export default function MainComponent({
             user_id={user_id}
             newUserCheck={newUserCheck}
             onDataUpdate={refreshMainData}
+            totalDailyCalories={
+              dailyStatus ? dailyStatus.totalCalories + dailyStatus.remainingCalories : 0
+            }
           />
         </Suspense>
 

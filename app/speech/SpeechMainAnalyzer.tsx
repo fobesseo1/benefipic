@@ -80,9 +80,15 @@ interface MainAnalyzerProps {
   user_id: string;
   newUserCheck: boolean;
   onDataUpdate: () => void;
+  totalDailyCalories?: number;
 }
 
-export const SpeechMainAnalyzer = ({ user_id, newUserCheck, onDataUpdate }: MainAnalyzerProps) => {
+export const SpeechMainAnalyzer = ({
+  user_id,
+  newUserCheck,
+  onDataUpdate,
+  totalDailyCalories,
+}: MainAnalyzerProps) => {
   const [showTrigger, setShowTrigger] = useState(true);
   const [currentAnalyzer, setCurrentAnalyzer] = useState<'food' | 'check' | 'menu' | 'exercise'>(
     'food'
@@ -114,6 +120,7 @@ export const SpeechMainAnalyzer = ({ user_id, newUserCheck, onDataUpdate }: Main
               currentUser_id={user_id}
               newUserCheck={newUserCheck}
               onDataUpdate={onDataUpdate}
+              totalDailyCalories={totalDailyCalories}
             />
           )}
           {currentAnalyzer === 'check' && (

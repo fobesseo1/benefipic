@@ -37,12 +37,14 @@ interface SpeechAnalyzerFoodProps {
   currentUser_id: string;
   newUserCheck: boolean;
   onDataUpdate?: () => void; // 추가
+  totalDailyCalories?: number;
 }
 
 const SpeechAnalyzerFood = ({
   currentUser_id,
   newUserCheck,
   onDataUpdate,
+  totalDailyCalories = 0,
 }: SpeechAnalyzerFoodProps) => {
   const [analysis, setAnalysis] = useState<NutritionData | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -519,6 +521,7 @@ const SpeechAnalyzerFood = ({
                 );
               }}
               editable={true}
+              totalDailyCalories={totalDailyCalories}
             />
           )}
 

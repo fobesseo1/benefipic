@@ -79,6 +79,7 @@ const FoodAnalyzer = ({
     saturation: 100,
     warmth: 100,
   });
+  const [dailyCaloriesTarget, setDailyCaloriesTarget] = useState(0);
 
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -169,6 +170,24 @@ const FoodAnalyzer = ({
       }
     };
   }, [stream]);
+
+  //오늘목표칼로리 가져오기
+  useEffect(() => {
+    const fetchDailyCaloriesTarget = async () => {
+      const supabase = createSupabaseBrowserClient();
+      const { data, error } = await supabase
+        .from('fitness_goals')
+        .select('daily_calories_target')
+        .eq('user_id', currentUser_id)
+        .single();
+
+      if (data) {
+        setDailyCaloriesTarget(data.daily_calories_target);
+      }
+    };
+
+    fetchDailyCaloriesTarget();
+  }, [currentUser_id]);
 
   const closeNotFoodAlert = () => {
     setNotFoodAlert({
@@ -421,9 +440,9 @@ const FoodAnalyzer = ({
           step === 'complete'
             ? 'h-[calc(100vh-50vw+32px)] py-8 pb-32'
             : 'h-[calc(100vh-100vw+32px)] py-8'
-        } flex flex-col px-6  rounded-t-3xl bg-white`}
+        } flex flex-col px-4  rounded-t-3xl bg-white`}
       >
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -526,6 +545,7 @@ const FoodAnalyzer = ({
                       );
                     }}
                     editable={true}
+                    totalDailyCalories={dailyCaloriesTarget}
                   />
 
                   {/* Ingredients Card */}
