@@ -68,7 +68,7 @@ export default async function RootLayout({
   const currentUser = await getUser();
   const headersList = headers();
   const pathname = headersList.get('x-pathname') || '';
-  const hiddenNavPaths = ['/start', '/question'];
+  const hiddenNavPaths = ['/start', '/question', '/food/input/photo'];
   const shouldShowNav = !hiddenNavPaths.includes(pathname);
 
   return (

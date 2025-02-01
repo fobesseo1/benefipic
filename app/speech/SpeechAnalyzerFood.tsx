@@ -392,7 +392,7 @@ const SpeechAnalyzerFood = ({
       <div className="relative">
         <form
           onSubmit={handleSubmit}
-          className="flex items-center  rounded-2xl shadow-sm border px-4 py-4 bg-black"
+          className="relative flex items-center  rounded-2xl shadow-sm border-2 px-4 py-4 border-gray-600"
         >
           {listening ? (
             <button
@@ -406,7 +406,7 @@ const SpeechAnalyzerFood = ({
           ) : (
             <button
               type="button"
-              className="rounded-full w-12 h-12 bg-gray-50 shadow-md flex items-center justify-center"
+              className="rounded-full w-12 h-12 border-2 border-gray-600 shadow-md flex items-center justify-center"
               onClick={handleStartListening}
               disabled={isAnalyzing}
             >
@@ -418,7 +418,7 @@ const SpeechAnalyzerFood = ({
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder="먹은 음식 음성 또는 텍스트 입력..."
-            className="flex-1 border-0 focus-visible:ring-0 bg-transparent p-2 text-sm tracking-tighter text-white"
+            className="flex-1 border-0 focus-visible:ring-0 bg-transparent p-2 text-sm tracking-tighter text-gray-600 placeholder:text-gray-600"
             readOnly={listening || isAnalyzing}
             onFocus={() => setIsTypingMode(true)}
           />
@@ -427,7 +427,7 @@ const SpeechAnalyzerFood = ({
             className="rounded-full"
             disabled={!inputText.trim() || isAnalyzing}
           >
-            <CornerDownLeft className="h-5 w-5 text-gray-400" size={12} />
+            <CornerDownLeft className="h-5 w-5 text-gray-600" size={12} />
           </button>
         </form>
       </div>

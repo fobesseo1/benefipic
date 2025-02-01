@@ -1,33 +1,32 @@
-//app/food/page.tsx
-
-import { getUser } from '@/lib/supabse/server';
-import FoodAnalyzer from './FoodAnalyzer';
-import NoLoginUserAlert from '../components/shared/ui/NoLoginUserAlert';
-import { isNewUser } from '@/utils/ad-utils';
-import FoodAnalyzerGpt from './FoodAnalyzerGpt';
-import { Camera, Home, Menu, Mic, Pen } from 'lucide-react';
+import TopNavigation from '../TopNavigation';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export default async function FoodPage() {
-  const currentUser = await getUser();
-  const currentUser_id = currentUser?.id;
-
-  const newUserCheck = isNewUser(currentUser.created_at);
-  //console.log(newUserCheck);
-
-  if (!currentUser) {
-    return <NoLoginUserAlert />;
-  }
+  const topNavigationTitle = '식사';
 
   return (
-    <div className="pb-16 relative">
-      <FoodAnalyzer currentUser_id={currentUser_id} newUserCheck={newUserCheck} />
-      {/* <p className="text-red-600">gpt</p>
-      <FoodAnalyzerGpt currentUser_id={currentUser_id} newUserCheck={newUserCheck} /> */}
-
-      {/* <FoodAnalyzerNoFilter currentUser_id={currentUser_id} /> */}
+    <div className="w-full max-w-xl flex flex-col gap-6">
+      <TopNavigation topNavigationTitle={topNavigationTitle} />
+      <div className="flex flex-col gap-6 mx-4">
+        {/* 입력버튼 */}
+        <div className="flex flex-col gap-2">
+          <Link href="/food/input">
+            <Button variant="outline" className="w-full py-6">
+              <p>🥄 식사 기록</p>
+            </Button>
+          </Link>
+          <hr />
+          <Link href="/food/check">
+            <Button variant="outline" className="w-full py-6 ">
+              <p>
+                🤔 음식 체크
+                <span className="text-xs tracking-tighter text-gray-600"> (먹을까? 말까?)</span>
+              </p>
+            </Button>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
-
-//https://www.data.go.kr/data/15064775/openapi.do

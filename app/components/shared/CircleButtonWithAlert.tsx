@@ -58,7 +58,7 @@ export default function CircleButtonWithAlert() {
                 음식 <span className="text-xs ">관련 카테고리</span>
               </h2>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols- gap-2">
               <Link href="/food" onClick={() => setIsOpen(false)}>
                 <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
                   <Camera className="w-8 h-8 text-gray-900 " strokeWidth={1} />

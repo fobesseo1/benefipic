@@ -176,9 +176,15 @@ export const ExerciseLogCardMain = ({
                 })} 한 운동`}
           </h3>
           {showMoreButton && (
-            <Link href={moreButtonLink}>
-              <h3 className="font-semibold mb-3 text-gray-400">...더보기</h3>
-            </Link>
+            <div className="flex items-center gap-2 mb-3">
+              <Link href={moreButtonLink}>
+                <button className="font-semibold text-gray-400">더보기</button>
+              </Link>
+              <p className="font-semibold text-gray-400 ">|</p>
+              <Link href="/exercise">
+                <button className="font-semibold text-gray-600 ">+ 입력</button>
+              </Link>
+            </div>
           )}
         </div>
 

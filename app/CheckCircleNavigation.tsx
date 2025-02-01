@@ -35,15 +35,15 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
     <>
       <div className="z-50 lg:max-w-lg w-full fixed left-1/2 -translate-x-1/2 bottom-0 pointer-events-none">
         <div className="relative w-full">
-          <div className="absolute bottom-40 right-4 z-50 pointer-events-auto">
+          <div className="absolute bottom-[80px] right-4 z-50 pointer-events-auto">
             <div
-              className="bg-black w-16 h-16 flex items-center justify-center rounded-full cursor-pointer shadow-xl"
+              className="bg-gray-800 border-2 border-gray-400 w-16 h-16 flex items-center justify-center rounded-full cursor-pointer shadow-md"
               style={{
                 boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.6)',
               }}
               onClick={() => setShowRouteDialog(true)}
             >
-              <Camera className="w-7 h-7 text-white" />
+              <Camera className="w-7 h-7 text-gray-200" />
             </div>
           </div>
 
@@ -76,7 +76,7 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
             </div>
           </AlertDialogHeader>
           <div className="flex flex-col gap-4 py-4">
-            <Link href="/food">
+            <Link href="/food/input/photo">
               <button
                 onClick={() => setShowRouteDialog(false)}
                 className="w-full bg-white border-2 border-gray-200 rounded-xl p-2 flex items-center gap-4 shadow-lg hover:bg-gray-50 hover:-translate-y-0.5 transition-all"
@@ -91,7 +91,7 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
               </button>
             </Link>
 
-            <Link href="/food-check">
+            <Link href="/food/check/photo-check">
               <button
                 onClick={() => setShowRouteDialog(false)}
                 className="w-full bg-white border-2 border-gray-200 rounded-xl p-2 flex items-center gap-4 shadow-lg hover:bg-gray-50 hover:-translate-y-0.5 transition-all"
@@ -121,7 +121,7 @@ export function CheckCircleNavigation({ currentUser }: { currentUser: any }) {
               </button>
             </Link>
 
-            <Link href="/exercise">
+            <Link href="/exercise/photo">
               <button
                 onClick={() => setShowRouteDialog(false)}
                 className="w-full bg-white border-2 border-gray-200 rounded-xl p-2 flex items-center gap-4 shadow-lg hover:bg-gray-50 hover:-translate-y-0.5 transition-all"

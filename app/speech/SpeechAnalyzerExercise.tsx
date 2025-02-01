@@ -420,7 +420,7 @@ const SpeechAnalyzerExercise = ({
       <div className="relative">
         <form
           onSubmit={handleSubmit}
-          className="flex items-center rounded-2xl shadow-sm border px-4 py-4 bg-black"
+          className="relative flex items-center  rounded-2xl shadow-sm border-2 px-4 py-4 border-gray-600"
         >
           {listening ? (
             <button
@@ -434,7 +434,7 @@ const SpeechAnalyzerExercise = ({
           ) : (
             <button
               type="button"
-              className="rounded-full w-12 h-12 bg-gray-50 shadow-md flex items-center justify-center"
+              className="rounded-full w-12 h-12 border-2 border-gray-600 shadow-md flex items-center justify-center"
               onClick={handleStartListening}
               disabled={isAnalyzing}
             >
@@ -455,7 +455,7 @@ const SpeechAnalyzerExercise = ({
             className="rounded-full"
             disabled={!inputText.trim() || isAnalyzing}
           >
-            <CornerDownLeft className="h-5 w-5 text-gray-400" size={12} />
+            <CornerDownLeft className="h-5 w-5 text-gray-600" size={12} />
           </button>
         </form>
       </div>

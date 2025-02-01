@@ -29,5 +29,5 @@
     ".next/types/**/*.ts",
     "app/components/shared/ui/NutritionCardMaintsx"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", ".next"]
 }

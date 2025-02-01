@@ -10,6 +10,8 @@ import ExerciseLogCardMain from '../components/shared/ui/ExerciseLogCardMain';
 
 import SpeechMainAnalyzer from '../speech/SpeechMainAnalyzer';
 import NutritionCardNew from '../components/shared/ui/NutritionCardMainNew';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const CurrentWeekCalendar = dynamic(() => import('./CurrentWeekCalendar'), { ssr: false });
 
@@ -122,7 +124,8 @@ export default function MainComponent({
         <Suspense fallback={<div>Loading food logs...</div>}>
           <CurrentWeekCalendar selectedDate={selectedDate} onDateSelect={setSelectedDate} />
         </Suspense>
-        <Suspense fallback={<div>Loading analyzer...</div>}>
+
+        {/* <Suspense fallback={<div>Loading analyzer...</div>}>
           <SpeechMainAnalyzer
             user_id={user_id}
             newUserCheck={newUserCheck}
@@ -131,7 +134,26 @@ export default function MainComponent({
               dailyStatus ? dailyStatus.totalCalories + dailyStatus.remainingCalories : 0
             }
           />
-        </Suspense>
+        </Suspense> */}
+
+        {/* 버튼 */}
+        {/* <div className="w-full border-2 border-green-600 rounded-lg grid grid-cols-3 gap-2 p-2">
+          <Link href="/food/input" className="w-full">
+            <Button variant={'outline'} className="w-full">
+              식사입력
+            </Button>
+          </Link>
+          <Link href="/exercise">
+            <Button variant={'outline'} className="w-full">
+              운동입력
+            </Button>
+          </Link>
+          <Link href="/weight-tracker">
+            <Button variant={'outline'} className="w-full">
+              체중입력
+            </Button>
+          </Link>
+        </div> */}
 
         {/* 오늘 남은 식사량 */}
         <Suspense fallback={<div>Loading nutrition...</div>}>

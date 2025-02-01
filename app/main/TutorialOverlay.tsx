@@ -12,8 +12,7 @@ interface TutorialOverlayProps {
 
 const tutorialImages = [
   '/tutorial/step1-0.webp',
-  '/tutorial/step2-0.webp',
-  '/tutorial/step3-0.webp',
+
   '/tutorial/step1-start.webp',
   '/tutorial/step1-1.webp',
   '/tutorial/step1-2.webp',
@@ -90,7 +89,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ onComplete, user_id }
   const handleComplete = async () => {
     await updateTutorialStatus();
     onComplete();
-    window.location.href = '/food';
+    window.location.href = '/food/input';
   };
 
   const isLastStep = currentStep === tutorialImages.length - 1;

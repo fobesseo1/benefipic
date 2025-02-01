@@ -40,33 +40,40 @@ export default function BottomNavigation() {
       <Link href="/main">
         <div className="col-span-1   flex flex-col items-center gap-[2px]">
           <div className="w-8 h-8 flex items-center justify-center ">
-            <Home className="w-8 h-8 text-gray-600 " />
+            <Home className="w-7 h-7 text-gray-600 " />
           </div>
           <p className="text-gray-600 text-xs font-semibold">홈</p>
         </div>
       </Link>
-      <Link href="/food">
-        <div className="col-span-1   flex flex-col items-center gap-[2px]">
-          <div className="w-8 h-8 flex items-center justify-center ">
-            <Utensils className="w-7 h-7 text-gray-600 " />
+      <div
+        className="col-span-1   flex flex-col items-center gap-[2px]"
+        onClick={() => setShowRouteDialog(true)}
+      >
+        <div className="w-8 h-8 flex items-center justify-center ">
+          <Camera className="w-8 h-8 text-gray-600 " />
+        </div>
+        <p className="text-gray-600 text-xs font-semibold">사진</p>
+      </div>
+      <Link href="/main">
+        <div
+          className="col-span-1 flex flex-col items-center gap-[2px]"
+          onClick={() => setSpeechAnalyzer(true, true)}
+        >
+          <div className="w-8 h-8 flex items-center justify-center">
+            <Pen className="w-7 h-7 text-gray-600" />
           </div>
-          <p className="text-gray-600 text-xs font-semibold">식사</p>
+          <p className="text-gray-600 text-xs font-semibold">텍스트</p>
         </div>
       </Link>
-      <Link href="/exercise">
-        <div className="col-span-1   flex flex-col items-center gap-[2px]">
-          <div className="w-8 h-8 flex items-center justify-center ">
-            <Dumbbell className="w-7 h-7 text-gray-600 " />
+      <Link href="/main">
+        <div
+          className="col-span-1 flex flex-col items-center gap-[2px]"
+          onClick={() => setSpeechAnalyzer(true, true)} // 'voice' 모드로 설정
+        >
+          <div className="w-8 h-8 flex items-center justify-center">
+            <Mic className="w-7 h-7 text-gray-600" />
           </div>
-          <p className="text-gray-600 text-xs font-semibold">운동</p>
-        </div>
-      </Link>
-      <Link href="/weight-tracker">
-        <div className="col-span-1   flex flex-col items-center gap-[2px]">
-          <div className="w-8 h-8 flex items-center justify-center ">
-            <Gauge className="w-8 h-8 text-gray-600 " />
-          </div>
-          <p className="text-gray-600 text-xs font-semibold">체중</p>
+          <p className="text-gray-600 text-xs font-semibold">음성</p>
         </div>
       </Link>
 
@@ -75,7 +82,7 @@ export default function BottomNavigation() {
         onClick={() => setIsOpen(true)}
       >
         <div className="w-8 h-8 flex items-center justify-center ">
-          <Menu className="w-8 h-8 text-gray-600 " />
+          <Menu className="w-7 h-7 text-gray-600 " />
         </div>
         <p className="text-gray-600 text-xs font-semibold">메뉴</p>
       </div>
@@ -165,7 +172,7 @@ export default function BottomNavigation() {
             </Button>
           </div>
 
-          <div className="flex flex-col gap-8 py-6">
+          <div className="flex flex-col gap-12 py-6">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-1 border-b-2 border-gray-200 pb-1">
                 <div className="w-8 h-8 p-[6px] rounded-full border-2 border-gray-600 flex items-center justify-center">
@@ -175,27 +182,31 @@ export default function BottomNavigation() {
                   음식 <span className="text-xs ">관련 카테고리</span>
                 </h2>
               </div>
-              <div className="grid grid-cols-1 gap-2">
-                {/* 시작 */}
-                <div className="flex flex-col gap-2" onClick={() => setIsOpen(false)}>
-                  <Link href="/food/input">
-                    <Button variant="outline" className="w-full py-6">
-                      <p>🥄 식사 기록</p>
-                    </Button>
-                  </Link>
-                  <Link href="/food/check" onClick={() => setIsOpen(false)}>
-                    <Button variant="outline" className="w-full py-6 ">
-                      <p>
-                        🤔 음식 체크
-                        <span className="text-xs tracking-tighter text-gray-600">
-                          {' '}
-                          (먹을까? 말까?)
-                        </span>
-                      </p>
-                    </Button>
-                  </Link>
-                </div>
-                {/* 끝 */}
+              <div className="grid grid-cols-2 gap-2">
+                <Link href="/food" onClick={() => setIsOpen(false)}>
+                  <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
+                    <Camera className="w-8 h-8 text-gray-900 " strokeWidth={1} />
+                    <p className="text-sm text-gray-900 font-bold">사진입력</p>
+                  </div>
+                </Link>
+                <Link href="/food-description" onClick={() => setIsOpen(false)}>
+                  <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
+                    <SquarePen className="w-8 h-8 text-gray-900 " strokeWidth={1} />
+                    <p className="text-sm text-gray-900 font-bold">직접입력</p>
+                  </div>
+                </Link>
+                <Link href="/food-check" onClick={() => setIsOpen(false)}>
+                  <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
+                    <Camera className="w-8 h-8 text-gray-900 " strokeWidth={1} />
+                    <p className="text-sm text-gray-900 font-bold tracking-tighter whitespace-pre-line">{`먹을까?\n말까?`}</p>
+                  </div>
+                </Link>
+                <Link href="/menu" onClick={() => setIsOpen(false)}>
+                  <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
+                    <SquareMenu className="w-8 h-8 text-gray-900 " strokeWidth={1} />
+                    <p className="text-sm text-gray-900 font-bold">메뉴추천</p>
+                  </div>
+                </Link>
               </div>
             </div>
 
@@ -208,11 +219,18 @@ export default function BottomNavigation() {
                   운동 <span className="text-xs ">관련 카테고리</span>
                 </h2>
               </div>
-              <div className="grid grid-cols-1 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <Link href="/exercise" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" className="w-full py-6">
-                    <p>💪 운동 기록</p>
-                  </Button>
+                  <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
+                    <Camera className="w-8 h-8 text-gray-900 " strokeWidth={1} />
+                    <p className="text-sm text-gray-900 font-bold">사진입력</p>
+                  </div>
+                </Link>
+                <Link href="/exercise-description" onClick={() => setIsOpen(false)}>
+                  <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
+                    <SquarePen className="w-8 h-8 text-gray-900 " strokeWidth={1} />
+                    <p className="text-sm text-gray-900 font-bold">직접입력</p>
+                  </div>
                 </Link>
               </div>
             </div>
@@ -226,16 +244,18 @@ export default function BottomNavigation() {
                   신체 <span className="text-xs ">관련 카테고리</span>
                 </h2>
               </div>
-              <div className="grid grid-cols-1 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <Link href="/weight-tracker" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" className="w-full py-6">
-                    <p>📈 체중 기록</p>
-                  </Button>
+                  <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
+                    <Gauge className="w-8 h-8 text-gray-900 " strokeWidth={1} />
+                    <p className="text-sm text-gray-900 font-bold">체중입력</p>
+                  </div>
                 </Link>
                 <Link href="/health-info" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" className="w-full py-6  ">
-                    <p>🎯 목표 확인</p>
-                  </Button>
+                  <div className="w-full h-full flex gap-2 items-center justify-between border border-gray-200 rounded-lg py-2 px-7 ">
+                    <Goal className="w-8 h-8 text-gray-900 " strokeWidth={1} />
+                    <p className="text-sm text-gray-900 font-bold">목표입력</p>
+                  </div>
                 </Link>
               </div>
             </div>
