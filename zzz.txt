@@ -1,13 +1,95 @@
 // app/main/PWAInstallAlert.tsx
 'use client';
 
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Download } from 'lucide-react';
+import createSupabaseBrowserClient from '@/lib/supabse/client';
+import { usePWAInstall } from './usePWAInstall';
+
 interface PWAInstallAlertProps {
   userId: string;
   lastPromptDate: string | null;
   isInstalled: boolean;
 }
 
-import { useEffect, useState } from 'react';
+export default function PWAInstallAlert({
+  userId,
+  lastPromptDate,
+  isInstalled,
+}: PWAInstallAlertProps) {
+  const { promptInstall } = usePWAInstall(userId);
+
+  // PWA가 설치됐는지만 체크
+  if (isInstalled) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-white">
+      <div className="max-w-md mx-auto text-center relative pt-32 pb-6">
+        {/* 상단 이모티콘 */}
+        <div className="flex justify-center mb-6">
+          <div className="relative">
+            <div className="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center">
+              <Download className="w-12 h-12 text-pink-400" />
+            </div>
+            {/* 작은 원 장식들 */}
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-pink-200 rounded-full" />
+            <div className="absolute bottom-0 -left-2 w-4 h-4 bg-pink-100 rounded-full" />
+          </div>
+        </div>
+
+        <div className="space-y-3 tracking-tighter p-4">
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-gray-800">서비스 설치하고</h2>
+            <h2 className="text-2xl font-bold text-gray-800">모든 기능 이용</h2>
+          </div>
+          <hr />
+          <div className="text-gray-600 pt-6">
+            <p className="text-base leading-relaxed">홈 화면에서 바로 실행하고</p>
+            <p className="text-xl font-semibold text-gray-800">더 빠르게 기록해보세요 📱</p>
+          </div>
+        </div>
+
+        <div className="flex-col space-y-4 mt-6 py-4 px-8">
+          <Button
+            onClick={promptInstall}
+            className="w-full shadow-md py-6 text-white bg-gray-900 hover:bg-gray-800 rounded-xl text-base tracking-tighter"
+          >
+            <Download className="w-5 h-5 mr-2" />
+            서비스 설치 후 이용하기
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+/////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////
+
+
+//app/question/QuestionForm.tsx
+
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Answers, Question } from './tpye';
+import createSupabaseBrowserClient from '@/lib/supabse/client';
+import {
+  HealthCalculator,
+  Gender,
+  ActivityLevel,
+  RecommendedGoal,
+} from '@/app/health-info/HealthCalculator';
+
 import {
   AlertDialog,
   AlertDialogContent,
@@ -15,109 +97,715 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogFooter,
+  AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Download, X } from 'lucide-react';
-import createSupabaseBrowserClient from '@/lib/supabse/client';
-import { usePWAInstall } from './usePWAInstall';
 
-interface PWAInstallAlertProps {
-  userId: string;
-  lastPromptDate: string | null;
-}
+export const getBMIStatus = (bmi: number): string => {
+  if (bmi < 18.5) return '저체중';
+  if (bmi <= 23) return '정상체중'; // < 에서 <= 로 수정
+  if (bmi < 25) return '비만 전 단계(과체중)';
+  if (bmi < 30) return '1단계 비만';
+  if (bmi < 35) return '2단계 비만';
+  return '3단계 비만(고도비만)';
+};
 
-export default function PWAInstallAlert({ userId, lastPromptDate }: PWAInstallAlertProps) {
-  const [showAlert, setShowAlert] = useState(false);
-  const { isInstallable, promptInstall } = usePWAInstall(userId);
+const QuestionSlidePage = ({
+  defaultSlide,
+  currentUser_id,
+}: {
+  defaultSlide: number;
+  currentUser_id: string;
+}) => {
   const supabase = createSupabaseBrowserClient();
+  const router = useRouter();
+  const [currentSlide, setCurrentSlide] = useState(defaultSlide);
+  const [answers, setAnswers] = useState<Answers>({});
+  const [yearError, setYearError] = useState<string>('');
+  const [monthError, setMonthError] = useState<string>('');
+  const [dayError, setDayError] = useState<string>('');
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const [recommendedGoal, setRecommendedGoal] = useState<RecommendedGoal | null>(null);
 
-  useEffect(() => {
-    const shouldShowPrompt = () => {
-      if (!lastPromptDate) return true;
-      const lastPrompt = new Date(lastPromptDate);
-      const now = new Date();
-      const diffDays = Math.floor((now.getTime() - lastPrompt.getTime()) / (1000 * 60 * 60 * 24));
-      return diffDays >= 3;
-    };
+  const validateDate = (part: 'year' | 'month' | 'day', value: string): boolean => {
+    if (value === '') return true;
+    const num = parseInt(value);
+    const currentYear = new Date().getFullYear();
 
-    if (isInstallable && shouldShowPrompt()) {
-      setShowAlert(true);
+    switch (part) {
+      case 'year':
+        if (num < 1900 || num > currentYear) {
+          setYearError(`연도는 1900년에서 ${currentYear}년 사이의 값을 입력해주세요`);
+          return false;
+        }
+        setYearError('');
+        break;
+      case 'month':
+        if (num < 1 || num > 12) {
+          setMonthError('월(mm)은 1에서 12 사이의 값을 입력해주세요');
+          return false;
+        }
+        setMonthError('');
+        break;
+      case 'day':
+        if (num < 1 || num > 31) {
+          setDayError('일(dd)은 1에서 31 사이의 값을 입력해주세요');
+          return false;
+        }
+        setDayError('');
+        break;
     }
-  }, [isInstallable, lastPromptDate]);
-
-  const handleClose = async () => {
-    console.log('Closing alert, userId:', userId);
-    try {
-      const { data, error } = await supabase
-        .from('userdata')
-        .update({ last_install_prompt: new Date().toISOString() })
-        .eq('id', userId);
-
-      if (error) {
-        console.error('Failed to update last prompt date:', error);
-      } else {
-        console.log('Successfully updated last prompt date:', data);
-      }
-    } catch (error) {
-      console.error('Failed to update last prompt date:', error);
-    }
-    setShowAlert(false);
+    return true;
   };
 
-  if (!showAlert) return null;
+  useEffect(() => {
+    if (defaultSlide >= 0 && defaultSlide < questions.length) {
+      setCurrentSlide(defaultSlide);
+    }
+  }, [defaultSlide]);
 
-  return (
-    <AlertDialog open={showAlert}>
-      <AlertDialogContent className="max-w-md text-center">
-        <div className="relative pt-12 pb-6">
-          <div
-            className="absolute right-0 top-0 rounded-full bg-gray-50 p-2 shadow-sm flex items-center justify-center gap-1"
-            onClick={handleClose}
-          >
-            <X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
-            <p className="text-sm font-medium text-gray-400">닫기</p>
+  const questions: Question[] = [
+    {
+      id: 'gender',
+      title: '성별을 알려주세요',
+      subtitle: '정확한 제안을 위해 필요해요',
+      type: 'select',
+      options: [
+        { value: 'male', label: '남성' },
+        { value: 'female', label: '여성' },
+      ],
+    },
+    {
+      id: 'activity_level',
+      title: '평소 활동량은 어느 정도인가요?',
+      subtitle: '정확한 제안을 위해 필요해요',
+      type: 'select',
+      options: [
+        { value: 'sedentary', label: '좌식 생활', description: '운동을 거의 하지 않음' },
+        { value: 'light', label: '가벼운 활동', description: '가벼운 운동 (주 1-3회)' },
+        { value: 'moderate', label: '보통 활동', description: '중간 운동 (주 3-5회)' },
+        { value: 'active', label: '활발한 활동', description: '활발한 운동 (주 6-7회)' },
+        {
+          value: 'very_active',
+          label: '매우 활발한 활동',
+          description: '매우 활발한 운동 또는 운동선수',
+        },
+      ],
+    },
+    {
+      id: 'height',
+      title: '현재 신장을 알려주세요',
+      subtitle: '정확한 제안을 위해 필요해요(BMI 등)',
+      type: 'number',
+      unit: 'cm',
+      placeholder: '신장을 입력해주세요',
+      min: 100,
+      max: 250,
+    },
+    {
+      id: 'weight',
+      title: '현재 체중을 알려주세요',
+      subtitle: '정확한 제안을 위해 필요해요(BMI 등)',
+      type: 'number',
+      unit: 'kg',
+      placeholder: '체중을 입력해주세요',
+      min: 30,
+      max: 200,
+    },
+    {
+      id: 'birthdate',
+      title: '생일을 알려주세요',
+      subtitle: '정확한 제안을 위해 필요해요.',
+      type: 'date',
+      placeholder: 'YYYY-MM-DD',
+    },
+    {
+      id: 'result',
+      title: '분석 결과',
+      subtitle: '입력하신 정보를 바탕으로 분석한 결과입니다.',
+      type: 'result',
+    },
+  ];
+
+  const saveHealthRecord = async () => {
+    const results = calculateResults();
+
+    // RecommendedGoal 계산
+    const recommended = HealthCalculator.calculateRecommendedGoal(
+      Number(answers['weight']),
+      Number(answers['height']),
+      answers['gender'] as Gender
+    );
+    setRecommendedGoal(recommended);
+
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + recommended.duration * 7);
+
+    const healthRecord = {
+      user_id: currentUser_id,
+      gender: answers['gender'],
+      activity_level: answers['activity_level'],
+      height: Number(answers['height']),
+      weight: Number(answers['weight']),
+      birth_date: answers['birthdate'],
+      bmr: results.bmr,
+      tdee: results.tdee,
+      bmi: Number(results.bmi),
+      bmi_status: results.bmiStatus,
+      recommended_weight: results.recommendedWeight,
+    };
+
+    // 영양소 계산을 위한 UserInput 구성
+    const birthDate = new Date(answers['birthdate'] as string);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    const nutrition = HealthCalculator.calculateNutrition({
+      age,
+      gender: answers['gender'] as Gender,
+      height: Number(answers['height']),
+      weight: Number(answers['weight']),
+      activityLevel: answers['activity_level'] as ActivityLevel,
+      goal: recommended.recommendedGoal,
+      targetWeight: recommended.targetWeight,
+      targetDuration: recommended.duration,
+    });
+
+    const goalData = {
+      user_id: currentUser_id,
+      target_weight: Number(recommended.targetWeight.toFixed(1)),
+      target_date: targetDate.toISOString().split('T')[0],
+      daily_calories_target: Math.round(nutrition.totalCalories),
+      daily_protein_target: Number(nutrition.protein.toFixed(1)),
+      daily_fat_target: Number(nutrition.fat.toFixed(1)),
+      daily_carbs_target: Number(nutrition.carbs.toFixed(1)),
+      daily_exercise_minutes_target: nutrition.exerciseMinutes,
+      status: 'active',
+    };
+
+    try {
+      await Promise.all([
+        // health_records 저장
+        (async () => {
+          const { data: existingRecords, error: selectError } = await supabase
+            .from('health_records')
+            .select('*')
+            .eq('user_id', currentUser_id);
+
+          if (selectError) throw selectError;
+
+          if (existingRecords && existingRecords.length > 0) {
+            const { error: updateError } = await supabase
+              .from('health_records')
+              .update(healthRecord)
+              .eq('user_id', currentUser_id);
+
+            if (updateError) throw updateError;
+          } else {
+            const { error: insertError } = await supabase
+              .from('health_records')
+              .insert([healthRecord]);
+
+            if (insertError) throw insertError;
+          }
+        })(),
+
+        // weight_tracking 저장
+        (async () => {
+          const { error: weightError } = await supabase.from('weight_tracking').upsert({
+            user_id: currentUser_id,
+            weight: Number(answers['weight']),
+          });
+
+          if (weightError) throw weightError;
+        })(),
+
+        // fitness_goals 저장
+        (async () => {
+          const { error: goalError } = await supabase.from('fitness_goals').upsert(goalData, {
+            onConflict: 'user_id',
+            ignoreDuplicates: false,
+          });
+
+          if (goalError) throw goalError;
+        })(),
+      ]);
+    } catch (error) {
+      console.error('Error saving records:', error);
+    }
+  };
+
+  const handleNext = async () => {
+    if (currentSlide < questions.length - 1) {
+      setCurrentSlide(currentSlide + 1);
+    } else if (currentSlide === questions.length - 1) {
+      try {
+        await saveHealthRecord(); // 저장이 완료될 때까지 대기
+        setShowCompletionDialog(true); // 저장 완료 후 다이얼로그 표시
+      } catch (error) {
+        console.error('Error in handleNext:', error);
+        // 에러 처리 (예: 토스트 메시지 표시)
+      }
+    }
+  };
+
+  // 새로운 함수 추가
+  const handleStartClick = () => {
+    router.push('/main');
+  };
+
+  const handleGoalClick = () => {
+    router.push('/health-info'); // 목표 설정 페이지로 이동
+  };
+
+  const handleBack = () => {
+    if (currentSlide === 0) {
+      router.push('/start/?slide=2');
+    } else {
+      setCurrentSlide(currentSlide - 1);
+    }
+  };
+
+  const handleSelect = (value: string) => {
+    setAnswers({ ...answers, [questions[currentSlide].id]: value });
+  };
+
+  const handleInputChange = (value: string) => {
+    setAnswers({ ...answers, [questions[currentSlide].id]: value });
+  };
+
+  const isSelected = (value: string) => answers[questions[currentSlide].id] === value;
+
+  const calculateResults = () => {
+    const birthDate = new Date(answers['birthdate'] as string);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    const weight = Number(answers['weight']);
+    const height = Number(answers['height']);
+    const gender = answers['gender'] as Gender;
+    const activityLevel = answers['activity_level'] as ActivityLevel;
+
+    const bmr = HealthCalculator.calculateBMR(gender, weight, height, age);
+    const tdee = HealthCalculator.calculateTDEE(bmr, activityLevel, gender);
+    const bmi = HealthCalculator.calculateBMI(weight, height);
+    const bmiStatus = getBMIStatus(bmi);
+    const recommendedWeight = HealthCalculator.calculateRecommendedWeight(height, weight);
+
+    return {
+      bmr: Math.round(bmr),
+      tdee: Math.round(tdee),
+      bmi: bmi.toFixed(1),
+      bmiStatus,
+      age,
+      recommendedWeight,
+    };
+  };
+
+  const renderBirthDateInput = () => {
+    const birthdate = (answers['birthdate'] as string) || '';
+    let [year, month, day] = birthdate.split('-').map((val) => val || '');
+
+    const displayMonth = month ? parseInt(month).toString() : '';
+    const displayDay = day ? parseInt(day).toString() : '';
+
+    const handleDateChange = (part: 'year' | 'month' | 'day', value: string) => {
+      if (value !== '' && !/^\d+$/.test(value)) return;
+
+      let dateComponents = birthdate ? birthdate.split('-') : ['', '', ''];
+
+      const maxLengths = { year: 4, month: 2, day: 2 };
+      value = value.slice(0, maxLengths[part]);
+
+      if (!validateDate(part, value)) {
+        if (part === 'year') dateComponents[0] = value;
+        if (part === 'month') dateComponents[1] = value;
+        if (part === 'day') dateComponents[2] = value;
+      } else {
+        if (part === 'year') {
+          dateComponents[0] = value;
+        } else if (part === 'month') {
+          dateComponents[1] = value ? value.padStart(2, '0') : '';
+        } else if (part === 'day') {
+          dateComponents[2] = value ? value.padStart(2, '0') : '';
+        }
+      }
+
+      const newDate = dateComponents.every((comp) => comp === '') ? '' : dateComponents.join('-');
+      handleInputChange(newDate);
+    };
+
+    return (
+      <div className="space-y-4">
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <p className="text-xs text-gray-500 mt-1 px-4">연도</p>
+            <input
+              type="text"
+              placeholder="YYYY"
+              value={year}
+              onChange={(e) => handleDateChange('year', e.target.value)}
+              className={`w-full p-4 rounded-xl bg-gray-50 text-gray-900 text-lg placeholder:text-gray-400 
+                ${yearError ? 'border-2 border-red-500' : ''}`}
+              maxLength={4}
+            />
           </div>
+          <div className="flex-1">
+            <p className="text-xs text-gray-500 mt-1 px-4">월</p>
+            <input
+              type="text"
+              placeholder="MM"
+              value={displayMonth}
+              onChange={(e) => handleDateChange('month', e.target.value)}
+              className={`w-full p-4 rounded-xl bg-gray-50 text-gray-900 text-lg placeholder:text-gray-400
+                ${monthError ? 'border-2 border-red-500' : ''}`}
+              maxLength={2}
+            />
+          </div>
+          <div className="flex-1">
+            <p className="text-xs text-gray-500 mt-1 px-4">일</p>
+            <input
+              type="text"
+              placeholder="DD"
+              value={displayDay}
+              onChange={(e) => handleDateChange('day', e.target.value)}
+              className={`w-full p-4 rounded-xl bg-gray-50 text-gray-900 text-lg placeholder:text-gray-400
+                ${dayError ? 'border-2 border-red-500' : ''}`}
+              maxLength={2}
+            />
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          {yearError && (
+            <p className="text-xs text-red-500 break-keep leading-tight">{yearError}</p>
+          )}
+          {monthError && (
+            <p className="text-xs text-red-500 break-keep leading-tight">{monthError}</p>
+          )}
+          {dayError && <p className="text-xs text-red-500 break-keep leading-tight">{dayError}</p>}
+        </div>
+      </div>
+    );
+  };
 
-          {/* 상단 이모티콘 */}
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center">
-                <Download className="w-12 h-12 text-pink-400" />
-              </div>
-              {/* 작은 원 장식들 */}
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-pink-200 rounded-full" />
-              <div className="absolute bottom-0 -left-2 w-4 h-4 bg-pink-100 rounded-full" />
+  // 결과 페이지 마운트시 실행될 useEffect
+  useEffect(() => {
+    if (currentSlide === questions.length - 1 && !answers['result']) {
+      setAnswers((prev) => ({ ...prev, result: 'completed' }));
+    }
+  }, [currentSlide]);
+
+  const renderResultContent = () => {
+    const results = calculateResults();
+    return (
+      <div className="space-y-6">
+        <div className="space-y-4">
+          <div className="p-4 bg-gray-50 rounded-xl">
+            <div className="font-medium text-lg mb-2">기초대사량 (BMR)</div>
+            <div className="text-2xl font-bold">{results.bmr.toLocaleString()} kcal</div>
+            <div className="text-sm text-gray-500 mt-1">
+              하루 동안 생명 유지에 필요한 최소한의 에너지량
             </div>
           </div>
 
-          <AlertDialogHeader className="space-y-3 tracking-tighter">
-            <AlertDialogTitle className="text-2xl font-bold text-gray-800">
-              앱 설치하고 더 편하게!
-            </AlertDialogTitle>
-            <hr />
-            <AlertDialogDescription className="text-gray-600 pt-6">
-              <p className="text-base leading-relaxed">홈 화면에서 바로 실행하고</p>
-              <p className="text-xl font-semibold text-gray-800">더 빠르게 기록해보세요 📱</p>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
+          <div className="p-4 bg-gray-50 rounded-xl">
+            <div className="font-medium text-lg mb-2">일일 총 에너지 소비량 (TDEE)</div>
+            <div className="text-2xl font-bold">{results.tdee.toLocaleString()} kcal</div>
+            <div className="text-sm text-gray-500 mt-1">
+              활동량을 고려한 하루 실제 소비 에너지량
+            </div>
+          </div>
 
-          <AlertDialogFooter className="flex-col space-y-4 mt-8">
-            <Button
-              onClick={handleClose}
-              variant="outline"
-              className="flex-1 py-3 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl text-sm"
-            >
-              나중에 하기
-            </Button>
-            <Button
-              onClick={promptInstall}
-              className="shadow-md py-6 text-white bg-gray-900 hover:text-gray-700 hover:bg-gray-50 rounded-xl text-sm"
-            >
-              <Download className="w-5 h-5 mr-2" />앱 설치하기
-            </Button>
-          </AlertDialogFooter>
+          <div className="p-4 bg-gray-50 rounded-xl">
+            <div className="font-medium text-lg mb-2">체질량지수 (BMI)</div>
+            <div className="text-2xl font-bold">{results.bmi}</div>
+            <div className="text-sm text-gray-500 mt-1">현재 상태: {results.bmiStatus}</div>
+          </div>
+
+          <div className="p-4 bg-gray-50 rounded-xl">
+            <div className="font-medium text-lg mb-2">권장 체중</div>
+            <div className="text-2xl font-bold">{results.recommendedWeight} kg</div>
+            <div className="text-sm text-gray-500 mt-1">
+              {results.recommendedWeight === Number(answers['weight'])
+                ? '현재 정상 체중 범위에 있습니다.'
+                : `목표 감량/증량: ${Math.abs(
+                    results.recommendedWeight - Number(answers['weight'])
+                  ).toFixed(1)}kg ${
+                    results.recommendedWeight > Number(answers['weight']) ? '증량' : '감량'
+                  }`}
+            </div>
+          </div>
+
+          <div className="p-4 bg-gray-50 rounded-xl">
+            <div className="font-medium text-lg mb-2">신체 정보</div>
+            <div className="space-y-2">
+              <div>나이: {results.age}세</div>
+              <div>신장: {answers['height']}cm</div>
+              <div>체중: {answers['weight']}kg</div>
+              <div>
+                활동량:{' '}
+                {questions[1].type === 'select' &&
+                  questions[1].options.find((opt) => opt.value === answers['activity_level'])
+                    ?.label}
+              </div>
+            </div>
+          </div>
         </div>
-      </AlertDialogContent>
-    </AlertDialog>
+      </div>
+    );
+  };
+
+  const renderQuestionContent = (question: Question) => {
+    switch (question.type) {
+      case 'select':
+        return (
+          <div className="space-y-3">
+            {question.options.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleSelect(option.value)}
+                className={`w-full p-4 rounded-xl text-left transition-all
+                  ${isSelected(option.value) ? 'bg-black text-white' : 'bg-gray-50 text-gray-900'}`}
+              >
+                <div className="font-medium">{option.label}</div>
+                {option.description && (
+                  <div
+                    className={`text-sm ${
+                      isSelected(option.value) ? 'text-gray-300' : 'text-gray-500'
+                    }`}
+                  >
+                    {option.description}
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        );
+
+      case 'number':
+        return (
+          <div className="relative">
+            <input
+              type="number"
+              value={answers[question.id] || ''}
+              onChange={(e) => handleInputChange(e.target.value)}
+              placeholder={question.placeholder}
+              min={question.min}
+              max={question.max}
+              className="w-full p-4 rounded-xl bg-gray-50 text-gray-900 text-lg"
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+              {question.unit}
+            </span>
+          </div>
+        );
+
+      case 'date':
+        return renderBirthDateInput();
+
+      case 'result':
+        return renderResultContent();
+    }
+  };
+
+  // 목표 텍스트 생성 함수
+  const getGoalParts = (recommendedGoal: RecommendedGoal) => {
+    let duration = {
+      value: recommendedGoal.duration,
+      unit: '주간',
+    };
+
+    let change = {
+      prefix: '',
+      value: 0,
+      unit: 'kg',
+      type: '',
+    };
+
+    switch (recommendedGoal.recommendedGoal) {
+      case 'maintain':
+        change = {
+          prefix: '',
+          value: recommendedGoal.targetWeight,
+          unit: 'kg',
+          type: '유지',
+        };
+        break;
+      case 'gain':
+        change = {
+          prefix: '+',
+          value: recommendedGoal.weightDiff,
+          unit: 'kg',
+          type: '증량',
+        };
+        break;
+      case 'lose':
+        change = {
+          prefix: '-',
+          value: Math.abs(recommendedGoal.weightDiff),
+          unit: 'kg',
+          type: '감량',
+        };
+        break;
+    }
+
+    return { duration, change };
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-white">
+      {/* Header - Back button and Progress bar */}
+      <div className="px-4 pt-4 pb-2">
+        <div className="flex items-center gap-4">
+          <button onClick={handleBack} className="p-2 rounded-full hover:bg-gray-100">
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-black transition-all duration-300 ease-out"
+              style={{ width: `${((currentSlide + 1) / questions.length) * 100}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Question Title Section */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentSlide}
+          initial={{ x: 100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: -100, opacity: 0 }}
+          className="px-4 py-6"
+        >
+          <h1 className="text-2xl font-semibold whitespace-pre-line">
+            {questions[currentSlide].title}
+          </h1>
+          <p className="text-gray-500 text-sm mt-2">{questions[currentSlide].subtitle}</p>
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Answer Options Section */}
+      <div className="flex-1 px-4">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSlide}
+            initial={{ x: 100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -100, opacity: 0 }}
+          >
+            {renderQuestionContent(questions[currentSlide])}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Next Button Section */}
+      <div className="p-4">
+        <button
+          onClick={handleNext}
+          disabled={!answers[questions[currentSlide].id]}
+          className={`w-full py-4 rounded-xl text-lg font-medium transition-all
+            ${
+              answers[questions[currentSlide].id]
+                ? 'bg-black text-white'
+                : 'bg-gray-100 text-gray-400'
+            }`}
+        >
+          다음
+        </button>
+      </div>
+
+      {/* Alert Dialog */}
+      {showCompletionDialog && (
+        <AlertDialog open={showCompletionDialog}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-xl font-semibold mb-2">
+                입력하느라 고생했어요!
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-4">
+                {recommendedGoal && (
+                  <div className="p-4 bg-white rounded-xl shadow-xl border-2 border-gray-200">
+                    <div className="flex items-center gap-3 mb-4">
+                      <h3 className="text-xl font-semibold">{recommendedGoal.message}</h3>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center gap-2 px-2 py-12 bg-gray-50 rounded-xl">
+                      <div className="flex flex-col gap-4">
+                        <div className="flex-flex-col">
+                          <p className="font-medium text-gray-600 mb-2">
+                            {recommendedGoal.messageGrid.title}
+                          </p>
+                          <div className="text-4xl gap-2 flex items-end font-bold">
+                            <p className="tracking-tighter">
+                              {recommendedGoal.messageGrid.content1}
+                            </p>
+                            {recommendedGoal.messageGrid.content2 && (
+                              <p className="text-4xl">{recommendedGoal.messageGrid.content2}</p>
+                            )}
+                          </div>
+                        </div>
+                        <hr className="border-gray-400" />
+                        <div className="flex flex-col">
+                          <div className="flex items-baseline justify-between gap-x-4">
+                            <div className="flex items-baseline">
+                              <span className="text-3xl font-bold tracking-tighter text-gray-900">
+                                {getGoalParts(recommendedGoal).duration.value}
+                              </span>
+                              <span className="text-sm text-gray-600">
+                                {getGoalParts(recommendedGoal).duration.unit}
+                              </span>
+                              <p className="text-xl text-gray-600">&gt;</p>
+                            </div>
+
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-4xl font-bold tracking-tighter text-gray-900">
+                                {getGoalParts(recommendedGoal).change.prefix}
+                                {getGoalParts(recommendedGoal).change.value}
+                              </span>
+                              <span className="text-sm text-gray-600">
+                                {getGoalParts(recommendedGoal).change.unit}
+                              </span>
+                              <p className="text-xl text-gray-600">
+                                {getGoalParts(recommendedGoal).change.type}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+              <Button
+                onClick={handleStartClick}
+                className="w-full text-lg font-bold bg-black text-white hover:bg-gray-800 p-6"
+              >
+                시작하기
+              </Button>
+              <Button
+                onClick={handleGoalClick}
+                className="w-full bg-white text-black border-2 p-6 border-black hover:bg-gray-100"
+              >
+                목표수정
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+    </div>
   );
-}
+};
+
+export default QuestionSlidePage;
+
