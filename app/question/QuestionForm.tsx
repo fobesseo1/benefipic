@@ -685,18 +685,18 @@ const QuestionSlidePage = ({
                               <span className="text-3xl font-bold tracking-tighter text-gray-900">
                                 {getGoalParts(recommendedGoal).duration.value}
                               </span>
-                              <span className="text-xl text-gray-600">
+                              <span className="text-sm text-gray-600">
                                 {getGoalParts(recommendedGoal).duration.unit}
                               </span>
                               <p className="text-xl text-gray-600">&gt;</p>
                             </div>
 
                             <div className="flex items-baseline gap-1">
-                              <span className="text-6xl font-bold tracking-tighter text-gray-900">
+                              <span className="text-4xl font-bold tracking-tighter text-gray-900">
                                 {getGoalParts(recommendedGoal).change.prefix}
                                 {getGoalParts(recommendedGoal).change.value}
                               </span>
-                              <span className="text-xl text-gray-600">
+                              <span className="text-sm text-gray-600">
                                 {getGoalParts(recommendedGoal).change.unit}
                               </span>
                               <p className="text-xl text-gray-600">
